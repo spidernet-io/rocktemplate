@@ -47,7 +47,6 @@ COPY --from=gops-cni-builder /out/${BUILDPLATFORM}/bin/gops /bin/gops
 
 RUN chmod +x /install-others.sh && /install-others.sh ${TARGETARCH} && rm -f /install-others.sh
 
-
 #============
 FROM scratch
 LABEL maintainer="maintainer@spidernet-io"
