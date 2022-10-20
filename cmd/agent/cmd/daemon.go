@@ -21,6 +21,7 @@ func SetupUtility() {
 }
 
 func DaemonMain() {
+
 	rootLogger.Sugar().Infof("config: %+v", globalConfig)
 
 	SetupUtility()
