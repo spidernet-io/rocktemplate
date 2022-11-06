@@ -9,9 +9,9 @@ import (
 )
 
 type mybookManager struct {
-	logger   *zap.Logger
-	webhook  *webhookhander
-	informer *informerHandler
+	logger     *zap.Logger
+	webhook    *webhookhander
+	controller *myController
 }
 
 var _ types.MybookManager = (*mybookManager)(nil)
