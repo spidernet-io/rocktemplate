@@ -42,7 +42,7 @@ type MybookSpec struct {
 type MybookStatus struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Optional
-	TotalIPCount *int64 `json:"totalIPCount,omitempty"`
+	TotalIPCount int64 `json:"totalIPCount,omitempty"`
 }
 
 // scope(Namespaced or Cluster)
