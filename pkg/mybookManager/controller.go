@@ -135,7 +135,7 @@ func (s *myController) processNextqueueEventItem(ctx context.Context) bool {
 
 // 添加controler业务
 func (s *myController) handleCrdEvent(ctx context.Context, obj *crd.Mybook) error {
-	s.logger.Sugar().Infof("handle Crd Event %v", obj.Name)
+	s.logger.Sugar().Infof("handle Crd Event: %v", obj.Name)
 
 	// 从 informer 缓存中获取数据，可能因为延时 而不是最新
 	t, e := s.crdLister.Get(obj.Name)
@@ -152,7 +152,7 @@ func (s *myController) handleCrdEvent(ctx context.Context, obj *crd.Mybook) erro
 
 	t.Status.TotalIPCount = 100
 
-	if _, e := s.clientset.RocktemplateV1().Mybooks().Update(ctx, t, metav1.UpdateOptions{}); e != nil {
+	if _, e := s.clientset.RocktemplateV1().Mybooks().UpdateStatus(ctx, t, metav1.UpdateOptions{}); e != nil {
 		if apierrors.IsConflict(e) {
 			// resrouceVersion Conflict, retry later
 			return e
