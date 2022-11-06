@@ -54,7 +54,7 @@ func (s *myController) informerAddHandler(obj interface{}) {
 		s.logger.Sugar().Errorf("failed to get crd: %v", r.Name)
 		return
 	}
-	s.logger.Sugar().Infof("add mybook crd: %+v", r)
+	s.logger.Sugar().Infof("informer add crd: %+v", r.Name)
 
 	// time.Sleep(30 * time.Second)
 	s.logger.Sugar().Infof("done crd add: %+v", r.Name)
@@ -68,7 +68,7 @@ func (s *myController) informerUpdateHandler(oldObj interface{}, newObj interfac
 		// Two different versions of the same pod will always have different RVs.
 		return
 	}
-	s.logger.Sugar().Infof("update crd: %+v", curPod.Name)
+	s.logger.Sugar().Infof("informer update crd: %+v", curPod.Name)
 
 	// // 简单方式处理事件，堵塞执行，重建重试5次更新，
 	// // 好处是代码简单，坏处是，resourceVersion、断网等场景，可能最终5次失败而最终失败
@@ -93,7 +93,7 @@ func (s *myController) informerUpdateHandler(oldObj interface{}, newObj interfac
 
 func (s *myController) informerDeleteHandler(obj interface{}) {
 	curPod := obj.(*crd.Mybook)
-	s.logger.Sugar().Infof("delete crd: %v", curPod.Name)
+	s.logger.Sugar().Infof("informer delete crd: %v", curPod.Name)
 }
 
 // --------------------

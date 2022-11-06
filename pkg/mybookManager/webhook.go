@@ -35,7 +35,7 @@ func (s *webhookhander) Default(ctx context.Context, obj runtime.Object) error {
 		logger.Error(s)
 		return apierrors.NewBadRequest(s)
 	}
-	logger.Sugar().Infof("obj: %+v", r)
+	logger.Sugar().Infof("mutating wehbook : %+v", r.Name)
 	r.Annotations["test"] = "add-by-mutating-webhook"
 
 	finalizerName := "rocktemplate.spidernet.io"

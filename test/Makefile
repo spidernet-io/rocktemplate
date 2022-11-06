@@ -136,6 +136,7 @@ deploy_project:
 			HELM_OPTION+=" --set rocktemplateController.extraEnv[0].name=ENV_PYROSCOPE_PUSH_SERVER_ADDRESS  --set rocktemplateController.extraEnv[0].value=http://$${ServerAddress}:$(PYROSCOPE_LOCAL_PORT) " ; \
 		fi ; \
 		HELM_OPTION+=" --set rocktemplateAgent.prometheus.enabled=true --set rocktemplateController.prometheus.enabled=true  " ; \
+		HELM_OPTION+=" --set rocktemplateAgent.debug.logLevel=debug --set rocktemplateController.debug.logLevel=debug " ; \
 		helm --kubeconfig=$(KIND_KUBECONFIG) install project $(ROOT_DIR)/charts \
 				-n kube-system --wait --debug \
 				--set global.imageTagOverride=$(PROJECT_IMAGE_VERSION) \
