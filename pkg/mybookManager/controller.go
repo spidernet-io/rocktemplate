@@ -236,9 +236,9 @@ func (s *myController) executeInformerOnce() {
 	// })
 
 	go func() {
-		s.logger.Debug("infomer up")
+		s.logger.Debug("informer up")
 		inform.Run(ctx.Done())
-		s.logger.Debug("infomer down")
+		s.logger.Debug("informer down")
 	}()
 
 	// run event handler
