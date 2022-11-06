@@ -56,7 +56,7 @@ func (s *webhookhander) ValidateCreate(ctx context.Context, obj runtime.Object) 
 		logger.Error(s)
 		return apierrors.NewBadRequest(s)
 	}
-	logger.Sugar().Infof("obj: %+v", r)
+	logger.Sugar().Infof("ValidateCreate: %v", r.Name)
 
 	return nil
 }
@@ -64,7 +64,7 @@ func (s *webhookhander) ValidateCreate(ctx context.Context, obj runtime.Object) 
 func (s *webhookhander) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) error {
 	logger := s.logger.Named("validating update webhook")
 
-	old, ok := oldObj.(*crd.Mybook)
+	_, ok := oldObj.(*crd.Mybook)
 	if !ok {
 		s := "failed to get oldObj"
 		logger.Error(s)
@@ -76,8 +76,8 @@ func (s *webhookhander) ValidateUpdate(ctx context.Context, oldObj, newObj runti
 		logger.Error(s)
 		return apierrors.NewBadRequest(s)
 	}
-	logger.Sugar().Infof("oldObj: %+v", old)
-	logger.Sugar().Infof("newObj: %+v", new)
+
+	logger.Sugar().Infof("ValidateUpdate: %v", new.Name)
 
 	return nil
 }
@@ -92,7 +92,7 @@ func (s *webhookhander) ValidateDelete(ctx context.Context, obj runtime.Object) 
 		logger.Error(s)
 		return apierrors.NewBadRequest(s)
 	}
-	logger.Sugar().Infof("obj: %+v", r)
+	logger.Sugar().Infof("ValidateDelete: %v", r.Name)
 
 	return nil
 }

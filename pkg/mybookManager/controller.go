@@ -20,7 +20,6 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/retry"
 	"k8s.io/client-go/util/workqueue"
 	"reflect"
 	"time"
@@ -49,23 +48,19 @@ type myController struct {
 }
 
 func (s *myController) informerAddHandler(obj interface{}) {
-	s.logger.Sugar().Infof("start crd add: %+v", obj)
 
 	r, ok := obj.(*crd.Mybook)
 	if !ok {
-		s.logger.Sugar().Errorf("failed to get crd: %+v", obj)
+		s.logger.Sugar().Errorf("failed to get crd: %v", r.Name)
 		return
 	}
-	s.logger.Sugar().Infof("mybook crd: %+v", r)
+	s.logger.Sugar().Infof("add mybook crd: %+v", r)
 
 	// time.Sleep(30 * time.Second)
-	s.logger.Sugar().Infof("done crd add: %+v", obj)
+	s.logger.Sugar().Infof("done crd add: %+v", r.Name)
 }
 
 func (s *myController) informerUpdateHandler(oldObj interface{}, newObj interface{}) {
-	s.logger.Sugar().Infof("crd update old: %+v", oldObj)
-	s.logger.Sugar().Infof("crd update new: %+v", newObj)
-
 	curPod := newObj.(*crd.Mybook)
 	oldPod := oldObj.(*crd.Mybook)
 	if curPod.ResourceVersion == oldPod.ResourceVersion {
@@ -73,18 +68,19 @@ func (s *myController) informerUpdateHandler(oldObj interface{}, newObj interfac
 		// Two different versions of the same pod will always have different RVs.
 		return
 	}
+	s.logger.Sugar().Infof("update crd: %+v", curPod.Name)
 
-	// 简单方式处理事件，堵塞执行，重建重试5次更新，
-	// 好处是代码简单，坏处是，resourceVersion、断网等场景，可能最终5次失败而最终失败
-	if !reflect.DeepEqual(curPod.Spec, oldPod.Spec) {
-		// when errors.IsConflict owing to resourceVersion, auto retry 5 times at interval 10ms
-		err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
-			return s.handleCrdEvent(context.Background(), curPod)
-		})
-		if err != nil {
-			s.logger.Sugar().Errorf("failed to update mybook status, error=%v", err)
-		}
-	}
+	// // 简单方式处理事件，堵塞执行，重建重试5次更新，
+	// // 好处是代码简单，坏处是，resourceVersion、断网等场景，可能最终5次失败而最终失败
+	// if !reflect.DeepEqual(curPod.Spec, oldPod.Spec) {
+	// 	// when errors.IsConflict owing to resourceVersion, auto retry 5 times at interval 10ms
+	// 	err := retry.RetryOnConflict(retry.DefaultRetry, func() error {
+	// 		return s.handleCrdEvent(context.Background(), curPod)
+	// 	})
+	// 	if err != nil {
+	// 		s.logger.Sugar().Errorf("failed to update mybook status, error=%v", err)
+	// 	}
+	// }
 
 	// 基于工作队列，生产者和消费者模型，使得事件能够本可靠的 异步执行 成功
 	// 例如 resourceVersion、断网等失败，最终都能够不断重试而手工
@@ -96,7 +92,8 @@ func (s *myController) informerUpdateHandler(oldObj interface{}, newObj interfac
 }
 
 func (s *myController) informerDeleteHandler(obj interface{}) {
-	s.logger.Sugar().Infof("crd delete: %+v", obj)
+	curPod := obj.(*crd.Mybook)
+	s.logger.Sugar().Infof("delete crd: %v", curPod.Name)
 }
 
 // --------------------
@@ -116,7 +113,9 @@ func (s *myController) processNextqueueEventItem(ctx context.Context) bool {
 	}
 	defer s.queueEvent.Done(key)
 
-	err := s.handleCrdEvent(ctx, key.(*crd.Mybook))
+	r := key.(*crd.Mybook)
+	s.logger.Sugar().Debugf("process item %v", r.Name)
+	err := s.handleCrdEvent(ctx, r)
 	if err == nil {
 		// succeed to handle the event
 		s.queueEvent.Forget(key)
@@ -136,6 +135,7 @@ func (s *myController) processNextqueueEventItem(ctx context.Context) bool {
 
 // 添加controler业务
 func (s *myController) handleCrdEvent(ctx context.Context, obj *crd.Mybook) error {
+	s.logger.Sugar().Infof("handle Crd Event %v", obj.Name)
 
 	// 从 informer 缓存中获取数据，可能因为延时 而不是最新
 	t, e := s.crdLister.Get(obj.Name)
@@ -245,10 +245,11 @@ func (s *myController) executeInformerOnce() {
 	if s.eventWorkerNumber > 0 {
 		go func() {
 			defer s.queueEvent.ShutDown()
+			s.logger.Sugar().Debugf("wait for Cache Sync")
 			if !cache.WaitForNamedCacheSync(crdKindName, ctx.Done(), inform.HasSynced) {
 				return
 			}
-			s.logger.Sugar().Debugf("start %v worker", s.eventWorkerNumber)
+			s.logger.Sugar().Debugf("start worker with counts %v ", s.eventWorkerNumber)
 			for i := 0; i < s.eventWorkerNumber; i++ {
 				go wait.UntilWithContext(ctx, s.crdEventWorker, time.Second)
 			}
