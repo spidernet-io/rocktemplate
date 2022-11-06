@@ -114,7 +114,7 @@ func (s *myController) processNextqueueEventItem(ctx context.Context) bool {
 	defer s.queueEvent.Done(key)
 
 	r := key.(*crd.Mybook)
-	s.logger.Sugar().Debugf("process item %v", r.Name)
+	s.logger.Sugar().Debugf("process item %v ， current queue length %v", r.Name, s.queueEvent.Len())
 	err := s.handleCrdEvent(ctx, r)
 	if err == nil {
 		// succeed to handle the event
@@ -245,10 +245,13 @@ func (s *myController) executeInformerOnce() {
 	if s.eventWorkerNumber > 0 {
 		go func() {
 			defer s.queueEvent.ShutDown()
+
+			// worker 中 如果使用了 lister 来获取缓存数据，此处需要等待 数据同步完毕
 			s.logger.Sugar().Debugf("wait for Cache Sync")
 			if !cache.WaitForNamedCacheSync(crdKindName, ctx.Done(), inform.HasSynced) {
 				return
 			}
+
 			s.logger.Sugar().Debugf("start worker with counts %v ", s.eventWorkerNumber)
 			for i := 0; i < s.eventWorkerNumber; i++ {
 				go wait.UntilWithContext(ctx, s.crdEventWorker, time.Second)
