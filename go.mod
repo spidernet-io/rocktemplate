@@ -24,7 +24,7 @@ require (
 	go.opentelemetry.io/otel v1.11.2
 	go.opentelemetry.io/otel/exporters/prometheus v0.33.0
 	go.opentelemetry.io/otel/metric v0.34.0
-	go.opentelemetry.io/otel/sdk v1.11.1
+	go.opentelemetry.io/otel/sdk v1.11.2
 	go.opentelemetry.io/otel/sdk/metric v0.33.0
 	go.uber.org/zap v1.24.0
 	golang.org/x/net v0.3.1-0.20221206200815-1e63c2f08a10
