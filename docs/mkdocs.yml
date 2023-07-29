@@ -35,3 +35,11 @@ markdown_extensions:
   - fenced_code
   - tables
   - attr_list
+
+nav:
+  - README.md
+  - usage:
+      - usage: usage/usage.md
+  - develop:
+      - dev: develop/dev.md
+      - release: develop/release.md
