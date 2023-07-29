@@ -382,7 +382,7 @@ preview_doc:
         --entrypoint sh \
         --stop-timeout 3 \
         --stop-signal "SIGKILL" \
-        squidfunk/mkdocs-material:8.5.11 -c "cd /host && cp ./docs/mkdocs.yml ./ && mkdocs build 2>&1 && cd site && tar -czvf site.tar.gz * && mv ${OUTPUT_TAR} ../docs/" 2>&1` ; \
+        squidfunk/mkdocs-material:8.5.11 -c "cd /host ; cp docs/mkdocs.yml ./ ; mkdocs serve -a 0.0.0.0:8000"
 	#sleep 10 ; if curl 127.0.0.1:8000 &>/dev/null  ; then echo "succeeded to set up preview server" ; else echo "error, failed to set up preview server" ; docker stop doc_previewer ; exit 1 ; fi
 
 
