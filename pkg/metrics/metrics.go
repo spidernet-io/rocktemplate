@@ -8,10 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	otelprometheus "go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
-	"go.opentelemetry.io/otel/metric/instrument"
-	"go.opentelemetry.io/otel/metric/instrument/syncfloat64"
 	metricsdk "go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/metric/view"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -26,31 +23,31 @@ func RegisterMetricInstance(metricMapping []MetricMappingType, meter metric.Mete
 
 	for _, v := range metricMapping {
 		switch v.P.(type) {
-		case *syncfloat64.Counter:
-			t, e := meter.SyncFloat64().Counter(v.Name, instrument.WithDescription(v.Description))
+		case *metric.Int64Counter:
+			t, e := meter.SyncFloat64().Counter(v.Name, metric.WithDescription(v.Description))
 			if e != nil {
 				logger.Sugar().Fatalf("failed to generate counter metric %v, reason=%v", v.Name, e)
 			}
 			// ctx: will not record metric if ctx.Err()!=nil
-			r := v.P.(*syncfloat64.Counter)
+			r := v.P.(*metric.Int64Counter)
 			*r = t
 			logger.Info("new counter metric: " + v.Name)
 
-		case *syncfloat64.UpDownCounter:
-			t, e := meter.SyncFloat64().UpDownCounter(v.Name, instrument.WithDescription(v.Description))
+		case *metric.Int64ObservableGauge:
+			t, e := meter.SyncFloat64().UpDownCounter(v.Name, metric.WithDescription(v.Description))
 			if e != nil {
 				logger.Sugar().Fatalf("failed to generate gauge metric %v, reason=%v", v.Name, e)
 			}
-			r := v.P.(*syncfloat64.UpDownCounter)
+			r := v.P.(*metric.Int64ObservableGauge)
 			*r = t
 			logger.Info("new gauge metric: " + v.Name)
 
-		case *syncfloat64.Histogram:
-			t, e := meter.SyncFloat64().Histogram(v.Name, instrument.WithDescription(v.Description))
+		case *metric.Float64Histogram:
+			t, e := meter.SyncFloat64().Histogram(v.Name, metric.WithDescription(v.Description))
 			if e != nil {
 				logger.Sugar().Fatalf("failed to generate histogram metric %v, reason=%v", v.Name, e)
 			}
-			r := v.P.(*syncfloat64.Histogram)
+			r := v.P.(*metric.Float64Histogram)
 			*r = t
 			logger.Info("new histogram metric: " + v.Name)
 
@@ -62,8 +59,8 @@ func RegisterMetricInstance(metricMapping []MetricMappingType, meter metric.Mete
 }
 
 // example: https://github.com/open-telemetry/opentelemetry-go/blob/main/example/prometheus/main.go
-// https://github.com/open-telemetry/opentelemetry-go/blob/main/example/view/main.go
-func RunMetricsServer(enabled bool, meterName string, metricPort int32, metricMapping []MetricMappingType, histogramBucketsView view.View, logger *zap.Logger) metric.Meter {
+// https://github.com/open-telemetry/opentelemetry-go/blob/main/example/prometheus/main.go
+func RunMetricsServer(enabled bool, meterName string, metricPort int32, metricMapping []MetricMappingType, histogramBucketsView metricsdk.View, logger *zap.Logger) metric.Meter {
 
 	if !enabled {
 		logger.Sugar().Infof("metric server '%v' is disabled, create a fake metric server ", meterName)
@@ -83,9 +80,9 @@ func RunMetricsServer(enabled bool, meterName string, metricPort int32, metricMa
 	}
 
 	// Default view for other instruments
-	defaultView, err := view.New(view.MatchInstrumentName("*"))
-	if err != nil {
-		logger.Sugar().Fatalf("failed to generate view, reason=%v", err)
+	defaultView := metricsdk.NewView(metricsdk.Instrument{Name: "*"})
+	if defaultView == nil {
+		logger.Sugar().Fatalf("failed to generate view")
 	}
 
 	// notice, view should rank to take priority

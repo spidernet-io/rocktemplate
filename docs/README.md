@@ -2,27 +2,29 @@
 
 ## copy
 
-1. copy repo
+1. copy repo `cp -rf rocktemplate/*  YourRepoName  && cp rocktemplate/.gitignore YourRepoName  && cp rocktemplate/.github  YourRepoName `
 
    replace all 'rocktemplate' to 'YourRepoName'
 
    replace all 'spidernet-io' and 'spidernet.io' to 'YourOrigin'
 
+   replace all 'Copyright 2022' to be the right time
+
 2. grep "====modify====" * -RHn --colour  and modify all of them
 
-3. update api/v1/openapi.yaml and `make update_openapi_sdk`
+3. in a linux machine, update api/v1/openapi.yaml and `make update_openapi_sdk`
 
 4. redefine CRD in pkg/k8s/v1
-    rename directory name 'pkg/k8s/v1/rocktemplate.spidernet.io' 
+    rename directory name 'pkg/k8s/apis/rocktemplate.spidernet.io' 
     replace all 'mybook' to 'YourCRDName'
-    and `make update_crd_sdk`, and code pkg/mybookManager
+    and `make update_crd_sdk`, and write code in pkg/mybookManager
 
     rename pkg/mybookManager and replace all 'mybook' with your CRD name in this directory
 
     rm charts/crds/rocktemplate.spidernet.io_mybooks.yaml 
 
-    in repo: replace all "github.com/spidernet-io/spiderdoctor/pkg/mybookManager" to "github.com/spidernet-io/spiderdoctor/pkg/${crdName}Manager"
-    in repo: find and replace all "mybook" to YourCrd
+    # in repo: replace all "github.com/spidernet-io/spiderdoctor/pkg/mybookManager" to "github.com/spidernet-io/spiderdoctor/pkg/${crdName}Manager"
+    # in repo: find and replace all "mybook" to YourCrd
 
 5. update charts/ , and images/ , and CODEOWNERS
 
@@ -83,8 +85,6 @@
 12. build base image , 
     update BASE_IMAGE in images/agent/Dockerfile and images/controller/Dockerfile
     run test
- 
-
 
 ## local develop
 
@@ -113,3 +113,8 @@
 
 helm repo add rock https://spidernet-io.github.io/rocktemplate/
 
+## upgrade project 
+
+1. golang version: edit golang version in Makefile.defs and `make update_go_version`
+
+2. 更新所有包  go get -u ./...
