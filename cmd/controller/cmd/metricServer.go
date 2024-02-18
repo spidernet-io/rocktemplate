@@ -11,9 +11,15 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 )
 
+// https://pkg.go.dev/go.opentelemetry.io/otel/metric#hdr-Instruments
+/*
+All synchronous instruments (Int64Counter, Int64UpDownCounter, Int64Histogram, Float64Counter, Float64UpDownCounter, and Float64Histogram) are used to measure the operation and performance of source code during the source code execution. These instruments only make measurements when the source code they instrument is run.
+
+All asynchronous instruments (Int64ObservableCounter, Int64ObservableUpDownCounter, Int64ObservableGauge, Float64ObservableCounter, Float64ObservableUpDownCounter, and Float64ObservableGauge) are used to measure metrics outside of the execution of source code. They are said to make "observations" via a callback function called once every measurement collection cycle.
+*/
 var (
 	MetricCounterRequest    api.Int64Counter
-	MetricGaugeEndpoint     api.Int64ObservableGauge
+	MetricGaugeEndpoint     api.Int64UpDownCounter
 	MetricHistogramDuration api.Float64Histogram
 )
 

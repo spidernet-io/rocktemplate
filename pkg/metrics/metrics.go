@@ -8,6 +8,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	otelprometheus "go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric"
+	"go.opentelemetry.io/otel/metric/noop"
 	metricsdk "go.opentelemetry.io/otel/sdk/metric"
 	"go.uber.org/zap"
 	"net/http"
@@ -24,7 +25,7 @@ func RegisterMetricInstance(metricMapping []MetricMappingType, meter metric.Mete
 	for _, v := range metricMapping {
 		switch v.P.(type) {
 		case *metric.Int64Counter:
-			t, e := meter.SyncFloat64().Counter(v.Name, metric.WithDescription(v.Description))
+			t, e := meter.Int64Counter(v.Name, metric.WithDescription(v.Description))
 			if e != nil {
 				logger.Sugar().Fatalf("failed to generate counter metric %v, reason=%v", v.Name, e)
 			}
@@ -33,17 +34,17 @@ func RegisterMetricInstance(metricMapping []MetricMappingType, meter metric.Mete
 			*r = t
 			logger.Info("new counter metric: " + v.Name)
 
-		case *metric.Int64ObservableGauge:
-			t, e := meter.SyncFloat64().UpDownCounter(v.Name, metric.WithDescription(v.Description))
+		case *metric.Int64UpDownCounter:
+			t, e := meter.Int64UpDownCounter(v.Name, metric.WithDescription(v.Description))
 			if e != nil {
 				logger.Sugar().Fatalf("failed to generate gauge metric %v, reason=%v", v.Name, e)
 			}
-			r := v.P.(*metric.Int64ObservableGauge)
+			r := v.P.(*metric.Int64UpDownCounter)
 			*r = t
 			logger.Info("new gauge metric: " + v.Name)
 
 		case *metric.Float64Histogram:
-			t, e := meter.SyncFloat64().Histogram(v.Name, metric.WithDescription(v.Description))
+			t, e := meter.Float64Histogram(v.Name, metric.WithDescription(v.Description))
 			if e != nil {
 				logger.Sugar().Fatalf("failed to generate histogram metric %v, reason=%v", v.Name, e)
 			}
@@ -64,7 +65,7 @@ func RunMetricsServer(enabled bool, meterName string, metricPort int32, metricMa
 
 	if !enabled {
 		logger.Sugar().Infof("metric server '%v' is disabled, create a fake metric server ", meterName)
-		globalMeter := metric.NewNoopMeterProvider().Meter(meterName)
+		globalMeter := noop.NewMeterProvider().Meter(meterName)
 		RegisterMetricInstance(metricMapping, globalMeter, logger)
 		return globalMeter
 	}
@@ -80,13 +81,19 @@ func RunMetricsServer(enabled bool, meterName string, metricPort int32, metricMa
 	}
 
 	// Default view for other instruments
-	defaultView := metricsdk.NewView(metricsdk.Instrument{Name: "*"})
+	defaultView := metricsdk.NewView(metricsdk.Instrument{Name: "*"}, metricsdk.Stream{})
 	if defaultView == nil {
 		logger.Sugar().Fatalf("failed to generate view")
 	}
 
+	provider := metricsdk.NewMeterProvider(
+		metricsdk.WithReader(exporter),
+		metricsdk.WithView(histogramBucketsView),
+		metricsdk.WithView(defaultView),
+	)
+
 	// notice, view should rank to take priority
-	provider := metricsdk.NewMeterProvider(metricsdk.WithReader(exporter, histogramBucketsView, defaultView))
+	// provider := metricsdk.NewMeterProvider(metricsdk.WithReader(exporter, histogramBucketsView, defaultView))
 	globalMeter := provider.Meter(meterName)
 
 	http.Handle("/metrics", promhttp.Handler())
