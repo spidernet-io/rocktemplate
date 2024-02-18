@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
+	"runtime"
 )
 
 type DebugManager interface {
@@ -39,6 +40,10 @@ func (s *debugManager) RunGops(listerPort int) {
 func (s *debugManager) RunPyroscope(serverAddress string, localHostName string) {
 	// push mode ,  push to pyroscope server
 	s.logger.Sugar().Infof("%v pyroscope works in push mode, server %s ", localHostName, serverAddress)
+
+	// These 2 lines are only required if you're using mutex or block profiling
+	runtime.SetMutexProfileFraction(5)
+	runtime.SetBlockProfileRate(5)
 
 	_, e := pyroscope.Start(pyroscope.Config{
 		ApplicationName: filepath.Base(os.Args[0]),
