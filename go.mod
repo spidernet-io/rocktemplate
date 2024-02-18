@@ -1,6 +1,6 @@
 module github.com/spidernet-io/rocktemplate
 
-go 1.22
+go 1.21
 
 require (
 	github.com/go-openapi/errors v0.20.3

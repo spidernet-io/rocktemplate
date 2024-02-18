@@ -3,7 +3,7 @@
 
 # ====modify====
 ARG BASE_IMAGE=ghcr.io/spidernet-io/rocktemplate-agent-base:f67530f1b0d3f29321c8901c036a217b521cd782
-ARG GOLANG_IMAGE=docker.io/library/golang:1.22
+ARG GOLANG_IMAGE=docker.io/library/golang:1.21.7
 
 #======= build bin ==========
 # use BUILDPLATFORM to cross build

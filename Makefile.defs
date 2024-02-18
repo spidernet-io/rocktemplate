@@ -1,5 +1,5 @@
 
-GO_VERSION := 1.22
+GO_VERSION := 1.21.7
 
 REGISTER ?= ghcr.io
 GIT_REPO ?= spidernet-io/rocktemplate
