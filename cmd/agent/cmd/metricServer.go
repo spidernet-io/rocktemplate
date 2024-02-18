@@ -15,7 +15,7 @@ import (
 
 var (
 	MetricCounterRequest    api.Int64Counter
-	MetricGaugeEndpoint     api.Int64ObservableGauge
+	MetricGaugeEndpoint     api.Int64UpDownCounter
 	MetricHistogramDuration api.Float64Histogram
 )
 
