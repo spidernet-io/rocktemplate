@@ -6,7 +6,7 @@ package debug
 import (
 	"fmt"
 	"github.com/google/gops/agent"
-	"github.com/pyroscope-io/client/pyroscope"
+	pyroscope "github.com/grafana/pyroscope-go"
 	"go.uber.org/zap"
 	"os"
 	"path/filepath"
@@ -49,10 +49,15 @@ func (s *debugManager) RunPyroscope(serverAddress string, localHostName string) 
 		Tags:   map[string]string{"node": localHostName},
 		ProfileTypes: []pyroscope.ProfileType{
 			pyroscope.ProfileCPU,
-			pyroscope.ProfileAllocObjects,
-			pyroscope.ProfileAllocSpace,
 			pyroscope.ProfileInuseObjects,
+			pyroscope.ProfileAllocObjects,
 			pyroscope.ProfileInuseSpace,
+			pyroscope.ProfileAllocSpace,
+			pyroscope.ProfileGoroutines,
+			pyroscope.ProfileMutexCount,
+			pyroscope.ProfileMutexDuration,
+			pyroscope.ProfileBlockCount,
+			pyroscope.ProfileBlockDuration,
 		},
 	})
 	if e != nil {
