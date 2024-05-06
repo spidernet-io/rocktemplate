@@ -29,7 +29,7 @@ require (
 	go.uber.org/zap v1.24.0
 	golang.org/x/net v0.21.0
 	google.golang.org/grpc v1.55.0
-	google.golang.org/protobuf v1.32.0
+	google.golang.org/protobuf v1.34.0
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.26.1
 	k8s.io/apimachinery v0.26.1
