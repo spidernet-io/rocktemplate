@@ -21,9 +21,9 @@ require (
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/viper v1.15.0
 	github.com/spidernet-io/e2eframework v0.0.0-20221012075947-0a835b3d4cf9
-	go.opentelemetry.io/otel v1.23.1
+	go.opentelemetry.io/otel v1.27.0
 	go.opentelemetry.io/otel/exporters/prometheus v0.45.2
-	go.opentelemetry.io/otel/metric v1.23.1
+	go.opentelemetry.io/otel/metric v1.27.0
 	go.opentelemetry.io/otel/sdk v1.23.1
 	go.opentelemetry.io/otel/sdk/metric v1.23.1
 	go.uber.org/zap v1.24.0
@@ -111,7 +111,7 @@ require (
 	github.com/subosito/gotenv v1.4.2 // indirect
 	github.com/toqueteos/webbrowser v1.2.0 // indirect
 	go.mongodb.org/mongo-driver v1.11.0 // indirect
-	go.opentelemetry.io/otel/trace v1.23.1 // indirect
+	go.opentelemetry.io/otel/trace v1.27.0 // indirect
 	go.uber.org/atomic v1.10.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	golang.org/x/crypto v0.19.0 // indirect
