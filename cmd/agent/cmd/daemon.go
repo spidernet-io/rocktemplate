@@ -6,6 +6,7 @@ package cmd
 import (
 	"github.com/spidernet-io/rocktemplate/pkg/debug"
 	"github.com/spidernet-io/rocktemplate/pkg/types"
+	"time"
 )
 
 func SetupUtility() {
@@ -31,5 +32,8 @@ func DaemonMain() {
 
 	// SetupController()
 	RunReconciles()
+
+	rootLogger.Info("hello world")
+	time.Sleep(time.Hour)
 
 }

@@ -128,18 +128,21 @@ func autoConfig() (*rest.Config, error) {
 	if existFile(KubeConfigPath) == true {
 		config, err = clientcmd.BuildConfigFromFlags("", KubeConfigPath)
 		if err != nil {
-			return fmt.Errorf("failed to get config from kube config=%v , info=%v", KubeConfigPath, err)
+			return nil, fmt.Errorf("failed to get config from kube config=%v , info=%v", KubeConfigPath, err)
 		}
 
 	} else if ExistDir(ScInPodPath) == true {
 		config, err = rest.InClusterConfig()
 		if err != nil {
-			return fmt.Errorf("failed to get config from serviceaccount=%v , info=%v", ScInPodPath, err)
+			return nil, fmt.Errorf("failed to get config from serviceaccount=%v , info=%v", ScInPodPath, err)
 		}
 
 	} else {
-		return fmt.Errorf("failed to get config ")
+		return nil
+		fmt.Errorf("failed to get config ")
 	}
+
+	return config, nil
 }
 
 func RunReconciles() {
@@ -155,5 +158,7 @@ func RunReconciles() {
 	}
 
 	// setup service informer
+	stopWatchCh := make(chan struct{})
+	NewServiceInformer(Client, stopWatchCh)
 
 }

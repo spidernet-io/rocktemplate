@@ -52,7 +52,7 @@ func (s *ServiceReconciler) HandlerDelete(obj interface{}) {
 	return
 }
 
-func RunServiceInformer(Client kubernetes.Clientset) {
+func NewServiceInformer(Client kubernetes.Clientset, stopWatchCh chan struct{}) {
 
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(Client, time.Second*30)
 	// service
@@ -70,6 +70,14 @@ func RunServiceInformer(Client kubernetes.Clientset) {
 		UpdateFunc: r.HandlerUpdate,
 		DeleteFunc: r.HandlerDelete,
 	})
+
+	// notice that there is no need to run Start methods in a separate goroutine.
+	// Start method is non-blocking and runs all registered informers in a dedicated goroutine.
+	kubeInformerFactory.Start(stopWatchCh)
+
+	if !cache.WaitForCacheSync(stopWatchCh, srcInformer.Informer().HasSynced) {
+		rootLogger.Sugar().Fatalf("failed to WaitForCacheSync for serivce ")
+	}
 
 	//
 	// epsRes := discoveryv1.SchemeGroupVersion.WithResource("endpointslices")
