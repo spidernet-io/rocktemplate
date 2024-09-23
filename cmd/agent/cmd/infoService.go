@@ -36,8 +36,8 @@ func (s *ServiceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 		return
 	}
 
-	s.log.Sugar().Infof("HandlerAdd get old sevice: %+v", oldSvc)
-	s.log.Sugar().Infof("HandlerAdd get old sevice: %+v", newSvc)
+	s.log.Sugar().Infof("HandlerUpdate get old sevice: %+v", oldSvc)
+	s.log.Sugar().Infof("HandlerUpdate get new sevice: %+v", newSvc)
 
 	return
 }
@@ -45,7 +45,7 @@ func (s *ServiceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 func (s *ServiceReconciler) HandlerDelete(obj interface{}) {
 	svc, ok := obj.(*corev1.Service)
 	if !ok {
-		s.log.Sugar().Warnf("HandlerAdd failed to get sevice obj: %v")
+		s.log.Sugar().Warnf("HandlerDelete failed to get sevice obj: %v")
 		return
 	}
 	s.log.Sugar().Infof("HandlerDelete delete sevice: %+v", svc)
@@ -78,6 +78,8 @@ func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{})
 	if !cache.WaitForCacheSync(stopWatchCh, srcInformer.Informer().HasSynced) {
 		rootLogger.Sugar().Fatalf("failed to WaitForCacheSync for serivce ")
 	}
+
+	rootLogger.Sugar().Infof("succeeded to cache all service ")
 
 	//
 	// epsRes := discoveryv1.SchemeGroupVersion.WithResource("endpointslices")

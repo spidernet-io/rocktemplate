@@ -33,7 +33,7 @@ func DaemonMain() {
 	// SetupController()
 	RunReconciles()
 
-	rootLogger.Info("hello world")
+	rootLogger.Info("finish all setup ")
 	time.Sleep(time.Hour)
 
 }
