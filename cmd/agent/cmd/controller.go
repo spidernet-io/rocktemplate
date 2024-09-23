@@ -98,7 +98,7 @@ func SetupController() {
 
 // ------------------------------
 
-const (
+var (
 	KubeConfigPath = filepath.Join(os.Getenv("HOME"), ".kube", "config")
 	ScInPodPath    = "/var/run/secrets/kubernetes.io/serviceaccount"
 )
@@ -138,8 +138,7 @@ func autoConfig() (*rest.Config, error) {
 		}
 
 	} else {
-		return nil
-		fmt.Errorf("failed to get config ")
+		return nil, fmt.Errorf("failed to get config ")
 	}
 
 	return config, nil

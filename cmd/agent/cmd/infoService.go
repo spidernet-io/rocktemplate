@@ -52,7 +52,7 @@ func (s *ServiceReconciler) HandlerDelete(obj interface{}) {
 	return
 }
 
-func NewServiceInformer(Client kubernetes.Clientset, stopWatchCh chan struct{}) {
+func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{}) {
 
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(Client, time.Second*30)
 	// service
