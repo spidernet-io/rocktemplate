@@ -29,6 +29,7 @@ func DaemonMain() {
 
 	// RunMetricsServer(types.AgentConfig.PodName)
 
-	SetupController()
+	// SetupController()
+	RunReconciles()
 
 }
