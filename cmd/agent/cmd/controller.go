@@ -36,7 +36,7 @@ func SetupController() {
 		Metrics: metricsserver.Options{BindAddress: "0"},
 	})
 	if err != nil {
-		logger.Sugar().Fatalf(err, "unable to set up controller: %v ", err)
+		logger.Sugar().Fatalf("unable to set up controller: %v ", err)
 	}
 
 	r := reconciler{
@@ -49,20 +49,20 @@ func SetupController() {
 		Reconciler: &r,
 	})
 	if err != nil {
-		logger.Sugar().Fatalf(err, "unable to set up individual controller: %v", err)
+		logger.Sugar().Fatalf("unable to set up individual controller: %v", err)
 	}
 
 	// Watch ReplicaSets and enqueue ReplicaSet object key
 	if err := c.Watch(source.Kind(mgr.GetCache(), &corev1.Service{}, &handler.TypedEnqueueRequestForObject[*corev1.Service]{})); err != nil {
-		logger.Sugar().Fatalf(err, "unable to watch service: %v", err)
+		logger.Sugar().Fatalf("unable to watch service: %v", err)
 	}
 	if err := c.Watch(source.Kind(mgr.GetCache(), &v1beta1.EndpointSlice{}, &handler.TypedEnqueueRequestForObject[*v1beta1.EndpointSlice]{})); err != nil {
-		logger.Sugar().Fatalf(err, "unable to watch EndpointSlice: %v", err)
+		logger.Sugar().Fatalf("unable to watch EndpointSlice: %v", err)
 	}
 
 	logger.Sugar().Info("starting manager")
 	if err := mgr.Start(signals.SetupSignalHandler()); err != nil {
-		logger.Sugar().Fatalf(err, "unable to run manager: %v", err)
+		logger.Sugar().Fatalf("unable to run manager: %v", err)
 	}
 
 }
