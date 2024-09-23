@@ -6,15 +6,12 @@ import (
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"time"
 )
 
 // -----------------------------------
 type ServiceReconciler struct {
-	// client can be used to retrieve objects from the APIServer.
-	client client.Client
-	log    *zap.Logger
+	log *zap.Logger
 }
 
 func (s *ServiceReconciler) HandlerAdd(obj interface{}) {
@@ -66,8 +63,7 @@ func RunServiceInformer(Client kubernetes.Clientset) {
 	}
 
 	r := ServiceReconciler{
-		client: Client,
-		log:    rootLogger.Named("service reconcile"),
+		log: rootLogger.Named("service reconcile"),
 	}
 	srcInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    r.HandlerAdd,
