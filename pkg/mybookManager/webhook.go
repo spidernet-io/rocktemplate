@@ -13,7 +13,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
+
 	"time"
 )
 
@@ -47,54 +50,54 @@ func (s *webhookhander) Default(ctx context.Context, obj runtime.Object) error {
 
 }
 
-func (s *webhookhander) ValidateCreate(ctx context.Context, obj runtime.Object) error {
+func (s *webhookhander) ValidateCreate(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
 	logger := s.logger.Named("validating create webhook")
 
 	r, ok := obj.(*crd.Mybook)
 	if !ok {
 		s := "failed to get obj"
 		logger.Error(s)
-		return apierrors.NewBadRequest(s)
+		return nil, apierrors.NewBadRequest(s)
 	}
 	logger.Sugar().Infof("obj: %+v", r)
 
-	return nil
+	return nil, nil
 }
 
-func (s *webhookhander) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) error {
+func (s *webhookhander) ValidateUpdate(ctx context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
 	logger := s.logger.Named("validating update webhook")
 
 	old, ok := oldObj.(*crd.Mybook)
 	if !ok {
 		s := "failed to get oldObj"
 		logger.Error(s)
-		return apierrors.NewBadRequest(s)
+		return nil, apierrors.NewBadRequest(s)
 	}
 	new, ok := newObj.(*crd.Mybook)
 	if !ok {
 		s := "failed to get newObj"
 		logger.Error(s)
-		return apierrors.NewBadRequest(s)
+		return nil, apierrors.NewBadRequest(s)
 	}
 	logger.Sugar().Infof("oldObj: %+v", old)
 	logger.Sugar().Infof("newObj: %+v", new)
 
-	return nil
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.CustomValidator so a webhook will be registered for the type
-func (s *webhookhander) ValidateDelete(ctx context.Context, obj runtime.Object) error {
+func (s *webhookhander) ValidateDelete(ctx context.Context, obj runtime.Object) (admission.Warnings, error) {
 	logger := s.logger.Named("validating delete webhook")
 
 	r, ok := obj.(*crd.Mybook)
 	if !ok {
 		s := "failed to get obj"
 		logger.Error(s)
-		return apierrors.NewBadRequest(s)
+		return nil, apierrors.NewBadRequest(s)
 	}
 	logger.Sugar().Infof("obj: %+v", r)
 
-	return nil
+	return nil, nil
 }
 
 // --------------------
@@ -115,14 +118,12 @@ func (s *mybookManager) RunWebhookServer(webhookPort int, tlsDir string) {
 		logger.Sugar().Fatalf("failed to add crd scheme, reason=%v", e)
 	}
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		LeaderElection:         false,
-		MetricsBindAddress:     "0",
+		Scheme:         scheme,
+		LeaderElection: false,
+		Metrics: metricsserver.Options{
+			BindAddress: "0",
+		},
 		HealthProbeBindAddress: "0",
-		// webhook port
-		Port: webhookPort,
-		// directory that contains the webhook server key and certificate, The server key and certificate must be named tls.key and tls.crt
-		CertDir: tlsDir,
 	})
 	if err != nil {
 		logger.Sugar().Fatalf("failed to NewManager, reason=%v", err)
@@ -151,3 +152,4 @@ func (s *mybookManager) RunWebhookServer(webhookPort int, tlsDir string) {
 	}()
 
 }
+

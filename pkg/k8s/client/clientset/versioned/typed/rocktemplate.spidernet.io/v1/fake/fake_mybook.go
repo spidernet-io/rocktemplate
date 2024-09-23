@@ -8,10 +8,9 @@ package fake
 import (
 	"context"
 
-	rocktemplatespidernetiov1 "github.com/spidernet-io/rocktemplate/pkg/k8s/apis/rocktemplate.spidernet.io/v1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	v1 "github.com/spidernet-io/rocktemplate/pkg/k8s/apis/rocktemplate.spidernet.io/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	labels "k8s.io/apimachinery/pkg/labels"
-	schema "k8s.io/apimachinery/pkg/runtime/schema"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
 	testing "k8s.io/client-go/testing"
@@ -22,34 +21,36 @@ type FakeMybooks struct {
 	Fake *FakeRocktemplateV1
 }
 
-var mybooksResource = schema.GroupVersionResource{Group: "rocktemplate.spidernet.io", Version: "v1", Resource: "mybooks"}
+var mybooksResource = v1.SchemeGroupVersion.WithResource("mybooks")
 
-var mybooksKind = schema.GroupVersionKind{Group: "rocktemplate.spidernet.io", Version: "v1", Kind: "Mybook"}
+var mybooksKind = v1.SchemeGroupVersion.WithKind("Mybook")
 
 // Get takes name of the mybook, and returns the corresponding mybook object, and an error if there is any.
-func (c *FakeMybooks) Get(ctx context.Context, name string, options v1.GetOptions) (result *rocktemplatespidernetiov1.Mybook, err error) {
+func (c *FakeMybooks) Get(ctx context.Context, name string, options metav1.GetOptions) (result *v1.Mybook, err error) {
+	emptyResult := &v1.Mybook{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootGetAction(mybooksResource, name), &rocktemplatespidernetiov1.Mybook{})
+		Invokes(testing.NewRootGetActionWithOptions(mybooksResource, name, options), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
-	return obj.(*rocktemplatespidernetiov1.Mybook), err
+	return obj.(*v1.Mybook), err
 }
 
 // List takes label and field selectors, and returns the list of Mybooks that match those selectors.
-func (c *FakeMybooks) List(ctx context.Context, opts v1.ListOptions) (result *rocktemplatespidernetiov1.MybookList, err error) {
+func (c *FakeMybooks) List(ctx context.Context, opts metav1.ListOptions) (result *v1.MybookList, err error) {
+	emptyResult := &v1.MybookList{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootListAction(mybooksResource, mybooksKind, opts), &rocktemplatespidernetiov1.MybookList{})
+		Invokes(testing.NewRootListActionWithOptions(mybooksResource, mybooksKind, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
 
 	label, _, _ := testing.ExtractFromListOptions(opts)
 	if label == nil {
 		label = labels.Everything()
 	}
-	list := &rocktemplatespidernetiov1.MybookList{ListMeta: obj.(*rocktemplatespidernetiov1.MybookList).ListMeta}
-	for _, item := range obj.(*rocktemplatespidernetiov1.MybookList).Items {
+	list := &v1.MybookList{ListMeta: obj.(*v1.MybookList).ListMeta}
+	for _, item := range obj.(*v1.MybookList).Items {
 		if label.Matches(labels.Set(item.Labels)) {
 			list.Items = append(list.Items, item)
 		}
@@ -58,63 +59,67 @@ func (c *FakeMybooks) List(ctx context.Context, opts v1.ListOptions) (result *ro
 }
 
 // Watch returns a watch.Interface that watches the requested mybooks.
-func (c *FakeMybooks) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
+func (c *FakeMybooks) Watch(ctx context.Context, opts metav1.ListOptions) (watch.Interface, error) {
 	return c.Fake.
-		InvokesWatch(testing.NewRootWatchAction(mybooksResource, opts))
+		InvokesWatch(testing.NewRootWatchActionWithOptions(mybooksResource, opts))
 }
 
 // Create takes the representation of a mybook and creates it.  Returns the server's representation of the mybook, and an error, if there is any.
-func (c *FakeMybooks) Create(ctx context.Context, mybook *rocktemplatespidernetiov1.Mybook, opts v1.CreateOptions) (result *rocktemplatespidernetiov1.Mybook, err error) {
+func (c *FakeMybooks) Create(ctx context.Context, mybook *v1.Mybook, opts metav1.CreateOptions) (result *v1.Mybook, err error) {
+	emptyResult := &v1.Mybook{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootCreateAction(mybooksResource, mybook), &rocktemplatespidernetiov1.Mybook{})
+		Invokes(testing.NewRootCreateActionWithOptions(mybooksResource, mybook, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
-	return obj.(*rocktemplatespidernetiov1.Mybook), err
+	return obj.(*v1.Mybook), err
 }
 
 // Update takes the representation of a mybook and updates it. Returns the server's representation of the mybook, and an error, if there is any.
-func (c *FakeMybooks) Update(ctx context.Context, mybook *rocktemplatespidernetiov1.Mybook, opts v1.UpdateOptions) (result *rocktemplatespidernetiov1.Mybook, err error) {
+func (c *FakeMybooks) Update(ctx context.Context, mybook *v1.Mybook, opts metav1.UpdateOptions) (result *v1.Mybook, err error) {
+	emptyResult := &v1.Mybook{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateAction(mybooksResource, mybook), &rocktemplatespidernetiov1.Mybook{})
+		Invokes(testing.NewRootUpdateActionWithOptions(mybooksResource, mybook, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
-	return obj.(*rocktemplatespidernetiov1.Mybook), err
+	return obj.(*v1.Mybook), err
 }
 
 // UpdateStatus was generated because the type contains a Status member.
 // Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeMybooks) UpdateStatus(ctx context.Context, mybook *rocktemplatespidernetiov1.Mybook, opts v1.UpdateOptions) (*rocktemplatespidernetiov1.Mybook, error) {
+func (c *FakeMybooks) UpdateStatus(ctx context.Context, mybook *v1.Mybook, opts metav1.UpdateOptions) (result *v1.Mybook, err error) {
+	emptyResult := &v1.Mybook{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootUpdateSubresourceAction(mybooksResource, "status", mybook), &rocktemplatespidernetiov1.Mybook{})
+		Invokes(testing.NewRootUpdateSubresourceActionWithOptions(mybooksResource, "status", mybook, opts), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
-	return obj.(*rocktemplatespidernetiov1.Mybook), err
+	return obj.(*v1.Mybook), err
 }
 
 // Delete takes name of the mybook and deletes it. Returns an error if one occurs.
-func (c *FakeMybooks) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
+func (c *FakeMybooks) Delete(ctx context.Context, name string, opts metav1.DeleteOptions) error {
 	_, err := c.Fake.
-		Invokes(testing.NewRootDeleteActionWithOptions(mybooksResource, name, opts), &rocktemplatespidernetiov1.Mybook{})
+		Invokes(testing.NewRootDeleteActionWithOptions(mybooksResource, name, opts), &v1.Mybook{})
 	return err
 }
 
 // DeleteCollection deletes a collection of objects.
-func (c *FakeMybooks) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewRootDeleteCollectionAction(mybooksResource, listOpts)
+func (c *FakeMybooks) DeleteCollection(ctx context.Context, opts metav1.DeleteOptions, listOpts metav1.ListOptions) error {
+	action := testing.NewRootDeleteCollectionActionWithOptions(mybooksResource, opts, listOpts)
 
-	_, err := c.Fake.Invokes(action, &rocktemplatespidernetiov1.MybookList{})
+	_, err := c.Fake.Invokes(action, &v1.MybookList{})
 	return err
 }
 
 // Patch applies the patch and returns the patched mybook.
-func (c *FakeMybooks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *rocktemplatespidernetiov1.Mybook, err error) {
+func (c *FakeMybooks) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts metav1.PatchOptions, subresources ...string) (result *v1.Mybook, err error) {
+	emptyResult := &v1.Mybook{}
 	obj, err := c.Fake.
-		Invokes(testing.NewRootPatchSubresourceAction(mybooksResource, name, pt, data, subresources...), &rocktemplatespidernetiov1.Mybook{})
+		Invokes(testing.NewRootPatchSubresourceActionWithOptions(mybooksResource, name, pt, data, opts, subresources...), emptyResult)
 	if obj == nil {
-		return nil, err
+		return emptyResult, err
 	}
-	return obj.(*rocktemplatespidernetiov1.Mybook), err
+	return obj.(*v1.Mybook), err
 }

@@ -7,8 +7,8 @@ package v1
 
 import (
 	v1 "github.com/spidernet-io/rocktemplate/pkg/k8s/apis/rocktemplate.spidernet.io/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/client-go/listers"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -26,30 +26,10 @@ type MybookLister interface {
 
 // mybookLister implements the MybookLister interface.
 type mybookLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*v1.Mybook]
 }
 
 // NewMybookLister returns a new MybookLister.
 func NewMybookLister(indexer cache.Indexer) MybookLister {
-	return &mybookLister{indexer: indexer}
-}
-
-// List lists all Mybooks in the indexer.
-func (s *mybookLister) List(selector labels.Selector) (ret []*v1.Mybook, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1.Mybook))
-	})
-	return ret, err
-}
-
-// Get retrieves the Mybook from the index for a given name.
-func (s *mybookLister) Get(name string) (*v1.Mybook, error) {
-	obj, exists, err := s.indexer.GetByKey(name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1.Resource("mybook"), name)
-	}
-	return obj.(*v1.Mybook), nil
+	return &mybookLister{listers.New[*v1.Mybook](indexer, v1.Resource("mybook"))}
 }
