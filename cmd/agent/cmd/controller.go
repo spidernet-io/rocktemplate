@@ -27,6 +27,8 @@ type reconciler struct {
 
 func (r *reconciler) Reconcile(ctx context.Context, req reconcile.Request) (reconcile.Result, error) {
 	r.log.Sugar().Infof("Reconcile: %v", req)
+
+	return nil, nil
 }
 
 func SetupController() {
@@ -41,7 +43,7 @@ func SetupController() {
 
 	r := reconciler{
 		client: mgr.GetClient(),
-		log:    logger,
+		log:    &logger,
 	}
 	// Setup a new controller to reconcile ReplicaSets
 	logger.Sugar().Info("Setting up controller")
