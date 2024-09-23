@@ -13,6 +13,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 
@@ -117,14 +118,12 @@ func (s *mybookManager) RunWebhookServer(webhookPort int, tlsDir string) {
 		logger.Sugar().Fatalf("failed to add crd scheme, reason=%v", e)
 	}
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
-		Scheme:                 scheme,
-		LeaderElection:         false,
-		MetricsBindAddress:     "0",
+		Scheme:         scheme,
+		LeaderElection: false,
+		Metrics: metricsserver.Options{
+			BindAddress: "0",
+		},
 		HealthProbeBindAddress: "0",
-		// webhook port
-		Port: webhookPort,
-		// directory that contains the webhook server key and certificate, The server key and certificate must be named tls.key and tls.crt
-		CertDir: tlsDir,
 	})
 	if err != nil {
 		logger.Sugar().Fatalf("failed to NewManager, reason=%v", err)
