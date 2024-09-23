@@ -9,11 +9,10 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+# refer to https://github.com/kubernetes/sample-controller/blob/master/hack/update-codegen.sh
 
 APIS_PKG="pkg/k8s/apis"
 OUTPUT_PKG="pkg/k8s/client"
-# ====modify====
-GROUPS_WITH_VERSIONS="rocktemplate.spidernet.io:v1"
 
 #===================
 
@@ -37,21 +36,23 @@ do
 done < ${SPDX_COPYRIGHT_HEADER}
 
 cd "${PROJECT_ROOT}"
-GO_PKG_DIR=$(dirname "${GO_PATH_DIR}/src/${MODULE_NAME}")
-mkdir -p "${GO_PKG_DIR}"
 
-if [[ ! -e "${GO_PKG_DIR}" || "$(readlink "${GO_PKG_DIR}")" != "${PROJECT_ROOT}" ]]; then
-  ln -snf "${PROJECT_ROOT}" "${GO_PKG_DIR}"
-fi
 rm -rf ${OUTPUT_PKG} || true
 
-export GOPATH="${GO_PATH_DIR}"
-bash ${PROJECT_ROOT}/${CODEGEN_PKG}/generate-groups.sh "client,informer,lister" \
-  ${MODULE_NAME}/${OUTPUT_PKG} \
-  ${MODULE_NAME}/${APIS_PKG} \
-  ${GROUPS_WITH_VERSIONS} \
-  --go-header-file ${LICENSE_FILE} -v 10
-(($?!=0)) && echo "error, failed to generate crd sdk" && exit 1
+# https://github.com/kubernetes/code-generator/blob/master/kube_codegen.sh
+source "${PROJECT_ROOT}/${CODEGEN_PKG}/kube_codegen.sh"
+
+kube::codegen::gen_helpers \
+    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
+    "${SCRIPT_ROOT}/pkg/apis"
+
+kube::codegen::gen_client\
+    --with-watch \
+    --output-dir "${PROJECT_ROOT}/${OUTPUT_PKG}" \
+    --output-pkg "${MODULE_NAME}/${OUTPUT_PKG}" \
+    --boilerplate ${LICENSE_FILE} \
+    "${PROJECT_ROOT}/${APIS_PKG}"
 
 rm -rf ${TMP_DIR}
 exit 0
+
