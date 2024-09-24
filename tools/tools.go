@@ -7,6 +7,7 @@
 package tools
 
 import (
+	_ "github.com/cilium/ebpf/cmd/bpf2go"
 	_ "github.com/go-swagger/go-swagger/cmd/swagger"
 	_ "github.com/onsi/ginkgo/v2"
 	// _ "github.com/gogo/protobuf/gogoproto" // Used for protobuf generation of pkg/k8s/types/slim/k8s

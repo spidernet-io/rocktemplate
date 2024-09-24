@@ -21,6 +21,9 @@ github.com/cespare/xxhash/v2
 github.com/cilium/ebpf
 github.com/cilium/ebpf/asm
 github.com/cilium/ebpf/btf
+github.com/cilium/ebpf/cmd/bpf2go
+github.com/cilium/ebpf/cmd/bpf2go/gen
+github.com/cilium/ebpf/cmd/bpf2go/internal
 github.com/cilium/ebpf/internal
 github.com/cilium/ebpf/internal/epoll
 github.com/cilium/ebpf/internal/kallsyms

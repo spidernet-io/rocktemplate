@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	discovery "k8s.io/api/discovery/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"time"
 )
 
@@ -55,7 +56,7 @@ func NewEbpfWriter(validityTime time.Duration, l *zap.Logger) EbpfWriter {
 func (s *ebpfWriter) DeamonGC() {
 	// todo: delete ebpf map data according the metadata.CreationTimestamp by the validityTime
 	logger := s.log
-	logger("ebpfWriter DeamonGC begin to retrieve ebpf data with validityTime %v", s.validityTime)
+	logger.Sugar().Infof("ebpfWriter DeamonGC begin to retrieve ebpf data with validityTime %s", s.validityTime.String())
 	for {
 		time.Sleep(time.Hour)
 	}
@@ -68,7 +69,9 @@ func (s *ebpfWriter) UpdateService(l *zap.Logger, svc *corev1.Service, onlyUpdat
 	}
 
 	// use it to record last update time
-	svc.ObjectMeta.CreationTimestamp = time.Now()
+	svc.ObjectMeta.CreationTimestamp = metav1.Time{
+		time.Now(),
+	}
 
 	index := svc.Namespace + "/" + svc.Name
 	l.Sugar().Debugf("update the service %s", index)
@@ -133,7 +136,9 @@ func (s *ebpfWriter) UpdateEndpointSlice(l *zap.Logger, epSlice *discovery.Endpo
 	if epSlice == nil {
 		return fmt.Errorf("empty EndpointSlice")
 	}
-	epSlice.ObjectMeta.CreationTimestamp = time.Now()
+	epSlice.ObjectMeta.CreationTimestamp = metav1.Time{
+		time.Now(),
+	}
 
 	// for default/kubernetes ，there is no owner
 	index := k8s.GetEndpointSliceOwnerName(epSlice)
