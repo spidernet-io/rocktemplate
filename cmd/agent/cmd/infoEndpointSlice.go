@@ -31,7 +31,7 @@ func (s *EndpoingSliceReconciler) HandlerAdd(obj interface{}) {
 		zap.String("endpointslice", name),
 	)
 
-	s.log.Sugar().Debugf("HandlerAdd process EndpointSlice: %+v", name)
+	logger.Sugar().Debugf("HandlerAdd process EndpointSlice: %+v", name)
 
 	s.writer.UpdateEndpointSlice(eds)
 
@@ -57,12 +57,12 @@ func (s *EndpoingSliceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 	)
 
 	if reflect.DeepEqual(oldEds.Endpoints, newEds.Endpoints) && reflect.DeepEqual(oldEds.Ports, newEds.Ports) {
-		s.log.Sugar().Debugf("HandlerUpdate skip unchanged EndpointSlice: %+v", name)
+		logger.Sugar().Debugf("HandlerUpdate skip unchanged EndpointSlice: %+v", name)
 		return
 	}
 
 	// s.log.Sugar().Debugf("HandlerUpdate get old EndpointSlice: %+v", oldEds)
-	s.log.Sugar().Debugf("HandlerUpdate process EndpointSlice: %+v", newEds)
+	logger.Sugar().Debugf("HandlerUpdate process EndpointSlice: %+v", newEds)
 	s.writer.UpdateEndpointSlice(logger, newEds)
 
 	return
@@ -80,7 +80,7 @@ func (s *EndpoingSliceReconciler) HandlerDelete(obj interface{}) {
 		zap.String("endpointslice", name),
 	)
 
-	s.log.Sugar().Debugf("HandlerDelete process EndpointSlice: %s", name)
+	logger.Sugar().Debugf("HandlerDelete process EndpointSlice: %s", name)
 
 	s.writer.DeleteEndpointSlice(eds)
 
