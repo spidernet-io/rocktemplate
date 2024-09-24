@@ -134,7 +134,7 @@ func RunReconciles() {
 
 	rootLogger.Sugar().Debugf("RunReconciles")
 
-	bpfManager := ebpf.NewEbpfProgramMananger()
+	bpfManager := ebpf.NewEbpfProgramMananger(rootLogger.Named("ebpf"))
 	if err := bpfManager.LoadProgramp(); err != nil {
 		rootLogger.Sugar().Fatalf("failed to Load ebpf Programp: %v \n", err)
 	}

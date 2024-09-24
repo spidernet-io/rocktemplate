@@ -42,8 +42,7 @@ import (
 // 	return nil
 // }
 
-type MapName string
-
+// type MapName string
 // const (
 // 	MapNameService   = MapName("mapService")
 // 	MapNameAffinity  = MapName("mapAffinity")
@@ -62,7 +61,7 @@ func (s *EbpfProgramStruct) PrintMapService() error {
 	} else if s.EbpfMaps != nil && s.EbpfMaps.MapService != nil {
 		mapPtr = s.EbpfMaps.MapService
 	} else {
-		return fmt.Append("failed to get ebpf map")
+		return fmt.Errorf("failed to get ebpf map")
 	}
 	name := mapPtr.String()
 
@@ -107,7 +106,7 @@ func (s *EbpfProgramStruct) PrintMapBackend() error {
 	} else if s.EbpfMaps != nil && s.EbpfMaps.MapBackend != nil {
 		mapPtr = s.EbpfMaps.MapBackend
 	} else {
-		return fmt.Append("failed to get ebpf map")
+		return fmt.Errorf("failed to get ebpf map")
 	}
 	name := mapPtr.String()
 
@@ -152,7 +151,7 @@ func (s *EbpfProgramStruct) PrintMapNode() error {
 	} else if s.EbpfMaps != nil && s.EbpfMaps.MapNode != nil {
 		mapPtr = s.EbpfMaps.MapNode
 	} else {
-		return fmt.Append("failed to get ebpf map")
+		return fmt.Errorf("failed to get ebpf map")
 	}
 	name := mapPtr.String()
 
@@ -197,7 +196,7 @@ func (s *EbpfProgramStruct) PrintMapAffinity() error {
 	} else if s.EbpfMaps != nil && s.EbpfMaps.MapAffinity != nil {
 		mapPtr = s.EbpfMaps.MapAffinity
 	} else {
-		return fmt.Append("failed to get ebpf map")
+		return fmt.Errorf("failed to get ebpf map")
 	}
 	name := mapPtr.String()
 
@@ -242,7 +241,7 @@ func (s *EbpfProgramStruct) PrintMapNatRecord() error {
 	} else if s.EbpfMaps != nil && s.EbpfMaps.MapNatRecord != nil {
 		mapPtr = s.EbpfMaps.MapNatRecord
 	} else {
-		return fmt.Append("failed to get ebpf map")
+		return fmt.Errorf("failed to get ebpf map")
 	}
 	name := mapPtr.String()
 
@@ -293,27 +292,25 @@ func (s *EbpfProgramStruct) daemonGetEvent() {
 	} else if s.EbpfMaps != nil && s.EbpfMaps.MapEvent != nil {
 		mapPtr = s.EbpfMaps.MapEvent
 	} else {
-		return fmt.Append("failed to get ebpf map")
+		s.l.Sugar().Fatal("failed to get ebpf event map")
 	}
 
 	rd, err := perf.NewReader(mapPtr, os.Getpagesize())
-
 	if err != nil {
-		fmt.Printf("failed to read ebpf map : %v ", err)
-		os.Exit(1)
+		s.l.Sugar().Fatal("failed to read ebpf map : %v ", err)
 	}
 	defer rd.Close()
 
 	for {
 		record, err := rd.Read()
 		if err != nil {
-			fmt.Printf("failed to read event: %v", err)
+			s.l.Sugar().Warnf("failed to read event: %v", err)
 			continue
 		}
 
 		t := MapEventValue{}
 		if err := binary.Read(bytes.NewBuffer(record.RawSample), binary.NativeEndian, &t); err != nil {
-			fmt.Printf("parsing ringbuf event: %s", err)
+			s.l.Sugar().Warnf("parsing ringbuf event: %s", err)
 			continue
 		}
 		// fmt.Printf("get event data: %v \n", t)
@@ -321,7 +318,7 @@ func (s *EbpfProgramStruct) daemonGetEvent() {
 		select {
 		case s.Event <- t:
 		default:
-			fmt.Printf("error, failed to write data to event chan, miss data: %v \n", t)
+			s.l.Sugar().Warnf("failed to write data to event chan, miss data: %v \n", t)
 		}
 	}
 }

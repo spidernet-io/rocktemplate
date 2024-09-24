@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
+	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	discovery "k8s.io/api/discovery/v1"
 	"path/filepath"
@@ -51,6 +52,7 @@ type EbpfProgramStruct struct {
 	BpfObjCgroup bpf_cgroupObjects
 	CgroupLink   link.Link
 	Event        chan MapEventValue
+	l            *zap.Logger
 
 	// for debug cli to load map alone
 	EbpfMaps *EbpfMaps
@@ -90,8 +92,10 @@ var _ EbpfProgram = &EbpfProgramStruct{}
 
 // ------------------------------------
 
-func NewEbpfProgramMananger() EbpfProgram {
-	return &EbpfProgramStruct{}
+func NewEbpfProgramMananger(l *zap.Logger) EbpfProgram {
+	return &EbpfProgramStruct{
+		l: l,
+	}
 }
 
 func (s *EbpfProgramStruct) LoadProgramp() error {
