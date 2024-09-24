@@ -55,9 +55,13 @@ const (
 func (s *EbpfProgramStruct) PrintMapService() error {
 	keys := make([]bpf_cgroupMapkeyService, 100)
 	vals := make([]bpf_cgroupMapvalueService, 100)
-	mapPtr := s.BpfObjCgroup.MapService
-	name := MapNameService
 
+	mapPtr := s.EbpfMaps.MapService
+	if mapPtr == nil {
+		mapPtr = s.BpfObjCgroup.MapService
+	}
+
+	name := mapPtr.String()
 	fmt.Printf("------------------------------\n")
 	fmt.Printf("ebgin map  %s\n", name)
 	var cursor ebpf.MapBatchCursor
