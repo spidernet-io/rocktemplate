@@ -126,7 +126,7 @@ static __always_inline bool get_service( ipv4_addr_t dest_ip, __u16 dst_port, __
     return false;
 
 succeed:
-    svcval->backend_id = t->backend_id ;
+    svcval->address_id = t->address_id ;
     svcval->total_backend_count = t->total_backend_count ;
     svcval->local_backend_count = t->local_backend_count ;
     svcval->affinity_timeout = t->affinity_timeout ;

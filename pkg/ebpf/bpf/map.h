@@ -44,7 +44,7 @@ struct mapkey_service {
 #define NAT_FLAG_ALLOW_ACCESS_SERVICE	0x1
 
 struct mapvalue_service {
-  __U32 address_id ;                 // 为 clusterIP ，对 nodePort 的记录，也记录为 clusterIP
+  __u32 address_id ;                 // 为 clusterIP ，对 nodePort 的记录，也记录为 clusterIP
   __u32 total_backend_count;         // how many global backend exist in the service
   __u32 local_backend_count;         // how many local-node backend exist in the service ，用于实现 clientIP 亲和
   __u32 affinity_timeout;       /* In seconds, only for svc frontend */
@@ -69,7 +69,7 @@ struct {
 
 struct mapkey_backend {
     __be32 order;      //  第几个 endpoint ip 。 前面几个记录，优先存储 本地 node 上的 endpoint ， 用于实现 clientIP 亲和
-    __be32 address_id;  // map to addressID in mapvalue_service
+    __u32 address_id;  // map to addressID in mapvalue_service
     __be16 dport;
     __u8  proto;
     __u8  nat_type;
