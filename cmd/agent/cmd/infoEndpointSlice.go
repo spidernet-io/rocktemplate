@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"github.com/spidernet-io/rocktemplate/pkg/ebpfWriter"
+	"github.com/spidernet-io/rocktemplate/pkg/k8s"
 	"go.uber.org/zap"
 	discoveryv1 "k8s.io/api/discovery/v1"
 	kubeinformers "k8s.io/client-go/informers"
@@ -23,7 +24,13 @@ func (s *EndpoingSliceReconciler) HandlerAdd(obj interface{}) {
 		s.log.Sugar().Warnf("HandlerAdd failed to get EndpointSlice obj: %v")
 		return
 	}
+
 	name := eds.Namespace + "/" + eds.Name
+	logger := s.log.With(
+		zap.String("loadbalance", k8s.GetEndpointSliceOwnerName(eds)),
+		zap.String("endpointslice", name),
+	)
+
 	s.log.Sugar().Debugf("HandlerAdd process EndpointSlice: %+v", name)
 
 	s.writer.UpdateEndpointSlice(eds)
@@ -44,6 +51,11 @@ func (s *EndpoingSliceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 	}
 
 	name := newEds.Namespace + "/" + newEds.Name
+	logger := s.log.With(
+		zap.String("loadbalance", k8s.GetEndpointSliceOwnerName(newEds)),
+		zap.String("endpointslice", name),
+	)
+
 	if reflect.DeepEqual(oldEds.Endpoints, newEds.Endpoints) && reflect.DeepEqual(oldEds.Ports, newEds.Ports) {
 		s.log.Sugar().Debugf("HandlerUpdate skip unchanged EndpointSlice: %+v", name)
 		return
@@ -51,7 +63,7 @@ func (s *EndpoingSliceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 
 	// s.log.Sugar().Debugf("HandlerUpdate get old EndpointSlice: %+v", oldEds)
 	s.log.Sugar().Debugf("HandlerUpdate process EndpointSlice: %+v", newEds)
-	s.writer.UpdateEndpointSlice(newEds)
+	s.writer.UpdateEndpointSlice(logger, newEds)
 
 	return
 }
@@ -63,6 +75,11 @@ func (s *EndpoingSliceReconciler) HandlerDelete(obj interface{}) {
 		return
 	}
 	name := eds.Namespace + "/" + eds.Name
+	logger := s.log.With(
+		zap.String("loadbalance", k8s.GetEndpointSliceOwnerName(eds)),
+		zap.String("endpointslice", name),
+	)
+
 	s.log.Sugar().Debugf("HandlerDelete process EndpointSlice: %s", name)
 
 	s.writer.DeleteEndpointSlice(eds)

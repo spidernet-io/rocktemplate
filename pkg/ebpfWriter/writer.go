@@ -5,6 +5,7 @@ package ebpfWriter
 
 import (
 	"fmt"
+	"github.com/spidernet-io/rocktemplate/pkg/k8s"
 	"github.com/spidernet-io/rocktemplate/pkg/lock"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -12,10 +13,10 @@ import (
 )
 
 type EbpfWriter interface {
-	UpdateService(svc *corev1.Service) error
-	UpdateEndpointSlice(*discovery.EndpointSlice) error
-	DeleteService(svc *corev1.Service) error
-	DeleteEndpointSlice(*discovery.EndpointSlice) error
+	UpdateService(*zap.Logger, svc *corev1.Service) error
+	UpdateEndpointSlice(*zap.Logger, *discovery.EndpointSlice) error
+	DeleteService(*zap.Logger, svc *corev1.Service) error
+	DeleteEndpointSlice(*zap.Logger, *discovery.EndpointSlice) error
 }
 
 type EndpointData struct {
@@ -29,33 +30,31 @@ type ebpfWriter struct {
 	l *lock.Mutex
 	// index: namesapce/name
 	endpointData map[string]*EndpointData
-	logger       *zap.Logger
 }
 
 var _ EbpfWriter = (*ebpfWriter)(nil)
 
-func NewEbpfWriter(logger *zap.Logger) EbpfWriter {
+func NewEbpfWriter() EbpfWriter {
 	return &ebpfWriter{
 		l:            &lock.Mutex{},
-		logger:       logger,
 		endpointData: make(map[string]*EndpointData),
 	}
 }
 
-func (s *ebpfWriter) UpdateService(svc *corev1.Service) error {
+func (s *ebpfWriter) UpdateService(l *zap.Logger, svc *corev1.Service) error {
 
 	if svc == nil {
 		return fmt.Errorf("empty service")
 	}
 
 	index := svc.Namespace + "/" + svc.Name
-	s.logger.Sugar().Debugf("delete the service %s", index)
+	l.Sugar().Debugf("delete the service %s", index)
 
 	s.l.Lock()
 	defer s.l.Unlock()
 	if d, ok := s.endpointData[index]; ok {
 		if d.EpsliceList != nil && len(d.EpsliceList) > 0 {
-			s.logger.Sugar().Infof("apply new data to ebpf map for service %v", index)
+			l.Sugar().Infof("apply new data to ebpf map for service %v", index)
 			// todo: use the old data to generate ebpf data
 			buildMapDataForService(d.Svc, d.EpsliceList)
 			// todo: use the new data to generate ebpf data
@@ -67,7 +66,7 @@ func (s *ebpfWriter) UpdateService(svc *corev1.Service) error {
 			d.Svc = svc
 		}
 	} else {
-		s.logger.Sugar().Debugf("no need to apply new data to ebpf map for service %v", index)
+		l.Sugar().Debugf("no need to apply new data to ebpf map for service %v", index)
 		s.endpointData[index] = &EndpointData{
 			Svc:         svc,
 			EpsliceList: make(map[string]*discovery.EndpointSlice),
@@ -77,48 +76,45 @@ func (s *ebpfWriter) UpdateService(svc *corev1.Service) error {
 	return nil
 }
 
-func (s *ebpfWriter) DeleteService(svc *corev1.Service) error {
+func (s *ebpfWriter) DeleteService(l *zap.Logger, svc *corev1.Service) error {
 	if svc == nil {
 		return fmt.Errorf("empty service")
 	}
 
 	index := svc.Namespace + "/" + svc.Name
-	s.logger.Sugar().Debugf("delete service %s", index)
+	l.Sugar().Debugf("delete service %s", index)
 
 	s.l.Lock()
 	defer s.l.Unlock()
 	if d, ok := s.endpointData[index]; ok {
 		// todo : generate a ebpf map data and apply it
-		s.logger.Sugar().Infof("delete data from ebpf map for service: %v", index)
+		l.Sugar().Infof("delete data from ebpf map for service: %v", index)
 		buildMapDataForService(d.Svc, d.EpsliceList)
 		deleteEbpfMapForService()
 		delete(s.endpointData, index)
 	} else {
-		s.logger.Sugar().Debugf("no need to delete data from ebpf map for service %v", index)
+		l.Sugar().Debugf("no need to delete data from ebpf map for service %v", index)
 	}
 
 	return nil
 }
 
-func (s *ebpfWriter) UpdateEndpointSlice(epSlice *discovery.EndpointSlice) error {
+func (s *ebpfWriter) UpdateEndpointSlice(l *zap.Logger, epSlice *discovery.EndpointSlice) error {
 
 	if epSlice == nil {
 		return fmt.Errorf("empty EndpointSlice")
 	}
 
 	// for default/kubernetes ，there is no owner
-	index := epSlice.Namespace + "/" + epSlice.Name
-	if len(epSlice.OwnerReferences) > 0 {
-		index = epSlice.Namespace + "/" + epSlice.OwnerReferences[0].Name
-	}
+	index := k8s.GetEndpointSliceOwnerName(epSlice)
 	epindex := epSlice.Namespace + "/" + epSlice.Name
-	s.logger.Sugar().Debugf("update EndpointSlice %s for the service %s", epindex, index)
+	l.Sugar().Debugf("update EndpointSlice %s for the service %s", epindex, index)
 
 	s.l.Lock()
 	defer s.l.Unlock()
 	if d, ok := s.endpointData[index]; ok {
 		if d.Svc != nil {
-			s.logger.Sugar().Infof("apply new data to ebpf map for the service %v", index)
+			l.Sugar().Infof("apply new data to ebpf map for the service %v", index)
 			// todo: use the old data to generate ebpf data
 			buildMapDataForService(s.endpointData[index].Svc, s.endpointData[index].EpsliceList)
 			// todo: use the new data to generate ebpf data
@@ -130,7 +126,7 @@ func (s *ebpfWriter) UpdateEndpointSlice(epSlice *discovery.EndpointSlice) error
 			d.EpsliceList[epindex] = epSlice
 		}
 	} else {
-		s.logger.Sugar().Debugf("no need to apply new data to ebpf map for the service %v", index)
+		l.Sugar().Debugf("no need to apply new data to ebpf map for the service %v", index)
 		s.endpointData[index] = &EndpointData{
 			Svc: nil,
 			EpsliceList: map[string]*discovery.EndpointSlice{
@@ -142,19 +138,15 @@ func (s *ebpfWriter) UpdateEndpointSlice(epSlice *discovery.EndpointSlice) error
 	return nil
 }
 
-func (s *ebpfWriter) DeleteEndpointSlice(epSlice *discovery.EndpointSlice) error {
+func (s *ebpfWriter) DeleteEndpointSlice(l *zap.Logger, epSlice *discovery.EndpointSlice) error {
 
 	if epSlice == nil {
 		return fmt.Errorf("empty service")
 	}
 
-	// for default/kubernetes ，there is no owner
-	index := epSlice.Namespace + "/" + epSlice.Name
-	if len(epSlice.OwnerReferences) > 0 {
-		index = epSlice.Namespace + "/" + epSlice.OwnerReferences[0].Name
-	}
+	index := k8s.GetEndpointSliceOwnerName(epSlice)
 	epindex := epSlice.Namespace + "/" + epSlice.Name
-	s.logger.Sugar().Debugf("delete EndpointSlice %s for the service %s", epindex, index)
+	l.Sugar().Debugf("delete EndpointSlice %s for the service %s", epindex, index)
 
 	s.l.Lock()
 	defer s.l.Unlock()
@@ -164,7 +156,7 @@ func (s *ebpfWriter) DeleteEndpointSlice(epSlice *discovery.EndpointSlice) error
 			delete(d.EpsliceList, epindex)
 		} else {
 			if _, ok := d.EpsliceList[epindex]; ok {
-				s.logger.Sugar().Infof("apply new data to ebpf map for the service %v", index)
+				l.Sugar().Infof("apply new data to ebpf map for the service %v", index)
 				// todo: use the old data to generate ebpf data
 				buildMapDataForService(d.Svc, d.EpsliceList)
 				// todo: use the new data to generate ebpf data
@@ -176,7 +168,7 @@ func (s *ebpfWriter) DeleteEndpointSlice(epSlice *discovery.EndpointSlice) error
 			}
 		}
 	}
-	s.logger.Sugar().Debugf("no need to apply data for ebpf map  for the service %v", index)
+	l.Sugar().Debugf("no need to apply data for ebpf map  for the service %v", index)
 
 finish:
 	return nil

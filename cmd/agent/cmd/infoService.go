@@ -36,13 +36,18 @@ func (s *ServiceReconciler) HandlerAdd(obj interface{}) {
 		return
 	}
 	name := svc.Namespace + "/" + svc.Name
+	logger := s.log.With(
+		zap.String("loadbalance", name),
+		zap.String("service", name),
+	)
+
 	if SkipServiceProcess(svc) {
-		s.log.Sugar().Debugf("HandlerAdd skip unsupported sevice %+v", name)
+		logger.Sugar().Debugf("HandlerAdd skip unsupported sevice %+v", name)
 		return
 	}
 
-	s.log.Sugar().Debugf("HandlerAdd process sevice %+v", name)
-	s.writer.UpdateService(svc)
+	logger.Sugar().Debugf("HandlerAdd process sevice %+v", name)
+	s.writer.UpdateService(logger, svc)
 
 	return
 }
@@ -60,17 +65,22 @@ func (s *ServiceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 	}
 
 	name := newSvc.Namespace + "/" + newSvc.Name
+	logger := s.log.With(
+		zap.String("loadbalance", name),
+		zap.String("service", name),
+	)
+
 	if SkipServiceProcess(newSvc) && SkipServiceProcess(oldSvc) {
-		s.log.Sugar().Debugf("HandlerAdd skip unsupported service %+v", name)
+		logger.Sugar().Debugf("HandlerAdd skip unsupported service %+v", name)
 		return
 	}
 	if reflect.DeepEqual(oldSvc.Spec, newSvc.Spec) && reflect.DeepEqual(oldSvc.Status, newSvc.Status) {
-		s.log.Sugar().Debugf("HandlerAdd skip unchanged service %+v", name)
+		logger.Sugar().Debugf("HandlerAdd skip unchanged service %+v", name)
 		return
 	}
 
-	s.log.Sugar().Debugf("HandlerUpdate process new sevice %+v", name)
-	s.writer.UpdateService(newSvc)
+	logger.Sugar().Debugf("HandlerUpdate process new sevice %+v", name)
+	s.writer.UpdateService(logger, newSvc)
 
 	return
 }
@@ -82,12 +92,17 @@ func (s *ServiceReconciler) HandlerDelete(obj interface{}) {
 		return
 	}
 	name := svc.Namespace + "/" + svc.Name
+	logger := s.log.With(
+		zap.String("loadbalance", name),
+		zap.String("service", name),
+	)
+
 	if SkipServiceProcess(svc) {
-		s.log.Sugar().Debugf("HandlerAdd skip service %+v", name)
+		logger.Sugar().Debugf("HandlerAdd skip service %+v", name)
 		return
 	}
-	s.log.Sugar().Debugf("HandlerDelete process sevice %+v", svc)
-	s.writer.DeleteService(svc)
+	logger.Sugar().Debugf("HandlerDelete process sevice %+v", svc)
+	s.writer.DeleteService(logger, svc)
 
 	return
 }
