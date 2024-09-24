@@ -64,7 +64,7 @@ func (s *EndpoingSliceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 	}
 
 	// s.log.Sugar().Debugf("HandlerUpdate get old EndpointSlice: %+v", oldEds)
-	logger.Sugar().Infof("HandlerUpdate process EndpointSlice: %+v", newEds)
+	logger.Sugar().Infof("HandlerUpdate process EndpointSlice: %+s", name)
 	s.writer.UpdateEndpointSlice(logger, newEds, onlyUpdateTime)
 
 	return
