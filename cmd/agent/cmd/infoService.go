@@ -20,7 +20,9 @@ type ServiceReconciler struct {
 func SkipServiceProcess(svc *corev1.Service) bool {
 	switch svc.Spec.Type {
 	case corev1.ServiceTypeClusterIP:
+		return false
 	case corev1.ServiceTypeNodePort:
+		return false
 	case corev1.ServiceTypeLoadBalancer:
 		return false
 	}
@@ -35,7 +37,7 @@ func (s *ServiceReconciler) HandlerAdd(obj interface{}) {
 	}
 	name := svc.Namespace + "/" + svc.Name
 	if SkipServiceProcess(svc) {
-		s.log.Sugar().Debugf("HandlerAdd skip sevice %+v", name)
+		s.log.Sugar().Debugf("HandlerAdd skip unsupported sevice %+v", name)
 		return
 	}
 
