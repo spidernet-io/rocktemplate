@@ -44,21 +44,25 @@ import (
 
 type MapName string
 
-const (
-	MapNameService   = MapName("mapService")
-	MapNameAffinity  = MapName("mapAffinity")
-	MapNameBackend   = MapName("mapBackend")
-	MapNameNatRecord = MapName("mapNatRecord")
-	MapNameNode      = MapName("mapNode")
-)
+// const (
+// 	MapNameService   = MapName("mapService")
+// 	MapNameAffinity  = MapName("mapAffinity")
+// 	MapNameBackend   = MapName("mapBackend")
+// 	MapNameNatRecord = MapName("mapNatRecord")
+// 	MapNameNode      = MapName("mapNode")
+// )
 
 func (s *EbpfProgramStruct) PrintMapService() error {
 	keys := make([]bpf_cgroupMapkeyService, 100)
 	vals := make([]bpf_cgroupMapvalueService, 100)
 
-	mapPtr := s.EbpfMaps.MapService
-	if mapPtr == nil {
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapService != nil {
 		mapPtr = s.BpfObjCgroup.MapService
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapService != nil {
+		mapPtr = s.EbpfMaps.MapService
+	} else {
+		return fmt.Append("failed to get ebpf map")
 	}
 	name := mapPtr.String()
 
@@ -97,9 +101,13 @@ func (s *EbpfProgramStruct) PrintMapBackend() error {
 	keys := make([]bpf_cgroupMapkeyBackend, 100)
 	vals := make([]bpf_cgroupMapvalueBackend, 100)
 
-	mapPtr := s.EbpfMaps.MapBackend
-	if mapPtr == nil {
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapBackend != nil {
 		mapPtr = s.BpfObjCgroup.MapBackend
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapBackend != nil {
+		mapPtr = s.EbpfMaps.MapBackend
+	} else {
+		return fmt.Append("failed to get ebpf map")
 	}
 	name := mapPtr.String()
 
@@ -138,9 +146,13 @@ func (s *EbpfProgramStruct) PrintMapNode() error {
 	keys := make([]bpf_cgroupMapkeyNode, 100)
 	vals := make([]uint32, 100)
 
-	mapPtr := s.EbpfMaps.MapNode
-	if mapPtr == nil {
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapNode != nil {
 		mapPtr = s.BpfObjCgroup.MapNode
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapNode != nil {
+		mapPtr = s.EbpfMaps.MapNode
+	} else {
+		return fmt.Append("failed to get ebpf map")
 	}
 	name := mapPtr.String()
 
@@ -179,9 +191,13 @@ func (s *EbpfProgramStruct) PrintMapAffinity() error {
 	keys := make([]bpf_cgroupMapkeyAffinity, 100)
 	vals := make([]bpf_cgroupMapvalueAffinity, 100)
 
-	mapPtr := s.EbpfMaps.MapAffinity
-	if mapPtr == nil {
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapAffinity != nil {
 		mapPtr = s.BpfObjCgroup.MapAffinity
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapAffinity != nil {
+		mapPtr = s.EbpfMaps.MapAffinity
+	} else {
+		return fmt.Append("failed to get ebpf map")
 	}
 	name := mapPtr.String()
 
@@ -220,9 +236,13 @@ func (s *EbpfProgramStruct) PrintMapNatRecord() error {
 	keys := make([]bpf_cgroupMapkeyNatRecord, 100)
 	vals := make([]bpf_cgroupMapvalueNatRecord, 100)
 
-	mapPtr := s.EbpfMaps.MapNatRecord
-	if mapPtr == nil {
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapNatRecord != nil {
 		mapPtr = s.BpfObjCgroup.MapNatRecord
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapNatRecord != nil {
+		mapPtr = s.EbpfMaps.MapNatRecord
+	} else {
+		return fmt.Append("failed to get ebpf map")
 	}
 	name := mapPtr.String()
 
@@ -267,9 +287,13 @@ func (s *EbpfProgramStruct) GetMapDataEvent() <-chan MapEventValue {
 // get data from map
 func (s *EbpfProgramStruct) daemonGetEvent() {
 
-	mapPtr := s.EbpfMaps.MapEvent
-	if mapPtr == nil {
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapEvent != nil {
 		mapPtr = s.BpfObjCgroup.MapEvent
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapEvent != nil {
+		mapPtr = s.EbpfMaps.MapEvent
+	} else {
+		return fmt.Append("failed to get ebpf map")
 	}
 
 	rd, err := perf.NewReader(mapPtr, os.Getpagesize())
