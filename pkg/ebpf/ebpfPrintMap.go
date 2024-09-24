@@ -60,8 +60,8 @@ func (s *EbpfProgramStruct) PrintMapService() error {
 	if mapPtr == nil {
 		mapPtr = s.BpfObjCgroup.MapService
 	}
-
 	name := mapPtr.String()
+
 	fmt.Printf("------------------------------\n")
 	fmt.Printf("ebgin map  %s\n", name)
 	var cursor ebpf.MapBatchCursor
@@ -96,8 +96,12 @@ func (s *EbpfProgramStruct) PrintMapService() error {
 func (s *EbpfProgramStruct) PrintMapBackend() error {
 	keys := make([]bpf_cgroupMapkeyBackend, 100)
 	vals := make([]bpf_cgroupMapvalueBackend, 100)
-	mapPtr := s.BpfObjCgroup.MapBackend
-	name := MapNameBackend
+
+	mapPtr := s.EbpfMaps.MapBackend
+	if mapPtr == nil {
+		mapPtr = s.BpfObjCgroup.MapBackend
+	}
+	name := mapPtr.String()
 
 	fmt.Printf("------------------------------\n")
 	fmt.Printf("ebgin map  %s\n", name)
@@ -133,8 +137,12 @@ func (s *EbpfProgramStruct) PrintMapBackend() error {
 func (s *EbpfProgramStruct) PrintMapNode() error {
 	keys := make([]bpf_cgroupMapkeyNode, 100)
 	vals := make([]uint32, 100)
-	mapPtr := s.BpfObjCgroup.MapNode
-	name := MapNameNode
+
+	mapPtr := s.EbpfMaps.MapNode
+	if mapPtr == nil {
+		mapPtr = s.BpfObjCgroup.MapNode
+	}
+	name := mapPtr.String()
 
 	fmt.Printf("------------------------------\n")
 	fmt.Printf("ebgin map  %s\n", name)
@@ -170,8 +178,12 @@ func (s *EbpfProgramStruct) PrintMapNode() error {
 func (s *EbpfProgramStruct) PrintMapAffinity() error {
 	keys := make([]bpf_cgroupMapkeyAffinity, 100)
 	vals := make([]bpf_cgroupMapvalueAffinity, 100)
-	mapPtr := s.BpfObjCgroup.MapAffinity
-	name := MapNameAffinity
+
+	mapPtr := s.EbpfMaps.MapAffinity
+	if mapPtr == nil {
+		mapPtr = s.BpfObjCgroup.MapAffinity
+	}
+	name := mapPtr.String()
 
 	fmt.Printf("------------------------------\n")
 	fmt.Printf("ebgin map  %s\n", name)
@@ -207,8 +219,12 @@ func (s *EbpfProgramStruct) PrintMapAffinity() error {
 func (s *EbpfProgramStruct) PrintMapNatRecord() error {
 	keys := make([]bpf_cgroupMapkeyNatRecord, 100)
 	vals := make([]bpf_cgroupMapvalueNatRecord, 100)
-	mapPtr := s.BpfObjCgroup.MapNatRecord
-	name := MapNameNatRecord
+
+	mapPtr := s.EbpfMaps.MapNatRecord
+	if mapPtr == nil {
+		mapPtr = s.BpfObjCgroup.MapNatRecord
+	}
+	name := mapPtr.String()
 
 	fmt.Printf("------------------------------\n")
 	fmt.Printf("ebgin map  %s\n", name)
@@ -251,7 +267,12 @@ func (s *EbpfProgramStruct) GetMapDataEvent() <-chan MapEventValue {
 // get data from map
 func (s *EbpfProgramStruct) daemonGetEvent() {
 
-	rd, err := perf.NewReader(s.BpfObjCgroup.bpf_cgroupMaps.MapEvent, os.Getpagesize())
+	mapPtr := s.EbpfMaps.MapEvent
+	if mapPtr == nil {
+		mapPtr = s.BpfObjCgroup.MapEvent
+	}
+
+	rd, err := perf.NewReader(mapPtr, os.Getpagesize())
 
 	if err != nil {
 		fmt.Printf("failed to read ebpf map : %v ", err)
