@@ -35,11 +35,11 @@ func (s *ServiceReconciler) HandlerAdd(obj interface{}) {
 	}
 	name := svc.Namespace + "/" + svc.Name
 	if SkipServiceProcess(svc) {
-		s.log.Sugar().Debugf("HandlerAdd skip sevice: %+v", name)
+		s.log.Sugar().Debugf("HandlerAdd skip sevice %+v", name)
 		return
 	}
 
-	s.log.Sugar().Debugf("HandlerAdd process sevice: %+v", name)
+	s.log.Sugar().Debugf("HandlerAdd process sevice %+v", name)
 	s.writer.UpdateService(svc)
 
 	return
@@ -48,26 +48,26 @@ func (s *ServiceReconciler) HandlerAdd(obj interface{}) {
 func (s *ServiceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 	oldSvc, ok1 := oldObj.(*corev1.Service)
 	if !ok1 {
-		s.log.Sugar().Warnf("HandlerUpdate failed to get old sevice obj: %v")
+		s.log.Sugar().Warnf("HandlerUpdate failed to get old sevice obj %v")
 		return
 	}
 	newSvc, ok2 := newObj.(*corev1.Service)
 	if !ok2 {
-		s.log.Sugar().Warnf("HandlerUpdate failed to get new sevice obj: %v")
+		s.log.Sugar().Warnf("HandlerUpdate failed to get new sevice obj %v")
 		return
 	}
 
 	name := newSvc.Namespace + "/" + newSvc.Name
 	if SkipServiceProcess(newSvc) && SkipServiceProcess(oldSvc) {
-		s.log.Sugar().Debugf("HandlerAdd skip service: %+v", name)
+		s.log.Sugar().Debugf("HandlerAdd skip unsupported service %+v", name)
 		return
 	}
 	if reflect.DeepEqual(oldSvc.Spec, newSvc.Spec) && reflect.DeepEqual(oldSvc.Status, newSvc.Status) {
-		s.log.Sugar().Debugf("HandlerAdd skip service: %+v", name)
+		s.log.Sugar().Debugf("HandlerAdd skip unchanged service %+v", name)
 		return
 	}
 
-	s.log.Sugar().Debugf("HandlerUpdate process new sevice: %+v", name)
+	s.log.Sugar().Debugf("HandlerUpdate process new sevice %+v", name)
 	s.writer.UpdateService(newSvc)
 
 	return
@@ -81,10 +81,10 @@ func (s *ServiceReconciler) HandlerDelete(obj interface{}) {
 	}
 	name := svc.Namespace + "/" + svc.Name
 	if SkipServiceProcess(svc) {
-		s.log.Sugar().Debugf("HandlerAdd skip service: %+v", name)
+		s.log.Sugar().Debugf("HandlerAdd skip service %+v", name)
 		return
 	}
-	s.log.Sugar().Debugf("HandlerDelete process sevice: %+v", svc)
+	s.log.Sugar().Debugf("HandlerDelete process sevice %+v", svc)
 	s.writer.DeleteService(svc)
 
 	return
@@ -98,11 +98,11 @@ func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{},
 	svcRes := corev1.SchemeGroupVersion.WithResource("services")
 	srcInformer, e3 := kubeInformerFactory.ForResource(svcRes)
 	if e3 != nil {
-		rootLogger.Sugar().Fatalf("failed to create service informer: %v", e3)
+		rootLogger.Sugar().Fatalf("failed to create service informer %v", e3)
 	}
 
 	r := ServiceReconciler{
-		log:    rootLogger.Named("service reconcile"),
+		log:    rootLogger.Named("serviceReconciler"),
 		writer: writer,
 	}
 	srcInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{

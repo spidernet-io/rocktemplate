@@ -149,7 +149,7 @@ func RunReconciles() {
 
 	rootLogger.Sugar().Debugf("RunReconciles")
 
-	writer := ebpfWriter.NewEbpfWriter(rootLogger.Named("data cacher"))
+	writer := ebpfWriter.NewEbpfWriter(rootLogger.Named("ebpfWriter"))
 	// get clientset
 	c, e1 := autoConfig()
 	if e1 != nil {

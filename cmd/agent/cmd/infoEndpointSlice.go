@@ -26,7 +26,7 @@ func (s *EndpoingSliceReconciler) HandlerAdd(obj interface{}) {
 	name := eds.Namespace + "/" + eds.Name
 	s.log.Sugar().Debugf("HandlerAdd process EndpointSlice: %+v", name)
 	if len(eds.OwnerReferences) == 0 {
-		s.log.Sugar().Debugf("HandlerAdd skip EndpointSlice %+v, no onwer", name)
+		s.log.Sugar().Debugf("HandlerAdd skip non-owned  EndpointSlice %+v, no onwer", name)
 		return
 	}
 
@@ -49,11 +49,11 @@ func (s *EndpoingSliceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 
 	name := newEds.Namespace + "/" + newEds.Name
 	if reflect.DeepEqual(oldEds.Endpoints, newEds.Endpoints) && reflect.DeepEqual(oldEds.Ports, newEds.Ports) {
-		s.log.Sugar().Debugf("HandlerUpdate skip EndpointSlice: %+v", name)
+		s.log.Sugar().Debugf("HandlerUpdate skip unchanged EndpointSlice: %+v", name)
 		return
 	}
 	if len(newEds.OwnerReferences) == 0 {
-		s.log.Sugar().Debugf("HandlerAdd skip EndpointSlice %+v, no onwer", name)
+		s.log.Sugar().Debugf("HandlerAdd skip non-owned EndpointSlice %+v, no onwer", name)
 		return
 	}
 
@@ -73,7 +73,7 @@ func (s *EndpoingSliceReconciler) HandlerDelete(obj interface{}) {
 	name := eds.Namespace + "/" + eds.Name
 	s.log.Sugar().Debugf("HandlerDelete process EndpointSlice: %s", name)
 	if len(eds.OwnerReferences) == 0 {
-		s.log.Sugar().Debugf("HandlerAdd skip EndpointSlice %+v, no onwer", name)
+		s.log.Sugar().Debugf("HandlerAdd skip non-owned EndpointSlice %+v, no onwer", name)
 		return
 	}
 
@@ -94,7 +94,7 @@ func NewEndpointSliceInformer(Client *kubernetes.Clientset, stopWatchCh chan str
 	}
 
 	r := EndpoingSliceReconciler{
-		log:    rootLogger.Named("EndpointSlice reconcile"),
+		log:    rootLogger.Named("EndpointsliceReconciler"),
 		writer: writer,
 	}
 	srcInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
