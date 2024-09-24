@@ -8,6 +8,7 @@ import (
 	"github.com/cilium/ebpf/link"
 	corev1 "k8s.io/api/core/v1"
 	discovery "k8s.io/api/discovery/v1"
+	"path/filepath"
 
 	// "github.com/cilium/ebpf/ringbuf"
 	"github.com/cilium/ebpf/rlimit"
@@ -232,41 +233,46 @@ func (s *EbpfProgramStruct) LoadAllEbpfMap(mapPinDir string) error {
 
 	var err error
 
-	filepath := mapPinDir + "map_affinity"
-	s.EbpfMaps.MapAffinity, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+	f := filepath.Join(mapPinDir, "map_affinity")
+	s.EbpfMaps.MapAffinity, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
-		return fmt.Errorf("failed to load map %s\n", filepath)
+		return fmt.Errorf("failed to load map %s\n", f)
 	}
-	filepath = mapPinDir + "map_backend"
-	s.EbpfMaps.MapBackend, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+
+	f = filepath.Join(mapPinDir, "map_backend")
+	s.EbpfMaps.MapBackend, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
-		return fmt.Errorf("failed to load map %s\n", filepath)
+		return fmt.Errorf("failed to load map %s\n", f)
 	}
-	filepath = mapPinDir + "map_event"
-	s.EbpfMaps.MapEvent, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+
+	f = filepath.Join(mapPinDir, "map_event")
+	s.EbpfMaps.MapEvent, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
-		return fmt.Errorf("failed to load map %s\n", filepath)
+		return fmt.Errorf("failed to load map %s\n", f)
 	}
-	filepath = mapPinDir + "map_nat_record"
-	s.EbpfMaps.MapNatRecord, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+
+	f = filepath.Join(mapPinDir, "map_nat_record")
+	s.EbpfMaps.MapNatRecord, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
-		return fmt.Errorf("failed to load map %s\n", filepath)
+		return fmt.Errorf("failed to load map %s\n", f)
 	}
-	filepath = mapPinDir + "map_node"
-	s.EbpfMaps.MapNode, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+
+	f = filepath.Join(mapPinDir, "map_node")
+	s.EbpfMaps.MapNode, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
-		return fmt.Errorf("failed to load map %s\n", filepath)
+		return fmt.Errorf("failed to load map %s\n", f)
 	}
-	filepath = mapPinDir + "map_service"
-	s.EbpfMaps.MapService, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+
+	f = filepath.Join(mapPinDir, "map_service")
+	s.EbpfMaps.MapService, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
-		return fmt.Errorf("failed to load map %s\n", filepath)
+		return fmt.Errorf("failed to load map %s\n", f)
 	}
 
 	return nil
