@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-var CmdPrintMapAll = &cobra.Command{
+var CmdPrintMapAffinity = &cobra.Command{
 	Use:   "affinity",
 	Short: "print the ebpf map of node ",
 	Args:  cobra.RangeArgs(0, 0),
@@ -20,16 +20,12 @@ var CmdPrintMapAll = &cobra.Command{
 		defer bpf.UnloadAllEbpfMap()
 
 		fmt.Printf("\n")
-		fmt.Printf("print all data of the ebpf map:\n")
+		fmt.Printf("print the ebpf map of affinity:\n")
 		bpf.PrintMapAffinity()
-		bpf.PrintMapNatRecord()
-		bpf.PrintMapService()
-		bpf.PrintMapBackend()
-		bpf.PrintMapNode()
 		fmt.Printf("\n")
 	},
 }
 
 func init() {
-	CmdPrintMap.AddCommand(CmdPrintMapAll)
+	CmdPrintMap.AddCommand(CmdPrintMapAffinity)
 }
