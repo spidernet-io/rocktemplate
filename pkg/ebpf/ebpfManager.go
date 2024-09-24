@@ -234,7 +234,7 @@ func (s *EbpfProgramStruct) LoadAllEbpfMap(mapPinDir string) error {
 	var err error
 
 	f := filepath.Join(mapPinDir, "map_affinity")
-	s.EbpfMaps.MapAffinity, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
+	s.EbpfMaps.MapAffinity, err = ebpf.LoadPinnedMap(f, nil)
 	if err != nil {
 		s.UnloadAllEbpfMap()
 		return fmt.Errorf("failed to load map %s\n", f)
