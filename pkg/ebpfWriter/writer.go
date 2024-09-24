@@ -5,6 +5,7 @@ package ebpfWriter
 
 import (
 	"fmt"
+	"github.com/spidernet-io/rocktemplate/pkg/ebpf"
 	"github.com/spidernet-io/rocktemplate/pkg/k8s"
 	"github.com/spidernet-io/rocktemplate/pkg/lock"
 	"go.uber.org/zap"
@@ -34,6 +35,7 @@ type ebpfWriter struct {
 	// use the creationTimestamp to record the last update time, and calculate the validityTime
 	validityTime time.Duration
 	log          *zap.Logger
+	ebpf         ebpf.EbpfProgram
 }
 
 var _ EbpfWriter = (*ebpfWriter)(nil)
@@ -44,6 +46,7 @@ func NewEbpfWriter(validityTime time.Duration, l *zap.Logger) EbpfWriter {
 		endpointData: make(map[string]*EndpointData),
 		validityTime: validityTime,
 		log:          l,
+		ebpf:         ebpf.NewEbpfProgramMananger(),
 	}
 	go t.DeamonGC()
 	return &t
