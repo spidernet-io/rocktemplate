@@ -231,47 +231,47 @@ func (s *EbpfProgramStruct) LoadAllEbpfMap(mapPinDir string) error {
 	s.EbpfMaps = &EbpfMaps{}
 
 	var err error
-	mappath := mapPinDir
-	if len(mappath) == 0 {
-		mappath = MapsPinpath
+	mapdir := mapPinDir
+	if len(mapdir) == 0 {
+		mapdir = MapsPinpath
 	}
 
-	f := filepath.Join(mapPinDir, "map_affinity")
+	f := filepath.Join(mapdir, "map_affinity")
 	s.EbpfMaps.MapAffinity, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
 		return fmt.Errorf("failed to load map %s\n", f)
 	}
 
-	f = filepath.Join(mapPinDir, "map_backend")
+	f = filepath.Join(mapdir, "map_backend")
 	s.EbpfMaps.MapBackend, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
 		return fmt.Errorf("failed to load map %s\n", f)
 	}
 
-	f = filepath.Join(mapPinDir, "map_event")
+	f = filepath.Join(mapdir, "map_event")
 	s.EbpfMaps.MapEvent, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
 		return fmt.Errorf("failed to load map %s\n", f)
 	}
 
-	f = filepath.Join(mapPinDir, "map_nat_record")
+	f = filepath.Join(mapdir, "map_nat_record")
 	s.EbpfMaps.MapNatRecord, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
 		return fmt.Errorf("failed to load map %s\n", f)
 	}
 
-	f = filepath.Join(mapPinDir, "map_node")
+	f = filepath.Join(mapdir, "map_node")
 	s.EbpfMaps.MapNode, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
 		return fmt.Errorf("failed to load map %s\n", f)
 	}
 
-	f = filepath.Join(mapPinDir, "map_service")
+	f = filepath.Join(mapdir, "map_service")
 	s.EbpfMaps.MapService, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
