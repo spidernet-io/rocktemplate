@@ -6,6 +6,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/spidernet-io/rocktemplate/pkg/ebpfWriter"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	discovery "k8s.io/api/discovery/v1"
@@ -146,6 +147,7 @@ func autoConfig() (*rest.Config, error) {
 
 func RunReconciles() {
 
+	writer := ebpfWriter.NewEbpfWriter(rootLogger.Named("data cacher"))
 	// get clientset
 	c, e1 := autoConfig()
 	if e1 != nil {
@@ -158,6 +160,7 @@ func RunReconciles() {
 
 	// setup service informer
 	stopWatchCh := make(chan struct{})
-	NewServiceInformer(Client, stopWatchCh)
+	NewServiceInformer(Client, stopWatchCh, writer)
+	NewEndpointSliceInformer(Client, stopWatchCh, writer)
 
 }

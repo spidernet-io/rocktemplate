@@ -1,17 +1,31 @@
 package cmd
 
 import (
+	"github.com/spidernet-io/rocktemplate/pkg/ebpfWriter"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	"reflect"
 	"time"
 )
 
 // -----------------------------------
 type ServiceReconciler struct {
-	log *zap.Logger
+	log    *zap.Logger
+	writer ebpfWriter.EbpfWriter
+}
+
+func SkipServiceProcess(svc *corev1.Service) bool {
+	switch svc.Spec.Type {
+	case corev1.ServiceTypeClusterIP:
+	case corev1.ServiceTypeNodePort:
+	case corev1.ServiceTypeLoadBalancer:
+		return false
+	default:
+		return true
+	}
 }
 
 func (s *ServiceReconciler) HandlerAdd(obj interface{}) {
@@ -20,7 +34,14 @@ func (s *ServiceReconciler) HandlerAdd(obj interface{}) {
 		s.log.Sugar().Warnf("HandlerAdd failed to get sevice obj: %v")
 		return
 	}
-	s.log.Sugar().Infof("HandlerAdd get sevice: %+v", svc)
+	if SkipServiceProcess(svc) {
+		return
+	}
+	name := svc.Namespace + "/" + svc.Name
+	s.log.Sugar().Debugf("HandlerAdd process sevice: %+v", name)
+
+	s.writer.UpdateService(svc)
+
 	return
 }
 
@@ -36,8 +57,16 @@ func (s *ServiceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 		return
 	}
 
-	s.log.Sugar().Infof("HandlerUpdate get old sevice: %+v", oldSvc)
-	s.log.Sugar().Infof("HandlerUpdate get new sevice: %+v", newSvc)
+	if SkipServiceProcess(newSvc) && SkipServiceProcess(oldSvc) {
+		return
+	}
+	if reflect.DeepEqual(oldSvc.Spec, newSvc.Spec) && reflect.DeepEqual(oldSvc.Status, newSvc.Status) {
+		return
+	}
+
+	name := newSvc.Namespace + "/" + newSvc.Name
+	s.log.Sugar().Debugf("HandlerUpdate process new sevice: %+v", name)
+	s.writer.UpdateService(newSvc)
 
 	return
 }
@@ -48,13 +77,20 @@ func (s *ServiceReconciler) HandlerDelete(obj interface{}) {
 		s.log.Sugar().Warnf("HandlerDelete failed to get sevice obj: %v")
 		return
 	}
-	s.log.Sugar().Infof("HandlerDelete delete sevice: %+v", svc)
+	if SkipServiceProcess(svc) {
+		return
+	}
+	name := svc.Namespace + "/" + svc.Name
+	s.log.Sugar().Debugf("HandlerDelete process sevice: %+v", svc)
+	s.writer.DeleteService(svc)
+
 	return
 }
 
-func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{}) {
+func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{}, writer ebpfWriter) {
 
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(Client, time.Second*30)
+	// call HandlerUpdate at an interval of 60s
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(Client, time.Second*60)
 	// service
 	svcRes := corev1.SchemeGroupVersion.WithResource("services")
 	srcInformer, e3 := kubeInformerFactory.ForResource(svcRes)
@@ -63,7 +99,8 @@ func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{})
 	}
 
 	r := ServiceReconciler{
-		log: rootLogger.Named("service reconcile"),
+		log:    rootLogger.Named("service reconcile"),
+		writer: writer,
 	}
 	srcInformer.Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc:    r.HandlerAdd,
@@ -80,8 +117,4 @@ func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{})
 	}
 
 	rootLogger.Sugar().Infof("succeeded to cache all service ")
-
-	//
-	// epsRes := discoveryv1.SchemeGroupVersion.WithResource("endpointslices")
-
 }
