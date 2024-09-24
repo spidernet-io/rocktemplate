@@ -23,9 +23,8 @@ func SkipServiceProcess(svc *corev1.Service) bool {
 	case corev1.ServiceTypeNodePort:
 	case corev1.ServiceTypeLoadBalancer:
 		return false
-	default:
-		return true
 	}
+	return true
 }
 
 func (s *ServiceReconciler) HandlerAdd(obj interface{}) {
@@ -91,7 +90,7 @@ func (s *ServiceReconciler) HandlerDelete(obj interface{}) {
 	return
 }
 
-func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{}, writer ebpfWriter) {
+func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{}, writer ebpfWriter.EbpfWriter) {
 
 	// call HandlerUpdate at an interval of 60s
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(Client, time.Second*60)
