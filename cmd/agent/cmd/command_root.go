@@ -6,6 +6,7 @@ package cmd
 import (
 	"github.com/spf13/cobra"
 	"github.com/spidernet-io/rocktemplate/pkg/types"
+	"go.uber.org/automaxprocs/maxprocs"
 	"go.uber.org/zap"
 	"os"
 	"os/signal"
@@ -51,6 +52,15 @@ func Execute() {
 		runtime.GOMAXPROCS(int(types.AgentConfig.GolangMaxProcs))
 		currentP = runtime.GOMAXPROCS(-1)
 		rootLogger.Sugar().Infof("%v: change max golang procs %v \n", BinName, currentP)
+	}
+
+	// Set golang max procs.
+	if _, err := maxprocs.Set(
+		maxprocs.Logger(func(s string, i ...interface{}) {
+			rootLogger.Sugar().Infof(s, i...)
+		}),
+	); err != nil {
+		rootLogger.Sugar().Warnf("failed to set GOMAXPROCS")
 	}
 
 	if err := rootCmd.Execute(); err != nil {

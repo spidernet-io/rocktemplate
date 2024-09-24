@@ -62,6 +62,14 @@ func (s *ebpfWriter) DeamonGC() {
 	}
 }
 
+func shallowCopy(t map[string]*discovery.EndpointSlice) map[string]*discovery.EndpointSlice {
+	m := make(map[string]*discovery.EndpointSlice)
+	for k, v := range t {
+		m[k] = v
+	}
+	return m
+}
+
 func (s *ebpfWriter) UpdateService(l *zap.Logger, svc *corev1.Service, onlyUpdateTime bool) error {
 
 	if svc == nil {
@@ -82,13 +90,8 @@ func (s *ebpfWriter) UpdateService(l *zap.Logger, svc *corev1.Service, onlyUpdat
 		if d.EpsliceList != nil && len(d.EpsliceList) > 0 {
 			if !onlyUpdateTime {
 				l.Sugar().Infof("apply new data to ebpf map for service %v", index)
-				// todo: use the old data to generate ebpf data
-				buildMapDataForService(d.Svc, d.EpsliceList)
-				// todo: use the new data to generate ebpf data
+				s.ebpfhandler.UpdateEbpfMapForService(d.Svc, svc, d.EpsliceList, d.EpsliceList)
 				d.Svc = svc
-				buildMapDataForService(d.Svc, d.EpsliceList)
-				// write to ebpf map
-				updateEbpfMapForService()
 			} else {
 				l.Sugar().Debugf("just update lastUpdateTime")
 				d.Svc = svc
@@ -121,8 +124,7 @@ func (s *ebpfWriter) DeleteService(l *zap.Logger, svc *corev1.Service) error {
 	if d, ok := s.endpointData[index]; ok {
 		// todo : generate a ebpf map data and apply it
 		l.Sugar().Infof("delete data from ebpf map for service: %v", index)
-		buildMapDataForService(d.Svc, d.EpsliceList)
-		deleteEbpfMapForService()
+		s.ebpfhandler.DeleteEbpfMapForService(d.Svc)
 		delete(s.endpointData, index)
 	} else {
 		l.Sugar().Debugf("no need to delete data from ebpf map, cause already removed")
@@ -151,13 +153,9 @@ func (s *ebpfWriter) UpdateEndpointSlice(l *zap.Logger, epSlice *discovery.Endpo
 		if d.Svc != nil {
 			if !onlyUpdateTime {
 				l.Sugar().Infof("apply new data to ebpf map for the service %v", index)
-				// todo: use the old data to generate ebpf data
-				buildMapDataForService(s.endpointData[index].Svc, s.endpointData[index].EpsliceList)
-				// todo: use the new data to generate ebpf data
+				oldEps := shallowCopy(d.EpsliceList)
 				d.EpsliceList[epindex] = epSlice
-				buildMapDataForService(s.endpointData[index].Svc, s.endpointData[index].EpsliceList)
-				// write to ebpf
-				updateEbpfMapForService()
+				s.ebpfhandler.UpdateEbpfMapForService(d.Svc, d.Svc, oldEps, d.EpsliceList)
 			} else {
 				l.Sugar().Debugf("just update lastUpdateTime")
 				d.EpsliceList[epindex] = epSlice
@@ -198,13 +196,10 @@ func (s *ebpfWriter) DeleteEndpointSlice(l *zap.Logger, epSlice *discovery.Endpo
 		} else {
 			if _, ok := d.EpsliceList[epindex]; ok {
 				l.Sugar().Infof("apply new data to ebpf map for the service %v", index)
-				// todo: use the old data to generate ebpf data
-				buildMapDataForService(d.Svc, d.EpsliceList)
-				// todo: use the new data to generate ebpf data
+				oldEps := shallowCopy(d.EpsliceList)
 				delete(d.EpsliceList, epindex)
-				buildMapDataForService(d.Svc, d.EpsliceList)
-				// write to ebpf
-				updateEbpfMapForService()
+				s.ebpfhandler.UpdateEbpfMapForService(d.Svc, d.Svc, oldEps, d.EpsliceList)
+
 				goto finish
 			}
 		}

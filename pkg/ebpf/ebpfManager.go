@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
+	corev1 "k8s.io/api/core/v1"
+	discovery "k8s.io/api/discovery/v1"
+
 	// "github.com/cilium/ebpf/ringbuf"
 	"github.com/cilium/ebpf/rlimit"
 	"os"
@@ -34,24 +37,41 @@ const (
 
 // -----------------------------------
 
+type EbpfMaps struct {
+	MapAffinity  *ebpf.Map
+	MapBackend   *ebpf.Map
+	MapEvent     *ebpf.Map
+	MapNatRecord *ebpf.Map
+	MapNode      *ebpf.Map
+	MapService   *ebpf.Map
+}
+
 type EbpfProgramStruct struct {
 	BpfObjCgroup bpf_cgroupObjects
 	CgroupLink   link.Link
 	Event        chan MapEventValue
+
+	// for debug cli to load map alone
+	EbpfMaps *EbpfMaps
 }
 
 type EbpfProgram interface {
+	// load the ebpf program and map
 	LoadProgramp() error
 	UnloadProgramp() error
 
-	GetMapDataEvent() <-chan MapEventValue
+	// for debug cli to load pinned map
+	LoadAllEbpfMap(string) error
+	UnloadAllEbpfMap()
 
+	GetMapDataEvent() <-chan MapEventValue
+	// for debug cli
 	PrintMapService() error
 	PrintMapNode() error
 	PrintMapBackend() error
 	PrintMapAffinity() error
 	PrintMapNatRecord() error
-
+	// for debug cli
 	UpdateMapService([]bpf_cgroupMapkeyService, []bpf_cgroupMapvalueService) error
 	UpdateMapBackend([]bpf_cgroupMapkeyBackend, []bpf_cgroupMapvalueBackend) error
 	UpdateMapNode([]bpf_cgroupMapkeyNode, []uint32) error
@@ -59,6 +79,10 @@ type EbpfProgram interface {
 	// DeleteMapDataBackendV4([]uint32) error
 	// UpdateMapDataBackendV4([]uint32, []bpf_cgroupMapvalueBackendV4) error
 	// PrintMapDataBackendV4()
+
+	// for agent
+	UpdateEbpfMapForService(*corev1.Service, *corev1.Service, map[string]*discovery.EndpointSlice, map[string]*discovery.EndpointSlice) error
+	DeleteEbpfMapForService(*corev1.Service) error
 }
 
 var _ EbpfProgram = &EbpfProgramStruct{}
@@ -66,12 +90,12 @@ var _ EbpfProgram = &EbpfProgramStruct{}
 // ------------------------------------
 
 func NewEbpfProgramMananger() EbpfProgram {
-	return &EbpfProgramStruct{
-		Event: make(chan MapEventValue, EventChanLength),
-	}
+	return &EbpfProgramStruct{}
 }
 
 func (s *EbpfProgramStruct) LoadProgramp() error {
+
+	s.Event = make(chan MapEventValue, EventChanLength)
 
 	if err := checkOrMountBpfFs(BpfFSPath); err != nil {
 		return fmt.Errorf("failed to mount bpf fs: %v", err)
@@ -194,6 +218,84 @@ func (s *EbpfProgramStruct) UnloadProgramp() error {
 	s.BpfObjCgroup.Close()
 
 	return nil
+}
+
+func (s *EbpfProgramStruct) LoadAllEbpfMap(mapPinDir string) error {
+	mappath := mapPinDir
+	if len(mappath) == 0 {
+		mappath = MapsPinpath
+	}
+	if s.EbpfMaps != nil {
+		// already load
+		return nil
+	}
+
+	var err error
+
+	filepath := mapPinDir + "map_affinity"
+	s.EbpfMaps.MapAffinity, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+	if err != nil {
+		s.UnloadAllEbpfMap()
+		return fmt.Errorf("failed to load map %s\n", filepath)
+	}
+	filepath = mapPinDir + "map_backend"
+	s.EbpfMaps.MapBackend, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+	if err != nil {
+		s.UnloadAllEbpfMap()
+		return fmt.Errorf("failed to load map %s\n", filepath)
+	}
+	filepath = mapPinDir + "map_event"
+	s.EbpfMaps.MapEvent, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+	if err != nil {
+		s.UnloadAllEbpfMap()
+		return fmt.Errorf("failed to load map %s\n", filepath)
+	}
+	filepath = mapPinDir + "map_nat_record"
+	s.EbpfMaps.MapNatRecord, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+	if err != nil {
+		s.UnloadAllEbpfMap()
+		return fmt.Errorf("failed to load map %s\n", filepath)
+	}
+	filepath = mapPinDir + "map_node"
+	s.EbpfMaps.MapNode, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+	if err != nil {
+		s.UnloadAllEbpfMap()
+		return fmt.Errorf("failed to load map %s\n", filepath)
+	}
+	filepath = mapPinDir + "map_service"
+	s.EbpfMaps.MapService, err = ebpf.LoadPinnedMap(filepath, &ebpf.LoadPinOptions{})
+	if err != nil {
+		s.UnloadAllEbpfMap()
+		return fmt.Errorf("failed to load map %s\n", filepath)
+	}
+
+	return nil
+}
+
+func (s *EbpfProgramStruct) UnloadAllEbpfMap() {
+	if s.EbpfMaps != nil {
+		// already load
+		return
+	}
+	if s.EbpfMaps.MapAffinity != nil {
+		s.EbpfMaps.MapAffinity.Close()
+	}
+	if s.EbpfMaps.MapBackend != nil {
+		s.EbpfMaps.MapBackend.Close()
+	}
+	if s.EbpfMaps.MapEvent != nil {
+		s.EbpfMaps.MapEvent.Close()
+	}
+	if s.EbpfMaps.MapNatRecord != nil {
+		s.EbpfMaps.MapNatRecord.Close()
+	}
+	if s.EbpfMaps.MapNode != nil {
+		s.EbpfMaps.MapNode.Close()
+	}
+	if s.EbpfMaps.MapService != nil {
+		s.EbpfMaps.MapService.Close()
+	}
+	return
 }
 
 // ------------------------------------------- map
