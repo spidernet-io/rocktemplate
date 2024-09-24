@@ -5,6 +5,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/spidernet-io/rocktemplate/pkg/ebpf"
 	"github.com/spidernet-io/rocktemplate/pkg/ebpfWriter"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -133,7 +134,14 @@ func RunReconciles() {
 
 	rootLogger.Sugar().Debugf("RunReconciles")
 
-	writer := ebpfWriter.NewEbpfWriter(InformerListInvterval, rootLogger.Named("ebpfWriter"))
+	bpfManager := ebpf.NewEbpfProgramMananger()
+	if err := bpfManager.LoadProgramp(); err != nil {
+		fmt.Printf("failed to Load ebpf Programp: %v \n", err)
+		return
+	}
+	defer bpfManager.UnloadProgramp()
+
+	writer := ebpfWriter.NewEbpfWriter(bpfManager, InformerListInvterval, rootLogger.Named("ebpfWriter"))
 	// get clientset
 	c, e1 := autoConfig()
 	if e1 != nil {
@@ -148,5 +156,8 @@ func RunReconciles() {
 	stopWatchCh := make(chan struct{})
 	NewServiceInformer(Client, stopWatchCh, writer)
 	NewEndpointSliceInformer(Client, stopWatchCh, writer)
+
+	rootLogger.Info("finish all setup ")
+	time.Sleep(time.Hour)
 
 }

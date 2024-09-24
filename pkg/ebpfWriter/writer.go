@@ -36,18 +36,18 @@ type ebpfWriter struct {
 	// use the creationTimestamp to record the last update time, and calculate the validityTime
 	validityTime time.Duration
 	log          *zap.Logger
-	ebpf         ebpf.EbpfProgram
+	ebpfhandler  ebpf.EbpfProgram
 }
 
 var _ EbpfWriter = (*ebpfWriter)(nil)
 
-func NewEbpfWriter(validityTime time.Duration, l *zap.Logger) EbpfWriter {
+func NewEbpfWriter(ebpfhandler ebpf.EbpfProgram, validityTime time.Duration, l *zap.Logger) EbpfWriter {
 	t := ebpfWriter{
 		l:            &lock.Mutex{},
 		endpointData: make(map[string]*EndpointData),
 		validityTime: validityTime,
 		log:          l,
-		ebpf:         ebpf.NewEbpfProgramMananger(),
+		ebpfhandler:  ebpfhandler,
 	}
 	go t.DeamonGC()
 	return &t
