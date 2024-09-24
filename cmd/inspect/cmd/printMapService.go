@@ -16,7 +16,7 @@ var CmdPrintMapService = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 
 		bpf := ebpf.NewEbpfProgramMananger()
-		if err := bpf.LoadAllEbpfMap(); err != nil {
+		if err := bpf.LoadAllEbpfMap(""); err != nil {
 			fmt.Printf("failed to load ebpf Map: %v\n", err)
 			os.Exit(2)
 		}
