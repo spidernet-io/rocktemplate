@@ -63,7 +63,7 @@ func (s *ebpfWriter) UpdateService(svc *corev1.Service) error {
 
 			// todo: use the new data to generate ebpf data
 			s.endpointData[index].svc = svc
-			buildMapDataForService(d.svc, s.endpointData[index].svc)
+			buildMapDataForService(d.svc, s.endpointData[index].epsliceList)
 
 			updateEbpfMapForService()
 		}
@@ -84,7 +84,7 @@ func (s *ebpfWriter) DeleteService(svc *corev1.Service) error {
 
 	s.l.Lock()
 	defer s.l.Unlock()
-	if d, ok := s.endpointData[index]; ok {
+	if _, ok := s.endpointData[index]; ok {
 		// todo : generate a ebpf map data and apply it
 		s.logger.Sugar().Infof("delete data from ebpf map for service: %v", index)
 		buildMapDataForService(s.endpointData[index].svc, s.endpointData[index].epsliceList)
@@ -97,7 +97,7 @@ func (s *ebpfWriter) DeleteService(svc *corev1.Service) error {
 	return nil
 }
 
-func (s *ebpfWriter) UpdateUpdateEndpointSlice(epSlice *discovery.EndpointSlice) error {
+func (s *ebpfWriter) UpdateEndpointSlice(epSlice *discovery.EndpointSlice) error {
 
 	if epSlice == nil {
 		return fmt.Errorf("empty EndpointSlice")
