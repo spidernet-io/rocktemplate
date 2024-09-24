@@ -35,8 +35,8 @@ func Run() {
 	floatip := net.ParseIP("169.254.0.101")
 	floatport := 8080
 
-	pod1 := net.ParseIP("172.25.161.21")
-	pod2 := net.ParseIP("172.25.132.16")
+	pod1 := net.ParseIP("172.25.161.26")
+	pod2 := net.ParseIP("172.25.132.19")
 	podport := 80
 
 	node1 := net.ParseIP("172.16.1.11")
@@ -60,12 +60,11 @@ func Run() {
 	nodePortLittle := binary.LittleEndian.Uint16(t[:])
 
 	// ======================= set floatIP test
-	var backendId uint32
-	if err := binary.Read(bytes.NewBuffer(floatip.To4()), binary.BigEndian, &backendId); err != nil {
+	var addressID uint32
+	if err := binary.Read(bytes.NewBuffer(floatip.To4()), binary.LittleEndian, &addressID); err != nil {
 		fmt.Printf("failed to generate backend id")
 		return
 	}
-	backendId += uint32(floatport)
 
 	// ----------- set service map
 	if true {
@@ -79,7 +78,7 @@ func Run() {
 			Scope:   0,
 		})
 		valueList = append(valueList, ebpf.bpf_cgroupMapvalueService{
-			BackendId:         backendId,
+			BackendId:         addressID,
 			TotalBackendCount: 2,
 			LocalBackendCount: 0,
 			AffinityTimeout:   0,
@@ -180,4 +179,3 @@ var _ = Describe("ebpf", func() {
 	})
 
 })
-

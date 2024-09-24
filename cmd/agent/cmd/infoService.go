@@ -9,7 +9,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"reflect"
-	"time"
 )
 
 // -----------------------------------
@@ -47,7 +46,7 @@ func (s *ServiceReconciler) HandlerAdd(obj interface{}) {
 		return
 	}
 
-	logger.Sugar().Debugf("HandlerAdd process sevice %+v", name)
+	logger.Sugar().Infof("HandlerAdd process sevice %+v", name)
 	s.writer.UpdateService(logger, svc)
 
 	return
@@ -75,14 +74,16 @@ func (s *ServiceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 		logger.Sugar().Debugf("HandlerAdd skip unsupported service %+v", name)
 		return
 	}
-	if reflect.DeepEqual(oldSvc.Spec, newSvc.Spec) && reflect.DeepEqual(oldSvc.Status, newSvc.Status) {
-		logger.Sugar().Debugf("HandlerAdd skip unchanged service %+v", name)
-		logger.Sugar().Debugf("diff: %v", cmp.Diff(oldSvc, newSvc))
-		return
-	}
+	logger.Sugar().Infof("HandlerUpdate process sevice %+v", name)
 
-	logger.Sugar().Debugf("HandlerUpdate process new sevice %+v", name)
-	s.writer.UpdateService(logger, newSvc)
+	onlyUpdateTime := false
+	if t := cmp.Diff(oldSvc, newSvc); len(t) > 0 {
+		logger.Sugar().Debugf("service diff: %s", t)
+	}
+	if reflect.DeepEqual(oldSvc.Spec, newSvc.Spec) && reflect.DeepEqual(oldSvc.Status, newSvc.Status) {
+		onlyUpdateTime = true
+	}
+	s.writer.UpdateService(logger, newSvc, onlyUpdateTime)
 
 	return
 }
@@ -103,7 +104,7 @@ func (s *ServiceReconciler) HandlerDelete(obj interface{}) {
 		logger.Sugar().Debugf("HandlerAdd skip service %+v", name)
 		return
 	}
-	logger.Sugar().Debugf("HandlerDelete process sevice %+v", svc)
+	logger.Sugar().Infof("HandlerDelete process sevice %+v", svc)
 	s.writer.DeleteService(logger, svc)
 
 	return
@@ -112,7 +113,7 @@ func (s *ServiceReconciler) HandlerDelete(obj interface{}) {
 func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{}, writer ebpfWriter.EbpfWriter) {
 
 	// call HandlerUpdate at an interval of 60s
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(Client, time.Second*60)
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(Client, InformerListInvterval)
 	// service
 	svcRes := corev1.SchemeGroupVersion.WithResource("services")
 	srcInformer, e3 := kubeInformerFactory.ForResource(svcRes)

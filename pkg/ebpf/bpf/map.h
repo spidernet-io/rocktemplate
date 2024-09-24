@@ -19,6 +19,12 @@
 
 #define NODE_PORT_IP	0xffffffff
 
+/*
+    对于 NAT_TYPE_SERVICE ：
+        无论目的是 clusterIP，nodePort，LoadBalancer  ， 都是解析到 pod ip
+    对于 NAT_TYPE_REDIRECT：
+        解析到 本地 pod ip，
+*/
 // a floatIP has several entries mapping to each backend
 struct mapkey_service {
   ipv4_addr_t address;     /* 小端存储。 clusterIP， 或者 NODE_PORT_IP(255.255.255.255) 表示 nodePort  */
@@ -30,19 +36,21 @@ struct mapkey_service {
 };
 
 
-#define NAT_FLG_EXTERNAL_LOCAL_SVC	0x1
-#define NAT_FLG_INTERNAL_LOCAL_SVC	0x2
+#define NAT_FLAG_EXTERNAL_LOCAL_SVC	0x1
+#define NAT_FLAG_INTERNAL_LOCAL_SVC	0x2
 
-#define NAT_FLG_ACCESS_NODEPORT_FLOATIP	0x1
+#define NAT_FLAG_ACCESS_NODEPORT_FLOATIP	0x1
+
+#define NAT_FLAG_ALLOW_ACCESS_SERVICE	0x1
 
 struct mapvalue_service {
-  __u32 backend_id;            /* 每个 clusterip 都是 唯一 id    */
-  __u32 total_backend_count;         // how many backend exist in the service
-  __u32 local_backend_count;         // how many backend exist in the service
+  __U32 address_id ;                 // 为 clusterIP ，对 nodePort 的记录，也记录为 clusterIP
+  __u32 total_backend_count;         // how many global backend exist in the service
+  __u32 local_backend_count;         // how many local-node backend exist in the service ，用于实现 clientIP 亲和
   __u32 affinity_timeout;       /* In seconds, only for svc frontend */
-  __u8  service_flags;                /* NAT_FLG_EXTERNAL_LOCAL_SVC  , NAT_FLG_INTERNAL_LOCAL_SVC */
-  __u8  floatip_flags;                /* NAT_FLG_ACCESS_NODEPORT_FLOATIP  */
-  __u8  redirect_flags;
+  __u8  service_flags;                /* NAT_FLAG_EXTERNAL_LOCAL_SVC  , NAT_FLAG_INTERNAL_LOCAL_SVC */
+  __u8  floatip_flags;                /* NAT_FLAG_ACCESS_NODEPORT_FLOATIP（是打到 pod 所在节点的 nodePort，还是 pod ip）  */
+  __u8  redirect_flags;         /* NAT_FLAG_ALLOW_ACCESS_SERVICE( 如果在 local-node backend 不可用时，是否正常解析到 clusterIP)  */
   __u8  pad;
 };
 
@@ -60,8 +68,13 @@ struct {
 //======================================= map ： 存储 endpoint  ， pod ip
 
 struct mapkey_backend {
-	__be32 backend_id; // 每个 clusterip 都是 唯一 id  ， 对应 mapvalue_service 中的 backend_id
-	__be32 order;      // service 下的 第几个 endpoint ip 。 前面几个记录，优先存储 本地 node 上的 endpoint
+    __be32 order;      //  第几个 endpoint ip 。 前面几个记录，优先存储 本地 node 上的 endpoint ， 用于实现 clientIP 亲和
+    __be32 address_id;  // map to addressID in mapvalue_service
+    __be16 dport;
+    __u8  proto;
+    __u8  nat_type;
+    __u8  scope;
+    __u8  pad[3];
 };
 
 struct mapvalue_backend {

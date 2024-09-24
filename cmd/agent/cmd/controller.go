@@ -4,34 +4,17 @@
 package cmd
 
 import (
-	"context"
 	"fmt"
 	"github.com/spidernet-io/rocktemplate/pkg/ebpfWriter"
-	"go.uber.org/zap"
-	corev1 "k8s.io/api/core/v1"
-	discovery "k8s.io/api/discovery/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"os"
 	"path/filepath"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/handler"
-	"sigs.k8s.io/controller-runtime/pkg/manager"
-	"sigs.k8s.io/controller-runtime/pkg/manager/signals"
-	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	"sigs.k8s.io/controller-runtime/pkg/source"
-
-	k8szap "sigs.k8s.io/controller-runtime/pkg/log/zap"
+	"time"
 )
 
+/*
 type reconciler struct {
 	// client can be used to retrieve objects from the APIServer.
 	client client.Client
@@ -96,12 +79,13 @@ func SetupController() {
 	}
 
 }
-
+*/
 // ------------------------------
 
 var (
-	KubeConfigPath = filepath.Join(os.Getenv("HOME"), ".kube", "config")
-	ScInPodPath    = "/var/run/secrets/kubernetes.io/serviceaccount"
+	KubeConfigPath        = filepath.Join(os.Getenv("HOME"), ".kube", "config")
+	ScInPodPath           = "/var/run/secrets/kubernetes.io/serviceaccount"
+	InformerListInvterval = time.Second * 60
 )
 
 func existFile(filePath string) bool {
@@ -149,7 +133,7 @@ func RunReconciles() {
 
 	rootLogger.Sugar().Debugf("RunReconciles")
 
-	writer := ebpfWriter.NewEbpfWriter()
+	writer := ebpfWriter.NewEbpfWriter(InformerListInvterval, rootLogger.Named("ebpfWriter"))
 	// get clientset
 	c, e1 := autoConfig()
 	if e1 != nil {

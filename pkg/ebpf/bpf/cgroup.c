@@ -7,6 +7,7 @@
 static __always_inline __be16 ctx_dst_port(const struct bpf_sock_addr *ctx) {
   // Stored in network byte order
   volatile __u32 dport = ctx->user_port;
+  // convert to littleEnd
   return (__be16)dport;
 }
 
@@ -234,7 +235,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     debugf(DEBUG_INFO, "succeeded to find service value for %pI4:%d\n" , &dst_ip  , dst_port   );
 
     __u32 backend_count = svcval.total_backend_count;
-    if ( svcval.service_flags & (NAT_FLG_INTERNAL_LOCAL_SVC | NAT_FLG_EXTERNAL_LOCAL_SVC)  ) {
+    if ( svcval.service_flags & (NAT_FLAG_INTERNAL_LOCAL_SVC | NAT_FLAG_EXTERNAL_LOCAL_SVC)  ) {
         backend_count = svcval.local_backend_count ;
         debugf(DEBUG_INFO, "forward to local backend for %pI4:%d\n" , &dst_ip  , dst_port   );
     }
@@ -258,8 +259,12 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     __u32 a = bpf_get_prandom_u32();
     a %= backend_count ;
     struct mapkey_backend backendKey = {
-    	.backend_id = svcval.backend_id ,
     	.order = a,
+        .address_id = svcval.address_id ,
+        .dport = svckey.dport ,
+        .proto = svckey.proto ,
+        .nat_type = svckey.nat_type ,
+        .scope = svckey.scope,
     };
     struct mapvalue_backend *backendValue = bpf_map_lookup_elem( &map_backend , &backendKey);
     if (!backendValue) {
@@ -290,7 +295,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     }else{
         if ( svckey.nat_type == NAT_TYPE_FLOATIP ) {
             evt.nat_type = NAT_TYPE_FLOATIP ;
-            if ( svcval.floatip_flags & NAT_FLG_ACCESS_NODEPORT_FLOATIP ) {
+            if ( svcval.floatip_flags & NAT_FLAG_ACCESS_NODEPORT_FLOATIP ) {
                 nat_ip = backendValue->node_address ;
                 nat_port = backendValue->node_port ;
             }else{

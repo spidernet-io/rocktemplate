@@ -10,7 +10,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
 	"reflect"
-	"time"
 )
 
 // -----------------------------------
@@ -32,8 +31,7 @@ func (s *EndpoingSliceReconciler) HandlerAdd(obj interface{}) {
 		zap.String("endpointslice", name),
 	)
 
-	logger.Sugar().Debugf("HandlerAdd process EndpointSlice: %+v", name)
-
+	logger.Sugar().Infof("HandlerAdd process EndpointSlice: %+v", name)
 	s.writer.UpdateEndpointSlice(logger, eds)
 
 	return
@@ -57,14 +55,16 @@ func (s *EndpoingSliceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 		zap.String("endpointslice", name),
 	)
 
+	if t := cmp.Diff(oldEds, newEds); len(t) > 0 {
+		logger.Sugar().Debugf("EndpointSlice diff: %s", t)
+	}
 	if reflect.DeepEqual(oldEds.Endpoints, newEds.Endpoints) && reflect.DeepEqual(oldEds.Ports, newEds.Ports) {
 		logger.Sugar().Debugf("HandlerUpdate skip unchanged EndpointSlice: %+v", name)
-		logger.Sugar().Debugf("diff: %v", cmp.Diff(oldEds, newEds))
 		return
 	}
 
 	// s.log.Sugar().Debugf("HandlerUpdate get old EndpointSlice: %+v", oldEds)
-	logger.Sugar().Debugf("HandlerUpdate process EndpointSlice: %+v", newEds)
+	logger.Sugar().Infof("HandlerUpdate process EndpointSlice: %+v", newEds)
 	s.writer.UpdateEndpointSlice(logger, newEds)
 
 	return
@@ -82,8 +82,7 @@ func (s *EndpoingSliceReconciler) HandlerDelete(obj interface{}) {
 		zap.String("endpointslice", name),
 	)
 
-	logger.Sugar().Debugf("HandlerDelete process EndpointSlice: %s", name)
-
+	logger.Sugar().Infof("HandlerDelete process EndpointSlice: %s", name)
 	s.writer.DeleteEndpointSlice(logger, eds)
 
 	return
@@ -92,7 +91,7 @@ func (s *EndpoingSliceReconciler) HandlerDelete(obj interface{}) {
 func NewEndpointSliceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{}, writer ebpfWriter.EbpfWriter) {
 
 	// call HandlerUpdate at an interval of 60s
-	kubeInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(Client, time.Second*60)
+	kubeInformerFactory := kubeinformers.NewSharedInformerFactoryWithOptions(Client, InformerListInvterval)
 	// service
 	edsRes := discoveryv1.SchemeGroupVersion.WithResource("endpointslices")
 	srcInformer, e3 := kubeInformerFactory.ForResource(edsRes)

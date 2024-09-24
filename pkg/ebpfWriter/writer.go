@@ -10,11 +10,12 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	discovery "k8s.io/api/discovery/v1"
+	"time"
 )
 
 type EbpfWriter interface {
-	UpdateService(*zap.Logger, *corev1.Service) error
-	UpdateEndpointSlice(*zap.Logger, *discovery.EndpointSlice) error
+	UpdateService(*zap.Logger, *corev1.Service, bool) error
+	UpdateEndpointSlice(*zap.Logger, *discovery.EndpointSlice, bool) error
 	DeleteService(*zap.Logger, *corev1.Service) error
 	DeleteEndpointSlice(*zap.Logger, *discovery.EndpointSlice) error
 }
@@ -30,22 +31,41 @@ type ebpfWriter struct {
 	l *lock.Mutex
 	// index: namesapce/name
 	endpointData map[string]*EndpointData
+	// use the creationTimestamp to record the last update time, and calculate the validityTime
+	validityTime time.Duration
+	log          *zap.Logger
 }
 
 var _ EbpfWriter = (*ebpfWriter)(nil)
 
-func NewEbpfWriter() EbpfWriter {
-	return &ebpfWriter{
+func NewEbpfWriter(validityTime time.Duration, l *zap.Logger) EbpfWriter {
+	t := ebpfWriter{
 		l:            &lock.Mutex{},
 		endpointData: make(map[string]*EndpointData),
+		validityTime: validityTime,
+		log:          l,
+	}
+	go t.DeamonGC()
+	return &t
+}
+
+func (s *ebpfWriter) DeamonGC() {
+	// todo: delete ebpf map data according the metadata.CreationTimestamp by the validityTime
+	logger := s.log
+	logger("ebpfWriter DeamonGC begin to retrieve ebpf data with validityTime %v", s.validityTime)
+	for {
+		time.Sleep(time.Hour)
 	}
 }
 
-func (s *ebpfWriter) UpdateService(l *zap.Logger, svc *corev1.Service) error {
+func (s *ebpfWriter) UpdateService(l *zap.Logger, svc *corev1.Service, onlyUpdateTime bool) error {
 
 	if svc == nil {
 		return fmt.Errorf("empty service")
 	}
+
+	// use it to record last update time
+	svc.ObjectMeta.CreationTimestamp = time.Now()
 
 	index := svc.Namespace + "/" + svc.Name
 	l.Sugar().Debugf("update the service %s", index)
@@ -54,14 +74,19 @@ func (s *ebpfWriter) UpdateService(l *zap.Logger, svc *corev1.Service) error {
 	defer s.l.Unlock()
 	if d, ok := s.endpointData[index]; ok {
 		if d.EpsliceList != nil && len(d.EpsliceList) > 0 {
-			l.Sugar().Infof("apply new data to ebpf map for service %v", index)
-			// todo: use the old data to generate ebpf data
-			buildMapDataForService(d.Svc, d.EpsliceList)
-			// todo: use the new data to generate ebpf data
-			d.Svc = svc
-			buildMapDataForService(d.Svc, d.EpsliceList)
-			// write to ebpf map
-			updateEbpfMapForService()
+			if !onlyUpdateTime {
+				l.Sugar().Infof("apply new data to ebpf map for service %v", index)
+				// todo: use the old data to generate ebpf data
+				buildMapDataForService(d.Svc, d.EpsliceList)
+				// todo: use the new data to generate ebpf data
+				d.Svc = svc
+				buildMapDataForService(d.Svc, d.EpsliceList)
+				// write to ebpf map
+				updateEbpfMapForService()
+			} else {
+				l.Sugar().Debugf("just update lastUpdateTime")
+				d.Svc = svc
+			}
 		} else {
 			l.Sugar().Debugf("no need to apply new data to ebpf map, cause miss endpointslice")
 			d.Svc = svc
@@ -100,11 +125,12 @@ func (s *ebpfWriter) DeleteService(l *zap.Logger, svc *corev1.Service) error {
 	return nil
 }
 
-func (s *ebpfWriter) UpdateEndpointSlice(l *zap.Logger, epSlice *discovery.EndpointSlice) error {
+func (s *ebpfWriter) UpdateEndpointSlice(l *zap.Logger, epSlice *discovery.EndpointSlice, onlyUpdateTime bool) error {
 
 	if epSlice == nil {
 		return fmt.Errorf("empty EndpointSlice")
 	}
+	epSlice.ObjectMeta.CreationTimestamp = time.Now()
 
 	// for default/kubernetes ，there is no owner
 	index := k8s.GetEndpointSliceOwnerName(epSlice)
@@ -115,14 +141,19 @@ func (s *ebpfWriter) UpdateEndpointSlice(l *zap.Logger, epSlice *discovery.Endpo
 	defer s.l.Unlock()
 	if d, ok := s.endpointData[index]; ok {
 		if d.Svc != nil {
-			l.Sugar().Infof("apply new data to ebpf map for the service %v", index)
-			// todo: use the old data to generate ebpf data
-			buildMapDataForService(s.endpointData[index].Svc, s.endpointData[index].EpsliceList)
-			// todo: use the new data to generate ebpf data
-			d.EpsliceList[epindex] = epSlice
-			buildMapDataForService(s.endpointData[index].Svc, s.endpointData[index].EpsliceList)
-			// write to ebpf
-			updateEbpfMapForService()
+			if !onlyUpdateTime {
+				l.Sugar().Infof("apply new data to ebpf map for the service %v", index)
+				// todo: use the old data to generate ebpf data
+				buildMapDataForService(s.endpointData[index].Svc, s.endpointData[index].EpsliceList)
+				// todo: use the new data to generate ebpf data
+				d.EpsliceList[epindex] = epSlice
+				buildMapDataForService(s.endpointData[index].Svc, s.endpointData[index].EpsliceList)
+				// write to ebpf
+				updateEbpfMapForService()
+			} else {
+				l.Sugar().Debugf("just update lastUpdateTime")
+				d.EpsliceList[epindex] = epSlice
+			}
 		} else {
 			d.EpsliceList[epindex] = epSlice
 			l.Sugar().Debugf("no need to apply new data to ebpf map, cause miss service")
