@@ -136,10 +136,10 @@ func RunReconciles() {
 
 	bpfManager := ebpf.NewEbpfProgramMananger()
 	if err := bpfManager.LoadProgramp(); err != nil {
-		fmt.Printf("failed to Load ebpf Programp: %v \n", err)
-		return
+		rootLogger.Sugar().Fatalf("failed to Load ebpf Programp: %v \n", err)
 	}
 	defer bpfManager.UnloadProgramp()
+	rootLogger.Sugar().Infof("succeeded to Load ebpf Programp \n")
 
 	writer := ebpfWriter.NewEbpfWriter(bpfManager, InformerListInvterval, rootLogger.Named("ebpfWriter"))
 	// get clientset
