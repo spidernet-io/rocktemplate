@@ -28,8 +28,8 @@ type EndpointData struct {
 type ebpfWriter struct {
 	l *lock.Mutex
 	// index: namesapce/name
-	data   map[string]EndpointData
-	logger *zap.Logger
+	endpointData map[string]EndpointData
+	logger       *zap.Logger
 }
 
 var _ EbpfWriter = (*ebpfWriter)(nil)
@@ -48,68 +48,52 @@ func (s *ebpfWriter) UpdateService(svc *corev1.Service) error {
 	}
 
 	index := svc.Namespace + "/" + svc.Name
-
-	var oldSvc *corev1.Service
-	var oldEdSliceList []*discovery.EndpointSlice
-	shouldUpdateEbpf := false
+	s.logger.Sugar().Debugf("delete the service %s", index)
 
 	s.l.Lock()
 	defer s.l.Unlock()
-	if d, ok := s.data[index]; ok {
-		s.logger.Sugar().Debugf("update service info to %s", index)
+	if d, ok := s.endpointData[index]; ok {
 		if d.epsliceList != nil && len(d.epsliceList) > 0 {
-			oldEdSliceList = d.epsliceList
-			shouldUpdateEbpf = true
+
+			// todo : generate a ebpf map data and apply it
+			s.logger.Sugar().Infof("apply new data to ebpf map for service %v", index)
+
+			// todo: use the old data to generate ebpf data
+			buildMapDataForService(s.endpointData[index].svc, d.epsliceList)
+
+			// todo: use the new data to generate ebpf data
+			s.endpointData[index].svc = svc
+			buildMapDataForService(s.endpointData[index].svc, d.epsliceList)
+
+			updateEbpfMapForService()
 		}
-		oldSvc = d
 	} else {
-		s.logger.Sugar().Debugf("add new service info to %s", index)
+		s.logger.Sugar().Debugf("no need to apply new data to ebpf map for service %v", index)
 	}
 
-	if shouldUpdateEbpf {
-		// todo : generate a ebpf map data and apply it
-		s.logger.Sugar().Infof("apply new data to ebpf map: %v", index)
-
-		// todo: use the old data to generate ebpf data
-		buildMapDataForService(oldSvc, oldEdSliceList)
-
-		// todo: use the new data to generate ebpf data
-		s.data[index] = svc
-		buildMapDataForService(svc, oldEdSliceList)
-
-		updateEbpfMapForService()
-	}
-
-	s.data[index] = svc
 	return nil
 }
 
 func (s *ebpfWriter) DeleteService(svc *corev1.Service) error {
-
 	if svc == nil {
 		return fmt.Errorf("empty service")
 	}
 
 	index := svc.Namespace + "/" + svc.Name
+	s.logger.Sugar().Debugf("delete service %s", index)
 
-	shouldUpdateEbpf := false
 	s.l.Lock()
 	defer s.l.Unlock()
-	if d, ok := s.data[index]; ok {
-		s.logger.Sugar().Debugf("delete service info to %s", index)
-		shouldUpdateEbpf = true
-	} else {
-		s.logger.Sugar().Debugf("delete service info to %s", index)
-	}
-
-	if shouldUpdateEbpf {
+	if d, ok := s.endpointData[index]; ok {
 		// todo : generate a ebpf map data and apply it
-		s.logger.Sugar().Infof("apply new data to ebpf map: %v", index)
-		buildMapDataForService(s.data[index].svc, s.data[index].epsliceList)
+		s.logger.Sugar().Infof("delete data from ebpf map for service: %v", index)
+		buildMapDataForService(s.endpointData[index].svc, s.endpointData[index].epsliceList)
 		deleteEbpfMapForService()
+		delete(s.endpointData, index)
+	} else {
+		s.logger.Sugar().Debugf("no need to delete data from ebpf map for service %v", index)
 	}
 
-	delete(s.data, index)
 	return nil
 }
 
@@ -121,35 +105,30 @@ func (s *ebpfWriter) UpdateUpdateEndpointSlice(epSlice *discovery.EndpointSlice)
 
 	index := epSlice.Namespace + "/" + epSlice.OwnerReferences[0].Name
 	epindex := epSlice.Namespace + "/" + epSlice.Name
-	var oldSvc *corev1.Service
+	s.logger.Sugar().Debugf("update EndpointSlice %s for the service %s", epindex, index)
 
 	s.l.Lock()
 	defer s.l.Unlock()
-	if d, ok := s.data[index]; ok {
-		s.logger.Sugar().Debugf("update EndpointSlice info to %s", index)
+	if d, ok := s.endpointData[index]; ok {
 		if d.svc != nil {
-			oldSvc = d.svc
+			// todo : generate a ebpf map data and apply it
+			s.logger.Sugar().Infof("apply new data to ebpf map for the service %v", index)
+
+			// todo: use the old data to generate ebpf data
+			buildMapDataForService(s.endpointData[index].svc, s.endpointData[index].epsliceList)
+
+			// todo: use the new data to generate ebpf data
+			s.endpointData[index].epsliceList[epindex] = epSlice
+			buildMapDataForService(s.endpointData[index].svc, s.endpointData[index].epsliceList)
+
+			updateEbpfMapForService()
+		} else {
+			s.endpointData[index].epsliceList[epindex] = epSlice
 		}
 	} else {
-		s.logger.Sugar().Debugf("add new EndpointSlice info to %s", index)
+		s.logger.Sugar().Debugf("no need to apply new data to ebpf map for the service %v", index)
 	}
 
-	if oldSvc != nil {
-		// todo : generate a ebpf map data and apply it
-		s.logger.Sugar().Infof("apply new data to ebpf map: %v", index)
-
-		// todo: use the old data to generate ebpf data
-		buildMapDataForService(oldSvc, s.data[index].epsliceList)
-
-		// todo: use the new data to generate ebpf data
-		s.data[index].epsliceList[epindex] = epSlice
-		buildMapDataForService(oldSvc, s.data[index].epsliceList)
-
-		updateEbpfMapForService()
-
-	}
-
-	s.data[index].epsliceList[epindex] = epSlice
 	return nil
 }
 
@@ -161,32 +140,33 @@ func (s *ebpfWriter) DeleteEndpointSlice(epSlice *discovery.EndpointSlice) error
 
 	index := epSlice.Namespace + "/" + epSlice.OwnerReferences[0].Name
 	epindex := epSlice.Namespace + "/" + epSlice.Name
-
-	shouldUpdateEbpf := false
+	s.logger.Sugar().Debugf("delete EndpointSlice %s for the service %s", epindex, index)
 
 	s.l.Lock()
 	defer s.l.Unlock()
-
-	if d, ok := s.data[index]; ok {
-		s.logger.Sugar().Debugf("delete EndpointSlice info to %s", index)
+	if d, ok := s.endpointData[index]; ok {
 		if d.svc == nil {
-			shouldUpdateEbpf = false
+			// when the service event happens, the data has been removed
+			delete(s.endpointData[index].epsliceList, epindex)
 		} else {
-			shouldUpdateEbpf = false
+			if t, ok := d[epindex]; ok {
+				s.logger.Sugar().Infof("apply new data to ebpf map for the service %v", index)
+
+				// todo: use the old data to generate ebpf data
+				buildMapDataForService(d.svc, s.endpointData[index].epsliceList)
+
+				// todo: use the new data to generate ebpf data
+				delete(s.endpointData[index].epsliceList, epindex)
+				buildMapDataForService(d.svc, s.endpointData[index].epsliceList)
+
+				updateEbpfMapForService()
+
+				goto finish
+			}
 		}
-		delete(s.data[index].epsliceList, epindex)
-
-	} else {
-		s.logger.Sugar().Debugf("delete EndpointSlice info to %s", index)
-		shouldUpdateEbpf = false
 	}
+	s.logger.Sugar().Debugf("no need to apply data for ebpf map  for the service %v", index)
 
-	if shouldUpdateEbpf {
-		// todo : generate a ebpf map data and apply it
-		s.logger.Sugar().Infof("apply new data to ebpf map: %v", index)
-		buildMapDataForService(s.data[index].svc, s.data[index].epsliceList)
-		deleteEbpfMapForService()
-	}
-
+finish:
 	return nil
 }

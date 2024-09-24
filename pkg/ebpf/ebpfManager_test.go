@@ -1,11 +1,11 @@
-package main
-
-//go:generate go run github.com/cilium/ebpf/cmd/bpf2go -no-strip -cc clang -target bpf -cflags "-D__TARGET_ARCH_x86"  bpf_cgroup   bpf/cgroup.c
+package ebpf_test
 
 import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	. "github.com/onsi/ginkgo/v2"
+	"github.com/spidernet-io/rocktemplate/pkg/ebpf"
 	"net"
 	"os"
 	"os/signal"
@@ -24,7 +24,7 @@ func GenerateEndpointID(address net.IP, port int) (ID uint32) {
 }
 
 func Run() {
-	bpfManager := NewEbpfProgramMananger()
+	bpfManager := ebpf.NewEbpfProgramMananger()
 	if err := bpfManager.LoadProgramp(); err != nil {
 		fmt.Printf("failed to Load ebpf Programp: %v \n", err)
 		return
@@ -69,16 +69,16 @@ func Run() {
 
 	// ----------- set service map
 	if true {
-		var keyList []bpf_cgroupMapkeyService
-		var valueList []bpf_cgroupMapvalueService
-		keyList = append(keyList, bpf_cgroupMapkeyService{
+		var keyList []ebpf.bpf_cgroupMapkeyService
+		var valueList []ebpf.bpf_cgroupMapvalueService
+		keyList = append(keyList, ebpf.bpf_cgroupMapkeyService{
 			Address: floatipLittle,
 			Dport:   floatPortLittle,
-			Proto:   PROTOCOL_TCP,
-			NatType: NatTypeFloatIP,
+			Proto:   ebpf.PROTOCOL_TCP,
+			NatType: ebpf.NatTypeFloatIP,
 			Scope:   0,
 		})
-		valueList = append(valueList, bpf_cgroupMapvalueService{
+		valueList = append(valueList, ebpf.bpf_cgroupMapvalueService{
 			BackendId:         backendId,
 			TotalBackendCount: 2,
 			LocalBackendCount: 0,
@@ -94,30 +94,30 @@ func Run() {
 	}
 	// ----------- set backend map
 	if true {
-		var keyList []bpf_cgroupMapkeyBackend
-		keyList = append(keyList, bpf_cgroupMapkeyBackend{
+		var keyList []ebpf.bpf_cgroupMapkeyBackend
+		keyList = append(keyList, ebpf.bpf_cgroupMapkeyBackend{
 			BackendId: backendId,
 			Order:     0,
 		})
-		keyList = append(keyList, bpf_cgroupMapkeyBackend{
+		keyList = append(keyList, ebpf.bpf_cgroupMapkeyBackend{
 			BackendId: backendId,
 			Order:     1,
 		})
-		var valueList []bpf_cgroupMapvalueBackend
-		valueList = append(valueList, bpf_cgroupMapvalueBackend{
+		var valueList []ebpf.bpf_cgroupMapvalueBackend
+		valueList = append(valueList, ebpf.bpf_cgroupMapvalueBackend{
 			PodAddress:  pod1Little,
 			PodPort:     podPortLittle,
 			NodeAddress: node1Little,
 			NodePort:    nodePortLittle,
-			Proto:       PROTOCOL_TCP,
+			Proto:       ebpf.PROTOCOL_TCP,
 			Flags:       0,
 		})
-		valueList = append(valueList, bpf_cgroupMapvalueBackend{
+		valueList = append(valueList, ebpf.bpf_cgroupMapvalueBackend{
 			PodAddress:  pod2Little,
 			PodPort:     podPortLittle,
 			NodeAddress: node2Little,
 			NodePort:    nodePortLittle,
-			Proto:       PROTOCOL_TCP,
+			Proto:       ebpf.PROTOCOL_TCP,
 			Flags:       0,
 		})
 		if e := bpfManager.UpdateMapBackend(keyList, valueList); e != nil {
@@ -129,11 +129,11 @@ func Run() {
 	// ======================================= 设置 节点
 	// ----------- set node node
 	if true {
-		var keyList []bpf_cgroupMapkeyNode
-		keyList = append(keyList, bpf_cgroupMapkeyNode{
+		var keyList []ebpf.bpf_cgroupMapkeyNode
+		keyList = append(keyList, ebpf.bpf_cgroupMapkeyNode{
 			Address: node1Little,
 		})
-		keyList = append(keyList, bpf_cgroupMapkeyNode{
+		keyList = append(keyList, ebpf.bpf_cgroupMapkeyNode{
 			Address: node2Little,
 		})
 		valueList := make([]uint32, 2)
@@ -171,21 +171,13 @@ func Run() {
 	<-c
 }
 
-func main() {
-	fmt.Printf("\n")
-	fmt.Printf("------------------------------\n")
-	fmt.Printf("begin to work \n")
+var _ = Describe("ebpf", func() {
+	It("ebpf sanity test", func() {
+		GinkgoWriter.Printf("\n------------------------------\n")
+		GinkgoWriter.Printf("begin to work \n")
+		Run()
 
-	bpfManager := NewEbpfProgramMananger()
-	if err := bpfManager.LoadProgramp(); err != nil {
-		fmt.Printf("failed to Load ebpf Programp: %v \n", err)
-		os.Exit(1)
-	}
-	defer bpfManager.UnloadProgramp()
+	})
 
-	fmt.Println("Run...")
-	defer fmt.Println("Exiting...")
+})
 
-	Run()
-
-}

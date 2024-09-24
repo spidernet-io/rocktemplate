@@ -34,12 +34,13 @@ func (s *ServiceReconciler) HandlerAdd(obj interface{}) {
 		s.log.Sugar().Warnf("HandlerAdd failed to get sevice obj: %v")
 		return
 	}
+	name := svc.Namespace + "/" + svc.Name
 	if SkipServiceProcess(svc) {
+		s.log.Sugar().Debugf("HandlerAdd skip sevice: %+v", name)
 		return
 	}
-	name := svc.Namespace + "/" + svc.Name
-	s.log.Sugar().Debugf("HandlerAdd process sevice: %+v", name)
 
+	s.log.Sugar().Debugf("HandlerAdd process sevice: %+v", name)
 	s.writer.UpdateService(svc)
 
 	return
@@ -57,14 +58,16 @@ func (s *ServiceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 		return
 	}
 
+	name := newSvc.Namespace + "/" + newSvc.Name
 	if SkipServiceProcess(newSvc) && SkipServiceProcess(oldSvc) {
+		s.log.Sugar().Debugf("HandlerAdd skip service: %+v", name)
 		return
 	}
 	if reflect.DeepEqual(oldSvc.Spec, newSvc.Spec) && reflect.DeepEqual(oldSvc.Status, newSvc.Status) {
+		s.log.Sugar().Debugf("HandlerAdd skip service: %+v", name)
 		return
 	}
 
-	name := newSvc.Namespace + "/" + newSvc.Name
 	s.log.Sugar().Debugf("HandlerUpdate process new sevice: %+v", name)
 	s.writer.UpdateService(newSvc)
 
@@ -77,10 +80,11 @@ func (s *ServiceReconciler) HandlerDelete(obj interface{}) {
 		s.log.Sugar().Warnf("HandlerDelete failed to get sevice obj: %v")
 		return
 	}
+	name := svc.Namespace + "/" + svc.Name
 	if SkipServiceProcess(svc) {
+		s.log.Sugar().Debugf("HandlerAdd skip service: %+v", name)
 		return
 	}
-	name := svc.Namespace + "/" + svc.Name
 	s.log.Sugar().Debugf("HandlerDelete process sevice: %+v", svc)
 	s.writer.DeleteService(svc)
 
@@ -116,5 +120,5 @@ func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{},
 		rootLogger.Sugar().Fatalf("failed to WaitForCacheSync for serivce ")
 	}
 
-	rootLogger.Sugar().Infof("succeeded to cache all service ")
+	rootLogger.Sugar().Infof("succeeded to NewServiceInformer ")
 }

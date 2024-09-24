@@ -14,7 +14,7 @@ import (
 func NewStdoutLogger(loglevel string, Name string) *zap.Logger {
 
 	// log level
-	l := zapcore.InfoLevel
+	l := zapcore.DebugLevel
 	switch strings.ToLower(loglevel) {
 	case "debug":
 		l = zapcore.DebugLevel

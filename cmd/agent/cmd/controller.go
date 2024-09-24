@@ -147,6 +147,8 @@ func autoConfig() (*rest.Config, error) {
 
 func RunReconciles() {
 
+	rootLogger.Sugar().Debugf("RunReconciles")
+
 	writer := ebpfWriter.NewEbpfWriter(rootLogger.Named("data cacher"))
 	// get clientset
 	c, e1 := autoConfig()
