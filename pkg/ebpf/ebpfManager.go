@@ -222,19 +222,22 @@ func (s *EbpfProgramStruct) UnloadProgramp() error {
 }
 
 func (s *EbpfProgramStruct) LoadAllEbpfMap(mapPinDir string) error {
-	mappath := mapPinDir
-	if len(mappath) == 0 {
-		mappath = MapsPinpath
-	}
+
 	if s.EbpfMaps != nil {
 		// already load
 		return nil
 	}
 
+	s.EbpfMaps = &EbpfMaps{}
+
 	var err error
+	mappath := mapPinDir
+	if len(mappath) == 0 {
+		mappath = MapsPinpath
+	}
 
 	f := filepath.Join(mapPinDir, "map_affinity")
-	s.EbpfMaps.MapAffinity, err = ebpf.LoadPinnedMap(f, nil)
+	s.EbpfMaps.MapAffinity, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()
 		return fmt.Errorf("failed to load map %s\n", f)
@@ -279,7 +282,7 @@ func (s *EbpfProgramStruct) LoadAllEbpfMap(mapPinDir string) error {
 }
 
 func (s *EbpfProgramStruct) UnloadAllEbpfMap() {
-	if s.EbpfMaps != nil {
+	if s.EbpfMaps == nil {
 		// already load
 		return
 	}
@@ -301,6 +304,7 @@ func (s *EbpfProgramStruct) UnloadAllEbpfMap() {
 	if s.EbpfMaps.MapService != nil {
 		s.EbpfMaps.MapService.Close()
 	}
+	s.EbpfMaps = nil
 	return
 }
 
