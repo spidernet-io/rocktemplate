@@ -67,9 +67,10 @@ func (s *ebpfWriter) UpdateService(svc *corev1.Service) error {
 		}
 	} else {
 		s.logger.Sugar().Debugf("no need to apply new data to ebpf map for service %v", index)
+		t := map[string]*discovery.EndpointSlice{}
 		s.endpointData[index] = &EndpointData{
 			Svc:         svc,
-			EpsliceList: make(map[string]*discovery.EndpointSlice),
+			EpsliceList: t,
 		}
 	}
 
