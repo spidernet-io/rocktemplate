@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/google/go-cmp/cmp"
 	"github.com/spidernet-io/rocktemplate/pkg/ebpfWriter"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
@@ -76,6 +77,7 @@ func (s *ServiceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 	}
 	if reflect.DeepEqual(oldSvc.Spec, newSvc.Spec) && reflect.DeepEqual(oldSvc.Status, newSvc.Status) {
 		logger.Sugar().Debugf("HandlerAdd skip unchanged service %+v", name)
+		logger.Sugar().Debugf("diff: %v", cmp.Diff(oldSvc, newSvc))
 		return
 	}
 

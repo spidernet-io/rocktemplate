@@ -48,7 +48,7 @@ func (s *ebpfWriter) UpdateService(l *zap.Logger, svc *corev1.Service) error {
 	}
 
 	index := svc.Namespace + "/" + svc.Name
-	l.Sugar().Debugf("delete the service %s", index)
+	l.Sugar().Debugf("update the service %s", index)
 
 	s.l.Lock()
 	defer s.l.Unlock()
@@ -63,10 +63,11 @@ func (s *ebpfWriter) UpdateService(l *zap.Logger, svc *corev1.Service) error {
 			// write to ebpf map
 			updateEbpfMapForService()
 		} else {
+			l.Sugar().Debugf("no need to apply new data to ebpf map, cause miss endpointslice")
 			d.Svc = svc
 		}
 	} else {
-		l.Sugar().Debugf("no need to apply new data to ebpf map for service %v", index)
+		l.Sugar().Debugf("no need to apply new data to ebpf map, cause miss endpointslice")
 		s.endpointData[index] = &EndpointData{
 			Svc:         svc,
 			EpsliceList: make(map[string]*discovery.EndpointSlice),
@@ -93,7 +94,7 @@ func (s *ebpfWriter) DeleteService(l *zap.Logger, svc *corev1.Service) error {
 		deleteEbpfMapForService()
 		delete(s.endpointData, index)
 	} else {
-		l.Sugar().Debugf("no need to delete data from ebpf map for service %v", index)
+		l.Sugar().Debugf("no need to delete data from ebpf map, cause already removed")
 	}
 
 	return nil
@@ -124,9 +125,10 @@ func (s *ebpfWriter) UpdateEndpointSlice(l *zap.Logger, epSlice *discovery.Endpo
 			updateEbpfMapForService()
 		} else {
 			d.EpsliceList[epindex] = epSlice
+			l.Sugar().Debugf("no need to apply new data to ebpf map, cause miss service")
 		}
 	} else {
-		l.Sugar().Debugf("no need to apply new data to ebpf map for the service %v", index)
+		l.Sugar().Debugf("no need to apply new data to ebpf map, cause miss service")
 		s.endpointData[index] = &EndpointData{
 			Svc: nil,
 			EpsliceList: map[string]*discovery.EndpointSlice{
@@ -168,7 +170,7 @@ func (s *ebpfWriter) DeleteEndpointSlice(l *zap.Logger, epSlice *discovery.Endpo
 			}
 		}
 	}
-	l.Sugar().Debugf("no need to apply data for ebpf map  for the service %v", index)
+	l.Sugar().Debugf("no need to apply data for ebpf map, cause the data has been already removed")
 
 finish:
 	return nil

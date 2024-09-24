@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"github.com/google/go-cmp/cmp"
 	"github.com/spidernet-io/rocktemplate/pkg/ebpfWriter"
 	"github.com/spidernet-io/rocktemplate/pkg/k8s"
 	"go.uber.org/zap"
@@ -58,6 +59,7 @@ func (s *EndpoingSliceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 
 	if reflect.DeepEqual(oldEds.Endpoints, newEds.Endpoints) && reflect.DeepEqual(oldEds.Ports, newEds.Ports) {
 		logger.Sugar().Debugf("HandlerUpdate skip unchanged EndpointSlice: %+v", name)
+		logger.Sugar().Debugf("diff: %v", cmp.Diff(oldEds, newEds))
 		return
 	}
 
