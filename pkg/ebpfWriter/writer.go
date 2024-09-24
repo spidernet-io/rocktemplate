@@ -12,10 +12,10 @@ import (
 )
 
 type EbpfWriter interface {
-	UpdateService(svc *corev1.Service)
-	UpdateEndpointSlice(*discovery.EndpointSlice)
-	DeleteService(svc *corev1.Service)
-	DeleteEndpointSlice(*discovery.EndpointSlice)
+	UpdateService(svc *corev1.Service) error
+	UpdateEndpointSlice(*discovery.EndpointSlice) error
+	DeleteService(svc *corev1.Service) error
+	DeleteEndpointSlice(*discovery.EndpointSlice) error
 }
 
 type EndpointData struct {
@@ -34,7 +34,7 @@ type ebpfWriter struct {
 
 var _ EbpfWriter = (*ebpfWriter)(nil)
 
-func NewEbpfWriter(logger *zap.Logger) {
+func NewEbpfWriter(logger *zap.Logger) EbpfWriter {
 	return &ebpfWriter{
 		l:      &lock.Mutex{},
 		logger: logger,
@@ -59,11 +59,11 @@ func (s *ebpfWriter) UpdateService(svc *corev1.Service) error {
 			s.logger.Sugar().Infof("apply new data to ebpf map for service %v", index)
 
 			// todo: use the old data to generate ebpf data
-			buildMapDataForService(s.endpointData[index].svc, d.epsliceList)
+			buildMapDataForService(d.svc, d.epsliceList)
 
 			// todo: use the new data to generate ebpf data
 			s.endpointData[index].svc = svc
-			buildMapDataForService(s.endpointData[index].svc, d.epsliceList)
+			buildMapDataForService(d.svc, s.endpointData[index].svc)
 
 			updateEbpfMapForService()
 		}
@@ -149,7 +149,7 @@ func (s *ebpfWriter) DeleteEndpointSlice(epSlice *discovery.EndpointSlice) error
 			// when the service event happens, the data has been removed
 			delete(s.endpointData[index].epsliceList, epindex)
 		} else {
-			if t, ok := d[epindex]; ok {
+			if _, ok := d.epsliceList[epindex]; ok {
 				s.logger.Sugar().Infof("apply new data to ebpf map for the service %v", index)
 
 				// todo: use the old data to generate ebpf data

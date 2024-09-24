@@ -8,7 +8,7 @@ import (
 	discovery "k8s.io/api/discovery/v1"
 )
 
-func buildMapDataForService(svc *corev1.Service, edsList []*discovery.EndpointSlice) {
+func buildMapDataForService(svc *corev1.Service, edsList map[string]*discovery.EndpointSlice) {
 
 }
 
