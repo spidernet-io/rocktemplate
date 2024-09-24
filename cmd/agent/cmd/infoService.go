@@ -47,7 +47,7 @@ func (s *ServiceReconciler) HandlerAdd(obj interface{}) {
 	}
 
 	logger.Sugar().Infof("HandlerAdd process sevice %+v", name)
-	s.writer.UpdateService(logger, svc)
+	s.writer.UpdateService(logger, svc, false)
 
 	return
 }

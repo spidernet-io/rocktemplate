@@ -32,7 +32,7 @@ func (s *EndpoingSliceReconciler) HandlerAdd(obj interface{}) {
 	)
 
 	logger.Sugar().Infof("HandlerAdd process EndpointSlice: %+v", name)
-	s.writer.UpdateEndpointSlice(logger, eds)
+	s.writer.UpdateEndpointSlice(logger, eds, false)
 
 	return
 }
@@ -55,17 +55,17 @@ func (s *EndpoingSliceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 		zap.String("endpointslice", name),
 	)
 
+	onlyUpdateTime := false
 	if t := cmp.Diff(oldEds, newEds); len(t) > 0 {
 		logger.Sugar().Debugf("EndpointSlice diff: %s", t)
 	}
 	if reflect.DeepEqual(oldEds.Endpoints, newEds.Endpoints) && reflect.DeepEqual(oldEds.Ports, newEds.Ports) {
-		logger.Sugar().Debugf("HandlerUpdate skip unchanged EndpointSlice: %+v", name)
-		return
+		onlyUpdateTime = true
 	}
 
 	// s.log.Sugar().Debugf("HandlerUpdate get old EndpointSlice: %+v", oldEds)
 	logger.Sugar().Infof("HandlerUpdate process EndpointSlice: %+v", newEds)
-	s.writer.UpdateEndpointSlice(logger, newEds)
+	s.writer.UpdateEndpointSlice(logger, newEds, onlyUpdateTime)
 
 	return
 }
