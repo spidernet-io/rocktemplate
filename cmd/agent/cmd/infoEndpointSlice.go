@@ -33,7 +33,7 @@ func (s *EndpoingSliceReconciler) HandlerAdd(obj interface{}) {
 
 	logger.Sugar().Debugf("HandlerAdd process EndpointSlice: %+v", name)
 
-	s.writer.UpdateEndpointSlice(eds)
+	s.writer.UpdateEndpointSlice(logger, eds)
 
 	return
 }
@@ -82,7 +82,7 @@ func (s *EndpoingSliceReconciler) HandlerDelete(obj interface{}) {
 
 	logger.Sugar().Debugf("HandlerDelete process EndpointSlice: %s", name)
 
-	s.writer.DeleteEndpointSlice(eds)
+	s.writer.DeleteEndpointSlice(logger, eds)
 
 	return
 }
