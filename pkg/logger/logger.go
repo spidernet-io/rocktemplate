@@ -29,7 +29,7 @@ func NewStdoutLogger(loglevel string, Name string) *zap.Logger {
 	case "panic":
 		l = zapcore.PanicLevel
 	case "":
-		l = zapcore.InfoLevel
+		l = zapcore.DebugLevel
 	default:
 		panic(fmt.Sprintf("unknown log level %s", loglevel))
 	}
