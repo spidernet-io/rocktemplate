@@ -25,10 +25,6 @@ func (s *EndpoingSliceReconciler) HandlerAdd(obj interface{}) {
 	}
 	name := eds.Namespace + "/" + eds.Name
 	s.log.Sugar().Debugf("HandlerAdd process EndpointSlice: %+v", name)
-	if len(eds.OwnerReferences) == 0 {
-		s.log.Sugar().Debugf("HandlerAdd skip non-owned  EndpointSlice %+v, no onwer", name)
-		return
-	}
 
 	s.writer.UpdateEndpointSlice(eds)
 
@@ -52,10 +48,6 @@ func (s *EndpoingSliceReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 		s.log.Sugar().Debugf("HandlerUpdate skip unchanged EndpointSlice: %+v", name)
 		return
 	}
-	if len(newEds.OwnerReferences) == 0 {
-		s.log.Sugar().Debugf("HandlerAdd skip non-owned EndpointSlice %+v, no onwer", name)
-		return
-	}
 
 	// s.log.Sugar().Debugf("HandlerUpdate get old EndpointSlice: %+v", oldEds)
 	s.log.Sugar().Debugf("HandlerUpdate process EndpointSlice: %+v", newEds)
@@ -72,10 +64,6 @@ func (s *EndpoingSliceReconciler) HandlerDelete(obj interface{}) {
 	}
 	name := eds.Namespace + "/" + eds.Name
 	s.log.Sugar().Debugf("HandlerDelete process EndpointSlice: %s", name)
-	if len(eds.OwnerReferences) == 0 {
-		s.log.Sugar().Debugf("HandlerAdd skip non-owned EndpointSlice %+v, no onwer", name)
-		return
-	}
 
 	s.writer.DeleteEndpointSlice(eds)
 

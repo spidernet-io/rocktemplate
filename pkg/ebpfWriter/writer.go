@@ -105,11 +105,12 @@ func (s *ebpfWriter) UpdateEndpointSlice(epSlice *discovery.EndpointSlice) error
 	if epSlice == nil {
 		return fmt.Errorf("empty EndpointSlice")
 	}
-	if len(epSlice.OwnerReferences) == 0 {
-		return fmt.Errorf("no owner")
-	}
 
-	index := epSlice.Namespace + "/" + epSlice.OwnerReferences[0].Name
+	// for default/kubernetes ，there is no owner
+	index := epSlice.Namespace + "/" + epSlice.Name
+	if len(epSlice.OwnerReferences) > 0 {
+		index = epSlice.Namespace + "/" + epSlice.OwnerReferences[0].Name
+	}
 	epindex := epSlice.Namespace + "/" + epSlice.Name
 	s.logger.Sugar().Debugf("update EndpointSlice %s for the service %s", epindex, index)
 
@@ -147,7 +148,11 @@ func (s *ebpfWriter) DeleteEndpointSlice(epSlice *discovery.EndpointSlice) error
 		return fmt.Errorf("empty service")
 	}
 
-	index := epSlice.Namespace + "/" + epSlice.OwnerReferences[0].Name
+	// for default/kubernetes ，there is no owner
+	index := epSlice.Namespace + "/" + epSlice.Name
+	if len(epSlice.OwnerReferences) > 0 {
+		index = epSlice.Namespace + "/" + epSlice.OwnerReferences[0].Name
+	}
 	epindex := epSlice.Namespace + "/" + epSlice.Name
 	s.logger.Sugar().Debugf("delete EndpointSlice %s for the service %s", epindex, index)
 
