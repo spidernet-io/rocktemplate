@@ -13,9 +13,9 @@ import (
 )
 
 type EbpfWriter interface {
-	UpdateService(*zap.Logger, svc *corev1.Service) error
+	UpdateService(*zap.Logger, *corev1.Service) error
 	UpdateEndpointSlice(*zap.Logger, *discovery.EndpointSlice) error
-	DeleteService(*zap.Logger, svc *corev1.Service) error
+	DeleteService(*zap.Logger, *corev1.Service) error
 	DeleteEndpointSlice(*zap.Logger, *discovery.EndpointSlice) error
 }
 
