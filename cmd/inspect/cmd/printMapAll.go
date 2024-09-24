@@ -8,8 +8,8 @@ import (
 )
 
 var CmdPrintMapAll = &cobra.Command{
-	Use:   "affinity",
-	Short: "print the ebpf map of node ",
+	Use:   "all",
+	Short: "print all data of the ebpf map ",
 	Args:  cobra.RangeArgs(0, 0),
 	Run: func(cmd *cobra.Command, args []string) {
 		bpf := ebpf.NewEbpfProgramMananger(nil)

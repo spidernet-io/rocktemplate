@@ -9,7 +9,7 @@ import (
 
 var CmdPrintMapNat = &cobra.Command{
 	Use:   "nat",
-	Short: "print the ebpf map of node ",
+	Short: "print the ebpf map of nat record ",
 	Args:  cobra.RangeArgs(0, 0),
 	Run: func(cmd *cobra.Command, args []string) {
 		bpf := ebpf.NewEbpfProgramMananger(nil)
