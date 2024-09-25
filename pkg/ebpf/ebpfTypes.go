@@ -102,13 +102,13 @@ func (t bpf_cgroupMapvalueNatRecord) String() string {
 // --------------------------------------------------
 
 func (t bpf_cgroupMapkeyAffinity) String() string {
-	return fmt.Sprintf(`{ ClientCookie:%d , OriginalDestIp:%s, OriginalPort:%d }`,
-		t.ClientCookie, GetIpStr(t.OriginalDestIp), t.OriginalPort)
+	return fmt.Sprintf(`{ ClientCookie:%d , OriginalDestIp:%s, OriginalPort:%d, protocol:%s }`,
+		t.ClientCookie, GetIpStr(t.OriginalDestIp), t.OriginalPort, GetProtocolStr(t.Proto))
 }
 
 func (t bpf_cgroupMapvalueAffinity) String() string {
-	return fmt.Sprintf(`{ LastUpatedTimeStamp:%d , NatIp:%s, NatPort:%d, protocol:%s }`,
-		t.Ts, GetIpStr(t.NatIp), t.NatPort, GetProtocolStr(t.Proto))
+	return fmt.Sprintf(`{ LastUpatedTimeStamp:%d , NatIp:%s, NatPort:%d  }`,
+		t.Ts, GetIpStr(t.NatIp), t.NatPort)
 }
 
 // -------------------------------------------------

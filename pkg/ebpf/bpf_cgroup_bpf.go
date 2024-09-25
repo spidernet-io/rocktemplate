@@ -15,7 +15,8 @@ type bpf_cgroupMapkeyAffinity struct {
 	ClientCookie   uint64
 	OriginalDestIp uint32
 	OriginalPort   uint16
-	Pad            [2]uint8
+	Proto          uint8
+	Pad            uint8
 }
 
 type bpf_cgroupMapkeyBackend struct {
@@ -51,8 +52,7 @@ type bpf_cgroupMapvalueAffinity struct {
 	Ts      uint64
 	NatIp   uint32
 	NatPort uint16
-	Proto   uint8
-	Pad     uint8
+	Pad     [2]uint8
 }
 
 type bpf_cgroupMapvalueBackend struct {
