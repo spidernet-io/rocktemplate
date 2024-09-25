@@ -126,7 +126,7 @@ func getClusterIPs(svc *corev1.Service, ipFamily corev1.IPFamily) []net.IP {
 
 func GenerateSvcV4Id(svc *corev1.Service) uint32 {
 	// 使用 clusterip （假设 IP 地址唯一） 作为 service 之间的区别，它用于关联 一个 service 和 其所属的所有 endpoint
-	t := net.ParseIP(svc.Spec.ClusterIP)
+	t := net.ParseIP(svc.Spec.ClusterIP).To4()
 	a := binary.LittleEndian.Uint32(t)
 	fmt.Printf("----debug: svc.Spec.ClusterIP=%s %d", svc.Spec.ClusterIP, a)
 	return a
