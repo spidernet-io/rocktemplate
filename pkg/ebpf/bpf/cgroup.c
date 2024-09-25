@@ -153,7 +153,7 @@ static __always_inline struct mapvalue_affinity* get_affinity_and_update( struct
     debugf(DEBUG_VERSBOSE, "search affinityKey  original_dest_ip=%pI4 \n"  ,  &(affinityKey.original_dest_ip)  );
     debugf(DEBUG_VERSBOSE, "search affinityKey  original_dest_ip=%d \n"  ,  affinityKey.client_cookie  );
     debugf(DEBUG_VERSBOSE, "search affinityKey  original_port=%d \n"  ,  affinityKey.original_port  );
-    debugf(DEBUG_VERSBOSE, "search affinityKey  ip_proto=%d \n"  ,  affinityKey.ip_proto  );
+    debugf(DEBUG_VERSBOSE, "search affinityKey  ip_proto=%d \n"  ,  affinityKey.proto  );
 
     struct mapvalue_affinity *affinityValue = bpf_map_lookup_elem( &map_affinity , &affinityKey);
     if (!affinityValue) {
@@ -298,7 +298,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
             debugf(DEBUG_VERSBOSE, "update affinityKey  original_dest_ip=%pI4 \n"  ,  &(affinityKey.original_dest_ip)  );
             debugf(DEBUG_VERSBOSE, "update affinityKey  original_dest_ip=%d \n"  ,  affinityKey.client_cookie  );
             debugf(DEBUG_VERSBOSE, "update affinityKey  original_port=%d \n"  ,  affinityKey.original_port  );
-            debugf(DEBUG_VERSBOSE, "update affinityKey  ip_proto=%d \n"  ,  affinityKey.ip_proto  );
+            debugf(DEBUG_VERSBOSE, "update affinityKey  ip_proto=%d \n"  ,  affinityKey.proto  );
 
         if ( bpf_map_update_elem(&map_affinity, &affinityKey, &affinityValue , BPF_ANY) ) {
             debugf(DEBUG_ERROR, "failed to create map_affinity for %pI4:%d\n" , &dst_ip  , dst_port   );
