@@ -69,6 +69,10 @@ func init() {
 		logger.Info(v.EnvName + " = " + m)
 	}
 
+	if len(types.AgentConfig.LocalNodeName) == 0 {
+		types.AgentConfig.LocalNodeName, _ = os.Hostname()
+	}
+	
 	// command flags
 	globalFlag := rootCmd.PersistentFlags()
 	globalFlag.StringVarP(&types.AgentConfig.ConfigMapPath, "config-path", "C", "", "configmap file path")

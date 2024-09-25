@@ -2,8 +2,6 @@
 // SPDX-License-Identifier: Apache-2.0
 package types
 
-import "os"
-
 type AgentConfigStruct struct {
 	// --------- from env
 	EnableMetric           bool
@@ -38,6 +36,6 @@ var AgentEnvMapping = []EnvMapping{
 	{"ENV_PYROSCOPE_PUSH_SERVER_ADDRESS", "", &AgentConfig.PyroscopeServerAddress},
 	{"ENV_POD_NAME", "", &AgentConfig.PodName},
 	{"ENV_POD_NAMESPACE", "", &AgentConfig.PodNamespace},
-	{"ENV_LOCAL_NODE_NAME", os.Hostname(), &AgentConfig.LocalNodeName},
+	{"ENV_LOCAL_NODE_NAME", "", &AgentConfig.LocalNodeName},
 	{"ENV_GOLANG_MAXPROCS", "8", &AgentConfig.GolangMaxProcs},
 }
