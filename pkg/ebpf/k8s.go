@@ -182,7 +182,7 @@ OUTER_NEW:
 	}
 
 	// -------- apply
-	// must deletion first, then apply new . or else it maybe delete expected item
+	// must deletion first, then apply new .
 	if len(delKeyList) > 0 {
 		if e := s.DeleteMapService(delKeyList); e != nil {
 			l.Sugar().Errorf("failed to delete service map: %v", e)
@@ -245,7 +245,7 @@ OUTER_NEW:
 	}
 
 	// -------- apply
-	// must deletion first, then apply new . or else it maybe delete expected item
+	// must deletion first, then apply new
 	if len(delKeyList) > 0 {
 		if e := s.DeleteMapBackend(delKeyList); e != nil {
 			l.Sugar().Errorf("failed to delete backend map: %v", e)

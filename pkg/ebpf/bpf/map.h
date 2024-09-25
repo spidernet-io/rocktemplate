@@ -27,7 +27,7 @@
 */
 // a loadbalancer has several entries mapping to each backend
 struct mapkey_service {
-  ipv4_addr_t address;     /* 小端存储。 clusterIP， 或者 NODE_PORT_IP(255.255.255.255) 表示 nodePort  */
+  __be32 address;     /* 小端存储。 clusterIP， 或者 NODE_PORT_IP(255.255.255.255) 表示 nodePort  */
   __be16 dport;            /* 小端存储。 clusterIP 的 端口， 或者 nodePort 的 端口     */
   __u8  proto;
   __u8  nat_type;         /* NAT_TYPE_SERVICE (  lowest priority  ) ,NAT_TYPE_REDIRECT ,  NAT_TYPE_BALANCING ( highest priority )  */
@@ -69,17 +69,17 @@ struct {
 
 struct mapkey_backend {
     __be32 order;      //  第几个 endpoint ip 。 前面几个记录，优先存储 本地 node 上的 endpoint ， 用于实现 clientIP 亲和
-    __u32 svc_id;  // 对应 mapvalue_service 中的 svc_id ，  一个 service 有一个 唯一的 ID ，用来映射 service 下 所有的 endpoint
+    __u32  svc_id;  // 对应 mapvalue_service 中的 svc_id ，  一个 service 有一个 唯一的 ID ，用来映射 service 下 所有的 endpoint
     __be16 dport;
-    __u8  proto;
-    __u8  nat_type;
-    __u8  scope;
-    __u8  pad[3];
+    __u8   proto;
+    __u8   nat_type;
+    __u8   scope;
+    __u8   pad[3];
 };
 
 struct mapvalue_backend {
-	ipv4_addr_t pod_address;		/* 小端存储。 Service endpoint IPv4 address , saved in LittleEndian */
-	ipv4_addr_t node_address;		/* 小端存储。 for loadbalancer , access the nodePort */
+	__be32 pod_address;		/* 小端存储。 Service endpoint IPv4 address , saved in LittleEndian */
+	__be32 node_address;		/* 小端存储。 for loadbalancer , access the nodePort */
 	__be16 pod_port;		/* 小端存储。 L4 port filter , saved in LittleEndian */
 	__be16 node_port;		/* 小端存储。 for loadbalancer , access the nodePort */
 };
@@ -114,20 +114,19 @@ struct {
 //======================================= map ： 存储 亲和 记录
 
 struct mapkey_affinity {
-   __u64 client_cookie;       //  bpf_get_socket_cookie(ctx);
-   ipv4_addr_t original_dest_ip;  // 小端存储。
-   //ipv4_addr_t client_ip;
-   __u16 original_port ;   // 小端存储。
-   __u8 proto;
-   __u8 pad;
+   __u64   client_cookie;       //  bpf_get_netns_cookie(ctx);
+   __be32  original_dest_ip;  // 小端存储。
+   __u16   original_port ;   // 小端存储。
+   __u8    proto;
+   __u8    pad;
 };
 
 struct mapvalue_affinity {
-   __u64 ts;   // 这个值存储了 上次发生 亲和命中的 时间
-   ipv4_addr_t nat_ip;   // 小端存储。
-   __u16       nat_port ;   // 小端存储。
-   __u8 proto;
-   __u8 pad;
+   __u64    ts;             // 这个值存储了 上次发生 亲和命中的 时间
+   __be32   nat_ip;   // 小端存储。
+   __u16    nat_port ;   // 小端存储。
+   __u8     proto;
+   __u8     pad;
 };
 
 
@@ -145,17 +144,17 @@ struct {
 
 
 struct mapkey_nat_record {
-   __u64 socket_cookie;       //  bpf_get_socket_cookie(ctx);
-   ipv4_addr_t nat_ip;    //   小端存储。  nat 后的 ip
-   __u16 nat_port;       // 小端存储。
-   __u8 proto;
-   __u8 pad;
+   __u64   socket_cookie;       //  bpf_get_socket_cookie(ctx);
+   __be32  nat_ip;    //   小端存储。  nat 后的 ip
+   __u16   nat_port;       // 小端存储。
+   __u8    proto;
+   __u8    pad;
 };
 
 struct mapvalue_nat_record {
-	ipv4_addr_t original_dest_ip;  // 小端存储。
-	__u16 original_dest_port;       // 小端存储。
-   __u8 pad[2];
+	__be32 original_dest_ip;  // 小端存储。
+	__u16  original_dest_port;       // 小端存储。
+   __u8    pad[2];
 };
 
 
@@ -178,8 +177,8 @@ struct {
 // BPF_MAP_TYPE_PERF_EVENT_ARRAY 类型的 数据结构体，在 golang 中需要自定定义 struct
 
 struct event_value {
-    ipv4_addr_t nat_ip ;    // 小端存储。
-    ipv4_addr_t original_dest_ip ;  /* 小端存储。 dest ip */
+    __be32 nat_ip ;    // 小端存储。
+    __be32 original_dest_ip ;  /* 小端存储。 dest ip */
 	__be16 nat_port;   // 小端存储。
 	__be16 original_dest_port;   // 小端存储。
 	__u32  tgid;

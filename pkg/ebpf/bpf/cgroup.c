@@ -70,7 +70,7 @@ static __always_inline  bool ctx_in_hostns(void *ctx )
 
 //-------------------------------------
 
-static __always_inline bool get_service( ipv4_addr_t dest_ip, __u16 dst_port, __u8 ip_proto  , struct mapkey_service *svckey , struct mapvalue_service *svcval ) {
+static __always_inline bool get_service( __be32 dest_ip, __u16 dst_port, __u8 ip_proto  , struct mapkey_service *svckey , struct mapvalue_service *svcval ) {
     struct mapvalue_service *t ;
 
     // search NAT_TYPE_BALANCING
@@ -144,7 +144,7 @@ static __always_inline struct mapvalue_affinity* get_affinity_and_update( struct
 
     struct mapkey_affinity affinityKey = {
        .original_dest_ip =  ctx->user_ip4 ,
-       .client_cookie =  bpf_get_socket_cookie(ctx) ,
+       .client_cookie =  bpf_get_netns_cookie(ctx) ,
        .original_port = ctx_dst_port(ctx) ,
        .proto = ip_proto ,
        .pad = 0 ,
@@ -181,7 +181,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
 	// user_port is saved in network order, convert to host order
 	__u16 dst_port = (__u16)(bpf_htonl(ctx->user_port)>>16);
 
-    ipv4_addr_t nat_ip ;
+    __be32 nat_ip ;
     __be16 nat_port ;
     struct mapkey_nat_record natkey;
     struct mapvalue_nat_record natvalue;
@@ -216,14 +216,6 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
 		return 1 ;
 	}
 
-    // -------- debug nat
-    __u32 float_ip = bpf_htonl(FLOAT_IP) ;
-    if ( dst_ip == float_ip  && dst_port == FLOAT_PORT ) {
-        nat_ip = ENDPOINT_IP ;
-        nat_port = ENDPOINT_PORT  ;
-        debugf(DEBUG_INFO, "nat by debug way for %pI4:%d\n" , &dst_ip  , dst_port   );
-        goto set_nat ;
-    }
 
     // ------------- find service value
     struct mapkey_service svckey;
@@ -248,7 +240,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     struct mapvalue_affinity *affinityValue = get_affinity_and_update(ctx, svcval.affinity_second , ip_proto ) ;
     if (affinityValue) {
         // update
-        debugf(DEBUG_INFO, "with affinity, nat for %pI4:%d\n" , &dst_ip  , dst_port   );
+        debugf(DEBUG_INFO, "nat by service with affinity, for %pI4:%d\n" , &dst_ip  , dst_port   );
         nat_ip = affinityValue->nat_ip ;
         nat_port = affinityValue->nat_port  ;
         goto set_nat ;
@@ -272,11 +264,12 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
         goto output_event;
     }
 
-    // create affinity item
+
     if ( svcval.affinity_second > 0 ) {
+        // create affinity item
         struct mapkey_affinity affinityKey = {
            .original_dest_ip =  dst_ip ,
-           .client_cookie =  bpf_get_socket_cookie(ctx) ,
+           .client_cookie =  bpf_get_netns_cookie(ctx) ,
            .original_port = dst_port ,
            .proto = ip_proto ,
            .pad = 0 ,
@@ -292,6 +285,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
             debugf(DEBUG_ERROR, "failed to create map_affinity for %pI4:%d\n" , &dst_ip  , dst_port   );
             goto output_event;
         }
+        debugf(DEBUG_VERSBOSE, "nat by affinity, for %pI4:%d\n" , &dst_ip  , dst_port   );
     }else{
         if ( svckey.nat_type == NAT_TYPE_BALANCING ) {
             evt.nat_type = NAT_TYPE_BALANCING ;
@@ -302,18 +296,19 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
                 nat_ip = backendValue->pod_address ;
                 nat_port = backendValue->pod_port ;
             }
+            debugf(DEBUG_VERSBOSE, "nat by balancing, for %pI4:%d\n" , &dst_ip  , dst_port   );
         }else if ( svckey.nat_type == NAT_TYPE_REDIRECT ) {
             evt.nat_type = NAT_TYPE_REDIRECT ;
             nat_ip = backendValue->pod_address ;
             nat_port = backendValue->pod_port ;
-
+            debugf(DEBUG_VERSBOSE, "nat by redirect, for %pI4:%d\n" , &dst_ip  , dst_port   );
         }else {
             evt.nat_type = NAT_TYPE_SERVICE ;
             nat_ip = backendValue->pod_address ;
             nat_port = backendValue->pod_port ;
+            debugf(DEBUG_VERSBOSE, "nat by service, for %pI4:%d\n" , &dst_ip  , dst_port   );
         }
     }
-
 
 set_nat:
     natkey.socket_cookie = bpf_get_socket_cookie(ctx) ;
