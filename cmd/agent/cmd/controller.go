@@ -134,23 +134,25 @@ func RunReconciles() {
 
 	rootLogger.Sugar().Debugf("RunReconciles")
 
+	// get clientset
+	c, e1 := autoConfig()
+	if e1 != nil {
+		rootLogger.Sugar().Fatalf("failed to find client-go config, make sure it is in a pod or ~/.kube/config exists: %v", e1)
+	}
+	Client, e2 := kubernetes.NewForConfig(c)
+	if e2 != nil {
+		rootLogger.Sugar().Fatalf("failed to NewForConfig: %v", e2)
+	}
+
+	// setup ebpf and load
 	bpfManager := ebpf.NewEbpfProgramMananger(rootLogger.Named("ebpf"))
 	if err := bpfManager.LoadProgramp(); err != nil {
 		rootLogger.Sugar().Fatalf("failed to Load ebpf Programp: %v \n", err)
 	}
 	defer bpfManager.UnloadProgramp()
 	rootLogger.Sugar().Infof("succeeded to Load ebpf Programp \n")
-
+	// setup ebpf writer
 	writer := ebpfWriter.NewEbpfWriter(bpfManager, InformerListInvterval, rootLogger.Named("ebpfWriter"))
-	// get clientset
-	c, e1 := autoConfig()
-	if e1 != nil {
-		rootLogger.Sugar().Fatalf("failed to find client-go config: %v", e1)
-	}
-	Client, e2 := kubernetes.NewForConfig(c)
-	if e2 != nil {
-		rootLogger.Sugar().Fatalf("failed to NewForConfig: %v", e2)
-	}
 
 	// setup service informer
 	stopWatchCh := make(chan struct{})

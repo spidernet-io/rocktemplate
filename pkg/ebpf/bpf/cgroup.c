@@ -278,8 +278,6 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
            .nat_ip = nat_ip ,
            .nat_port = nat_port ,
            .ts = bpf_ktime_get_ns() ,
-           .proto = ip_proto ,
-           .pad = 0 ,
         };
         if ( bpf_map_update_elem(&map_affinity, &affinityKey, &affinityValue , BPF_ANY) ) {
             debugf(DEBUG_ERROR, "failed to create map_affinity for %pI4:%d\n" , &dst_ip  , dst_port   );

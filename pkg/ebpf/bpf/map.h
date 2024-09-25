@@ -125,8 +125,7 @@ struct mapvalue_affinity {
    __u64    ts;             // 这个值存储了 上次发生 亲和命中的 时间
    __be32   nat_ip;   // 小端存储。
    __u16    nat_port ;   // 小端存储。
-   __u8     proto;
-   __u8     pad;
+   __u8     pad[2];
 };
 
 

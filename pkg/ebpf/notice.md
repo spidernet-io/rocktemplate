@@ -46,3 +46,5 @@ fowardToNode ： 是否解析到 pod 所在的 node 的 nodePort  ， 适用与�
 
 程序启动时，会清除 service backend node map， 实现数据完整同步 。 这样，可能会带来 短暂的 service 访问失败 
 
+貌似每次启动，calico node 都歇菜了 ？ 测试和 其它 ebpf 程序的 工程兼容性 
+

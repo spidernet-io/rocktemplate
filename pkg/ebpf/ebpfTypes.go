@@ -99,6 +99,18 @@ func (t bpf_cgroupMapvalueNatRecord) String() string {
 		GetIpStr(t.OriginalDestIp), t.OriginalDestPort)
 }
 
+// --------------------------------------------------
+
+func (t bpf_cgroupMapkeyAffinity) String() string {
+	return fmt.Sprintf(`{ ClientCookie:%d , OriginalDestIp:%s, OriginalPort:%d }`,
+		t.ClientCookie, GetIpStr(t.OriginalDestIp), t.OriginalPort)
+}
+
+func (t bpf_cgroupMapvalueAffinity) String() string {
+	return fmt.Sprintf(`{ LastUpatedTimeStamp:%d , NatIp:%s, NatPort:%d, protocol:%s }`,
+		t.Ts, GetIpStr(t.NatIp), t.NatPort, GetProtocolStr(t.Proto))
+}
+
 // -------------------------------------------------
 
 // struct for ebpf map : event
