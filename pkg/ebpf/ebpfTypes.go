@@ -66,7 +66,7 @@ func (t bpf_cgroupMapkeyService) String() string {
 }
 
 func (t bpf_cgroupMapvalueService) String() string {
-	return fmt.Sprintf(`{ SvcId:%s, TotalBackendCount:%d, LocalBackendCount:%d, AffinitySecond:%d, ServiceFlags:%d, FloatipFlags:%d, RedirectFlags:%d }`,
+	return fmt.Sprintf(`{ SvcId:%d, TotalBackendCount:%d, LocalBackendCount:%d, AffinitySecond:%d, ServiceFlags:%d, FloatipFlags:%d, RedirectFlags:%d }`,
 		t.SvcId, t.TotalBackendCount, t.LocalBackendCount, t.AffinitySecond, t.ServiceFlags, t.FloatipFlags, t.RedirectFlags)
 }
 

@@ -76,6 +76,12 @@ type EbpfProgram interface {
 	PrintMapAffinity() error
 	PrintMapNatRecord() error
 
+	CleanMapService() (int, error)
+	CleanMapNode() (int, error)
+	CleanMapBackend() (int, error)
+	CleanMapAffinity() (int, error)
+	CleanMapNatRecord() (int, error)
+
 	UpdateMapService([]bpf_cgroupMapkeyService, []bpf_cgroupMapvalueService) error
 	UpdateMapBackend([]bpf_cgroupMapkeyBackend, []bpf_cgroupMapvalueBackend) error
 	UpdateMapNode([]bpf_cgroupMapkeyNode, []uint32) error

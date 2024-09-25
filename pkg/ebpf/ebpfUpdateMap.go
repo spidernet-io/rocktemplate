@@ -1,6 +1,7 @@
 package ebpf
 
 import (
+	"errors"
 	"fmt"
 	"github.com/cilium/ebpf"
 )
@@ -172,4 +173,216 @@ func (s *EbpfProgramStruct) DeleteMapNatRecord(keyList []bpf_cgroupMapkeyNatReco
 		return fmt.Errorf("deleted account %v , different from expected account %v ", c, len(keyList))
 	}
 	return nil
+}
+
+// ------------------------- clean ----------------------------------
+
+func (s *EbpfProgramStruct) CleanMapService() (int, error) {
+	keys := make([]bpf_cgroupMapkeyService, 100)
+	vals := make([]bpf_cgroupMapvalueService, 100)
+
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapService != nil {
+		mapPtr = s.BpfObjCgroup.MapService
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapService != nil {
+		mapPtr = s.EbpfMaps.MapService
+	} else {
+		return 0, fmt.Errorf("failed to get ebpf map")
+	}
+	name := mapPtr.String()
+
+	var cursor ebpf.MapBatchCursor
+	count := 0
+	for {
+		c, batchErr := mapPtr.BatchLookup(&cursor, keys, vals, nil)
+		count += c
+		finished := false
+		if batchErr != nil {
+			if errors.Is(batchErr, ebpf.ErrKeyNotExist) {
+				// end
+				finished = true
+			} else {
+				return 0, fmt.Errorf("failed to batchlookup for %v\n", mapPtr.String())
+			}
+		}
+		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
+		if e != nil {
+			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
+		}
+		if len(keys) != c {
+			return 0, fmt.Errorf("deleted account %v , different from expected account %v ", c, len(keys))
+		}
+		if finished {
+			break
+		}
+	}
+	return count, nil
+}
+
+func (s *EbpfProgramStruct) CleanMapBackend() (int, error) {
+	keys := make([]bpf_cgroupMapkeyBackend, 100)
+	vals := make([]bpf_cgroupMapvalueBackend, 100)
+
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapBackend != nil {
+		mapPtr = s.BpfObjCgroup.MapBackend
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapBackend != nil {
+		mapPtr = s.EbpfMaps.MapBackend
+	} else {
+		return 0, fmt.Errorf("failed to get ebpf map")
+	}
+	name := mapPtr.String()
+
+	var cursor ebpf.MapBatchCursor
+	count := 0
+	for {
+		c, batchErr := mapPtr.BatchLookup(&cursor, keys, vals, nil)
+		count += c
+		finished := false
+		if batchErr != nil {
+			if errors.Is(batchErr, ebpf.ErrKeyNotExist) {
+				// end
+				finished = true
+			} else {
+				return 0, fmt.Errorf("failed to batchlookup for %v\n", mapPtr.String())
+			}
+		}
+		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
+		if e != nil {
+			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
+		}
+		if len(keys) != c {
+			return 0, fmt.Errorf("deleted account %v , different from expected account %v ", c, len(keys))
+		}
+		if finished {
+			break
+		}
+	}
+	return count, nil
+}
+
+func (s *EbpfProgramStruct) CleanMapNode() (int, error) {
+	keys := make([]bpf_cgroupMapkeyNode, 100)
+	vals := make([]uint32, 100)
+
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapNode != nil {
+		mapPtr = s.BpfObjCgroup.MapNode
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapNode != nil {
+		mapPtr = s.EbpfMaps.MapNode
+	} else {
+		return 0, fmt.Errorf("failed to get ebpf map")
+	}
+	name := mapPtr.String()
+
+	var cursor ebpf.MapBatchCursor
+	count := 0
+	for {
+		c, batchErr := mapPtr.BatchLookup(&cursor, keys, vals, nil)
+		count += c
+		finished := false
+		if batchErr != nil {
+			if errors.Is(batchErr, ebpf.ErrKeyNotExist) {
+				// end
+				finished = true
+			} else {
+				return 0, fmt.Errorf("failed to batchlookup for %v\n", mapPtr.String())
+			}
+		}
+		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
+		if e != nil {
+			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
+		}
+		if len(keys) != c {
+			return 0, fmt.Errorf("deleted account %v , different from expected account %v ", c, len(keys))
+		}
+		if finished {
+			break
+		}
+	}
+	return count, nil
+}
+
+func (s *EbpfProgramStruct) CleanMapAffinity() (int, error) {
+	keys := make([]bpf_cgroupMapkeyAffinity, 100)
+	vals := make([]bpf_cgroupMapvalueAffinity, 100)
+
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapAffinity != nil {
+		mapPtr = s.BpfObjCgroup.MapAffinity
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapAffinity != nil {
+		mapPtr = s.EbpfMaps.MapAffinity
+	} else {
+		return 0, fmt.Errorf("failed to get ebpf map")
+	}
+	name := mapPtr.String()
+
+	var cursor ebpf.MapBatchCursor
+	count := 0
+	for {
+		c, batchErr := mapPtr.BatchLookup(&cursor, keys, vals, nil)
+		count += c
+		finished := false
+		if batchErr != nil {
+			if errors.Is(batchErr, ebpf.ErrKeyNotExist) {
+				// end
+				finished = true
+			} else {
+				return 0, fmt.Errorf("failed to batchlookup for %v\n", mapPtr.String())
+			}
+		}
+		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
+		if e != nil {
+			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
+		}
+		if len(keys) != c {
+			return 0, fmt.Errorf("deleted account %v , different from expected account %v ", c, len(keys))
+		}
+		if finished {
+			break
+		}
+	}
+	return count, nil
+}
+
+func (s *EbpfProgramStruct) CleanMapNatRecord() (int, error) {
+	keys := make([]bpf_cgroupMapkeyNatRecord, 100)
+	vals := make([]bpf_cgroupMapvalueNatRecord, 100)
+
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapNatRecord != nil {
+		mapPtr = s.BpfObjCgroup.MapNatRecord
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapNatRecord != nil {
+		mapPtr = s.EbpfMaps.MapNatRecord
+	} else {
+		return 0, fmt.Errorf("failed to get ebpf map")
+	}
+	name := mapPtr.String()
+
+	var cursor ebpf.MapBatchCursor
+	count := 0
+	for {
+		c, batchErr := mapPtr.BatchLookup(&cursor, keys, vals, nil)
+		count += c
+		finished := false
+		if batchErr != nil {
+			if errors.Is(batchErr, ebpf.ErrKeyNotExist) {
+				// end
+				finished = true
+			} else {
+				return 0, fmt.Errorf("failed to batchlookup for %v\n", mapPtr.String())
+			}
+		}
+		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
+		if e != nil {
+			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
+		}
+		if len(keys) != c {
+			return 0, fmt.Errorf("deleted account %v , different from expected account %v ", c, len(keys))
+		}
+		if finished {
+			break
+		}
+	}
+	return count, nil
 }
