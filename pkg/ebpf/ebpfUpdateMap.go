@@ -189,7 +189,6 @@ func (s *EbpfProgramStruct) CleanMapService() (int, error) {
 	} else {
 		return 0, fmt.Errorf("failed to get ebpf map")
 	}
-	name := mapPtr.String()
 
 	var cursor ebpf.MapBatchCursor
 	count := 0
@@ -231,7 +230,6 @@ func (s *EbpfProgramStruct) CleanMapBackend() (int, error) {
 	} else {
 		return 0, fmt.Errorf("failed to get ebpf map")
 	}
-	name := mapPtr.String()
 
 	var cursor ebpf.MapBatchCursor
 	count := 0
@@ -273,7 +271,6 @@ func (s *EbpfProgramStruct) CleanMapNode() (int, error) {
 	} else {
 		return 0, fmt.Errorf("failed to get ebpf map")
 	}
-	name := mapPtr.String()
 
 	var cursor ebpf.MapBatchCursor
 	count := 0
@@ -315,7 +312,6 @@ func (s *EbpfProgramStruct) CleanMapAffinity() (int, error) {
 	} else {
 		return 0, fmt.Errorf("failed to get ebpf map")
 	}
-	name := mapPtr.String()
 
 	var cursor ebpf.MapBatchCursor
 	count := 0
@@ -357,7 +353,6 @@ func (s *EbpfProgramStruct) CleanMapNatRecord() (int, error) {
 	} else {
 		return 0, fmt.Errorf("failed to get ebpf map")
 	}
-	name := mapPtr.String()
 
 	var cursor ebpf.MapBatchCursor
 	count := 0
