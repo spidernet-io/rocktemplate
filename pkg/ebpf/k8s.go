@@ -20,6 +20,11 @@ type backendMapData struct {
 }
 
 func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[string]*discovery.EndpointSlice) ([]*serviceMapData, []*backendMapData, error) {
+
+	if svc == nil {
+		return nil, nil, fmt.Errorf("service is empty")
+	}
+
 	resultSvcList := []*serviceMapData{}
 	resultBackList := []*backendMapData{}
 
@@ -111,7 +116,7 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 			})
 		}
 	}
-	return resultSvcList, resultBackList
+	return resultSvcList, resultBackList, nil
 
 }
 
