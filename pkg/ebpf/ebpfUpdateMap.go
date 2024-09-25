@@ -207,7 +207,7 @@ func (s *EbpfProgramStruct) CleanMapService() (int, error) {
 		if c == 0 {
 			break
 		}
-		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
+		c, e := mapPtr.BatchDelete(keys, &ebpf.BatchOptions{})
 		if e != nil {
 			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
 		}
@@ -251,7 +251,7 @@ func (s *EbpfProgramStruct) CleanMapBackend() (int, error) {
 		if c == 0 {
 			break
 		}
-		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
+		c, e := mapPtr.BatchDelete(keys, &ebpf.BatchOptions{})
 		if e != nil {
 			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
 		}
@@ -295,7 +295,7 @@ func (s *EbpfProgramStruct) CleanMapNode() (int, error) {
 		if c == 0 {
 			break
 		}
-		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
+		c, e := mapPtr.BatchDelete(keys, &ebpf.BatchOptions{})
 		if e != nil {
 			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
 		}
@@ -339,7 +339,7 @@ func (s *EbpfProgramStruct) CleanMapAffinity() (int, error) {
 		if c == 0 {
 			break
 		}
-		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
+		c, e := mapPtr.BatchDelete(keys, &ebpf.BatchOptions{})
 		if e != nil {
 			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
 		}
@@ -383,7 +383,7 @@ func (s *EbpfProgramStruct) CleanMapNatRecord() (int, error) {
 		if c == 0 {
 			break
 		}
-		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
+		c, e := mapPtr.BatchDelete(keys, &ebpf.BatchOptions{})
 		if e != nil {
 			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
 		}
