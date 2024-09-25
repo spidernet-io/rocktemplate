@@ -81,7 +81,7 @@ func Run() {
 			BackendId:         addressID,
 			TotalBackendCount: 2,
 			LocalBackendCount: 0,
-			AffinityTimeout:   0,
+			AffinitySecond:    0,
 			ServiceFlags:      0,
 			FloatipFlags:      0,
 			RedirectFlags:     0,

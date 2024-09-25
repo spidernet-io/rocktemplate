@@ -40,7 +40,7 @@ func (s *ebpfWriter) UpdateService(l *zap.Logger, svc *corev1.Service, onlyUpdat
 	if d, ok := s.endpointData[index]; ok {
 		if d.EpsliceList != nil && len(d.EpsliceList) > 0 {
 			if !onlyUpdateTime {
-				l.Sugar().Infof("apply new data to ebpf map for service %v", index)
+				l.Sugar().Infof("cache the data, and apply new data to ebpf map for service %v", index)
 				s.ebpfhandler.UpdateEbpfMapForService(l, d.Svc, svc, d.EpsliceList, d.EpsliceList)
 				d.Svc = svc
 			} else {
@@ -48,11 +48,11 @@ func (s *ebpfWriter) UpdateService(l *zap.Logger, svc *corev1.Service, onlyUpdat
 				d.Svc = svc
 			}
 		} else {
-			l.Sugar().Debugf("no need to apply new data to ebpf map, cause miss endpointslice")
+			l.Sugar().Debugf("cache the data, but no need to apply new data to ebpf map, cause miss endpointslice")
 			d.Svc = svc
 		}
 	} else {
-		l.Sugar().Debugf("no need to apply new data to ebpf map, cause miss endpointslice")
+		l.Sugar().Debugf("cache the data, but no need to apply new data to ebpf map, cause miss endpointslice")
 		s.endpointData[index] = &EndpointData{
 			Svc:         svc,
 			EpsliceList: make(map[string]*discovery.EndpointSlice),
@@ -103,7 +103,7 @@ func (s *ebpfWriter) UpdateEndpointSlice(l *zap.Logger, epSlice *discovery.Endpo
 	if d, ok := s.endpointData[index]; ok {
 		if d.Svc != nil {
 			if !onlyUpdateTime {
-				l.Sugar().Infof("apply new data to ebpf map for the service %v", index)
+				l.Sugar().Infof("cache the data, and apply new data to ebpf map for the service %v", index)
 				oldEps := shallowCopy(d.EpsliceList)
 				d.EpsliceList[epindex] = epSlice
 				s.ebpfhandler.UpdateEbpfMapForService(l, d.Svc, d.Svc, oldEps, d.EpsliceList)
@@ -113,10 +113,10 @@ func (s *ebpfWriter) UpdateEndpointSlice(l *zap.Logger, epSlice *discovery.Endpo
 			}
 		} else {
 			d.EpsliceList[epindex] = epSlice
-			l.Sugar().Debugf("no need to apply new data to ebpf map, cause miss service")
+			l.Sugar().Debugf("cache the data, but no need to apply new data to ebpf map, cause miss service")
 		}
 	} else {
-		l.Sugar().Debugf("no need to apply new data to ebpf map, cause miss service")
+		l.Sugar().Debugf("cache the data, but no need to apply new data to ebpf map, cause miss service")
 		s.endpointData[index] = &EndpointData{
 			Svc: nil,
 			EpsliceList: map[string]*discovery.EndpointSlice{

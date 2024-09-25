@@ -73,7 +73,7 @@ type bpf_cgroupMapvalueService struct {
 	SvcId         uint32
 	TotalBackendCount uint32
 	LocalBackendCount uint32
-	AffinityTimeout   uint32
+	AffinitySecond   uint32
 	ServiceFlags      uint8
 	FloatipFlags      uint8
 	RedirectFlags     uint8

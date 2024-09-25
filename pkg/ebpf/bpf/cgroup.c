@@ -129,16 +129,16 @@ succeed:
     svcval->svc_id = t->svc_id ;
     svcval->total_backend_count = t->total_backend_count ;
     svcval->local_backend_count = t->local_backend_count ;
-    svcval->affinity_timeout = t->affinity_timeout ;
+    svcval->affinity_second = t->affinity_second ;
     svcval->service_flags = t->service_flags ;
     svcval->balancing_flags = t->balancing_flags ;
     svcval->redirect_flags = t->redirect_flags ;
     return true ;
 }
 
-static __always_inline struct mapvalue_affinity* get_affinity_and_update( struct bpf_sock_addr *ctx , __u32 affinity_timeout , __u8 ip_proto ) {
+static __always_inline struct mapvalue_affinity* get_affinity_and_update( struct bpf_sock_addr *ctx , __u32 affinity_second , __u8 ip_proto ) {
 
-    if (affinity_timeout == 0 ) {
+    if (affinity_second == 0 ) {
         return NULL ;
     }
 
@@ -157,7 +157,7 @@ static __always_inline struct mapvalue_affinity* get_affinity_and_update( struct
 
     // check timeout
     __u64 now = bpf_ktime_get_ns();
-    if ( ( now - affinityValue->ts ) <= ( affinity_timeout  * 1000000000ULL ) ) {
+    if ( ( now - affinityValue->ts ) <= ( affinity_second  * 1000000000ULL ) ) {
         // .......... 需要检测下之前的 endpoint 是否还存活？否则 亲和解析 导致 访问失败
 
         //
@@ -245,7 +245,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     }
 
     //------------ check affinity history
-    struct mapvalue_affinity *affinityValue = get_affinity_and_update(ctx, svcval.affinity_timeout , ip_proto ) ;
+    struct mapvalue_affinity *affinityValue = get_affinity_and_update(ctx, svcval.affinity_second , ip_proto ) ;
     if (affinityValue) {
         // update
         debugf(DEBUG_INFO, "with affinity, nat for %pI4:%d\n" , &dst_ip  , dst_port   );
@@ -273,7 +273,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     }
 
     // create affinity item
-    if ( svcval.affinity_timeout > 0 ) {
+    if ( svcval.affinity_second > 0 ) {
         struct mapkey_affinity affinityKey = {
            .original_dest_ip =  dst_ip ,
            .client_cookie =  bpf_get_socket_cookie(ctx) ,

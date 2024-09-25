@@ -80,7 +80,7 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 				SvcId:             svcV4Id,
 				TotalBackendCount: uint32(len(allEp)),
 				LocalBackendCount: uint32(len(localEp)),
-				AffinityTimeout:   affinityTime,
+				AffinitySecond:    affinityTime,
 				ServiceFlags:      serviceFlags,
 				FloatipFlags:      0,
 				RedirectFlags:     0,
@@ -105,7 +105,7 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 				SvcId:             svcV4Id,
 				TotalBackendCount: uint32(len(allEp)),
 				LocalBackendCount: uint32(len(localEp)),
-				AffinityTimeout:   affinityTime,
+				AffinitySecond:    affinityTime,
 				ServiceFlags:      serviceFlags,
 				FloatipFlags:      0,
 				RedirectFlags:     0,
@@ -141,13 +141,13 @@ func (s *EbpfProgramStruct) applyEpfMapDataService(l *zap.Logger, oldList, newLi
 	addKeyList := []bpf_cgroupMapkeyService{}
 	addValList := []bpf_cgroupMapvalueService{}
 
-	l.Sugar().Debugf("%d items in oldList: \n", len(oldList))
+	l.Sugar().Debugf("service map %d items in oldList: \n", len(oldList))
 	for k, v := range oldList {
-		l.Sugar().Debugf("oldList[%d]: key=%s, value=%s \n", k, *v.key, *v.val)
+		l.Sugar().Debugf("service map oldList[%d]: key=%s, value=%s \n", k, *v.key, *v.val)
 	}
-	l.Sugar().Debugf("%d items in newSvcList: \n", len(newList))
+	l.Sugar().Debugf("service map %d items in newSvcList: \n", len(newList))
 	for k, v := range newList {
-		l.Sugar().Debugf("newSvcList[%d]: key=%s, value=%s \n", k, *v.key, *v.val)
+		l.Sugar().Debugf("service map newSvcList[%d]: key=%s, value=%s \n", k, *v.key, *v.val)
 	}
 
 OUTER_OLD:
@@ -212,13 +212,13 @@ func (s *EbpfProgramStruct) applyEpfMapDataBackend(l *zap.Logger, oldList, newLi
 	addKeyList := []bpf_cgroupMapkeyBackend{}
 	addValList := []bpf_cgroupMapvalueBackend{}
 
-	l.Sugar().Debugf("%d items in oldList: \n", len(oldList))
+	l.Sugar().Debugf("backend map %d items in oldList: \n", len(oldList))
 	for k, v := range oldList {
-		l.Sugar().Debugf("oldList[%d]: key=%s, value=%s \n", k, *v.key, *v.val)
+		l.Sugar().Debugf("backend map oldList[%d]: key=%s, value=%s ", k, *v.key, *v.val)
 	}
-	l.Sugar().Debugf("%d items in newSvcList: \n", len(newList))
+	l.Sugar().Debugf("backend map %d items in newSvcList: \n", len(newList))
 	for k, v := range newList {
-		l.Sugar().Debugf("newSvcList[%d]: key=%s, value=%s \n", k, *v.key, *v.val)
+		l.Sugar().Debugf("backend map newSvcList[%d]: key=%s, value=%s ", k, *v.key, *v.val)
 	}
 
 OUTER_OLD:

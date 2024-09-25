@@ -61,36 +61,41 @@ func GetNatTypeStr(p uint8) string {
 }
 
 func (t bpf_cgroupMapkeyService) String() string {
-	return fmt.Sprintf(`{ DestIp:"%s", DestPort:%d, protocol:"%s", NatType:"%s", Scope:%d }`,
+	return fmt.Sprintf(`{ DestIp:%s, DestPort:%d, protocol:%s, NatType:%s, Scope:%d }`,
 		GetIpStr(t.Address), t.Dport, GetProtocolStr(t.Proto), GetNatTypeStr(t.NatType), t.Scope)
+}
+
+func (t bpf_cgroupMapvalueService) String() string {
+	return fmt.Sprintf(`{ SvcId:%s, TotalBackendCount:%d, LocalBackendCount:%d, AffinitySecond:%d, ServiceFlags:%d, FloatipFlags:%d, RedirectFlags:%d }`,
+		t.SvcId, t.TotalBackendCount, t.LocalBackendCount, t.AffinitySecond, t.ServiceFlags, t.FloatipFlags, t.RedirectFlags)
 }
 
 // ------------------------------------------------
 
 func (t bpf_cgroupMapkeyNode) String() string {
-	return fmt.Sprintf(`{ NodeIp:"%s"}`, GetIpStr(t.Address))
+	return fmt.Sprintf(`{ NodeIp:%s}`, GetIpStr(t.Address))
 }
 
 // ------------------------------------------------
 func (t bpf_cgroupMapkeyBackend) String() string {
-	return fmt.Sprintf(`{ Order:%d, id:%d, port:%s, protocol:"%s", NatType:"%s", Scope: %d }`,
+	return fmt.Sprintf(`{ Order:%d, id:%d, port:%s, protocol:%s, NatType:%s, Scope: %d }`,
 		t.Order, t.SvcId, t.Dport, GetProtocolStr(t.Proto), GetNatTypeStr(t.NatType), t.Scope)
 }
 
 func (t bpf_cgroupMapvalueBackend) String() string {
-	return fmt.Sprintf(`{ PodIp:"%s" , PodPort:%d, NodeIp:"%s", NodePort:%d }`,
+	return fmt.Sprintf(`{ PodIp:%s , PodPort:%d, NodeIp:%s, NodePort:%d }`,
 		GetIpStr(t.PodAddress), t.PodPort, GetIpStr(t.NodeAddress), t.NodePort)
 }
 
 // ------------------------------------------------
 
 func (t bpf_cgroupMapkeyNatRecord) String() string {
-	return fmt.Sprintf(`{ SocketCookie:%d, NatIp:"%s", NatPort:%d, protocol:"%s" }`,
+	return fmt.Sprintf(`{ SocketCookie:%d, NatIp:%s, NatPort:%d, protocol:%s }`,
 		t.SocketCookie, GetIpStr(t.NatIp), t.NatPort, GetProtocolStr(t.Proto))
 }
 
 func (t bpf_cgroupMapvalueNatRecord) String() string {
-	return fmt.Sprintf(`{ OriginalDstIp:"%s" , OriginalDstPort:%d }`,
+	return fmt.Sprintf(`{ OriginalDstIp:%s , OriginalDstPort:%d }`,
 		GetIpStr(t.OriginalDestIp), t.OriginalDestPort)
 }
 
@@ -110,7 +115,7 @@ type MapEventValue struct {
 }
 
 func (t MapEventValue) String() string {
-	return fmt.Sprintf(`{ IsIpv4:%d, IsSuccess:%d, NatType:"%s", OriginalDestIp:"%s", OriginalDestPort:%d, NatIp:"%s", NatPort:%d , Tgid:%d }`,
+	return fmt.Sprintf(`{ IsIpv4:%d, IsSuccess:%d, NatType:%s, OriginalDestIp:%s, OriginalDestPort:%d, NatIp:%s, NatPort:%d , Tgid:%d }`,
 		t.IsIpv4, t.IsSuccess, GetNatTypeStr(t.NatType),
 		GetIpStr(t.OriginalDestIp), t.OriginalDestPort, GetIpStr(t.NatIp), t.NatPort, t.Tgid)
 }
