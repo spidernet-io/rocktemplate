@@ -68,24 +68,29 @@ type EbpfProgram interface {
 	UnloadAllEbpfMap()
 
 	GetMapDataEvent() <-chan MapEventValue
+
 	// for debug cli
 	PrintMapService() error
 	PrintMapNode() error
 	PrintMapBackend() error
 	PrintMapAffinity() error
 	PrintMapNatRecord() error
-	// for debug cli
+
 	UpdateMapService([]bpf_cgroupMapkeyService, []bpf_cgroupMapvalueService) error
 	UpdateMapBackend([]bpf_cgroupMapkeyBackend, []bpf_cgroupMapvalueBackend) error
 	UpdateMapNode([]bpf_cgroupMapkeyNode, []uint32) error
+	UpdateMapAffinity([]bpf_cgroupMapkeyAffinity, []bpf_cgroupMapvalueAffinity) error
+	UpdateMapNatRecord([]bpf_cgroupMapkeyNatRecord, []bpf_cgroupMapvalueNatRecord) error
 
-	// DeleteMapDataBackendV4([]uint32) error
-	// UpdateMapDataBackendV4([]uint32, []bpf_cgroupMapvalueBackendV4) error
-	// PrintMapDataBackendV4()
+	DeleteMapNatRecord([]bpf_cgroupMapkeyNatRecord) error
+	DeleteMapAffinity([]bpf_cgroupMapkeyAffinity) error
+	DeleteMapNode([]bpf_cgroupMapkeyNode) error
+	DeleteMapService([]bpf_cgroupMapkeyService) error
+	DeleteMapBackend([]bpf_cgroupMapkeyBackend) error
 
 	// for agent
-	UpdateEbpfMapForService(*corev1.Service, *corev1.Service, map[string]*discovery.EndpointSlice, map[string]*discovery.EndpointSlice) error
-	DeleteEbpfMapForService(*corev1.Service) error
+	UpdateEbpfMapForService(*zap.Logger, *corev1.Service, *corev1.Service, map[string]*discovery.EndpointSlice, map[string]*discovery.EndpointSlice) error
+	DeleteEbpfMapForService(*zap.Logger, *corev1.Service, map[string]*discovery.EndpointSlice) error
 }
 
 var _ EbpfProgram = &EbpfProgramStruct{}

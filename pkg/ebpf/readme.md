@@ -1,4 +1,6 @@
 
+=============  应用场景
+
 (1)  k8s 集群内实现 service 解析，包括 clusterip 、 nodePort 等 
 
 （2）支持集群外 主机部署， 实现 主机应用 直接访问到 pod ip（macvlan）或者  pod 所在主机 ip + nodePort 
@@ -12,3 +14,27 @@
 
 （5）支持 kubeedge， 在 边端 不需要 cni 的情况下，边端进行 clusterIP 解析，把流量 封发到 云端 
      pod 所在节点的 nodePort
+
+============================ 功能
+
+目前只支持 ipv4， 不支持 ipv6
+
+如果 node ip 变换了，目前 backend 中的 pod 所在 的 node ip 不会变化，需要增强
+
+(1) 支持 service 的访问
+		支持 访问 clusterIP + svcPort
+                loadbalancerIp + svcPort  ( 不支持 loadbalancerIp + nodePort  )
+				externalIP + svcPort ( 不支持 externalIP + nodePort  )
+				nodeIP + nodePort
+
+(2) 支持 crd  localRedirect 
+		onlyLocal:  当本地 endpoint 挂了，是否 允许 正常 访问 service
+		qos:   本地 所有 pod 的 connect qos 流控
+         
+（3）支持 crd  balancing 
+		自定义 浮动 ip  和 后端 endpoint ip 
+		可以 额外 自定义  endpoint ip
+         也可以关联 K8S 的 service  
+       fowardToNode ： 是否解析到 pod 所在的 node 的 nodePort  ， 适用与集群外部 的节点
+
+

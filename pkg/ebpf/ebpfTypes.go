@@ -6,6 +6,28 @@ import (
 	"net"
 )
 
+// ----------------- map flag ---------------------
+
+var (
+	NAT_TYPE_SERVICE   = uint8(0)
+	NAT_TYPE_REDIRECT  = uint8(1)
+	NAT_TYPE_BALANCING = uint8(2)
+
+	IPPROTO_TCP = uint8(6)
+	IPPROTO_UDP = uint8(17)
+
+	SCOPE_LOCAL_CLUSTER = uint8(0)
+
+	// for NodePorts, ExternalIPs, and LoadBalancer IPs
+	SERVICE_FLAG_EXTERNAL_LOCAL_SVC = uint8(0x1)
+	// for ClusterIP
+	SERVICE_FLAG_INTERNAL_LOCAL_SVC = uint8(0x2)
+
+	NODEPORT_V4_IP = net.ParseIP("255.255.255.255").To4()
+)
+
+// -------------------------
+
 func GetProtocolStr(p uint8) string {
 	proto := "unknown"
 	switch p {
@@ -50,10 +72,14 @@ func (t bpf_cgroupMapkeyNode) String() string {
 }
 
 // ------------------------------------------------
+func (t bpf_cgroupMapkeyBackend) String() string {
+	return fmt.Sprintf(`{ Order:%d, id:%d, port:%s, protocol:"%s", NatType:"%s", Scope: %d }`,
+		t.Order, t.SvcId, t.Dport, GetProtocolStr(t.Proto), GetNatTypeStr(t.NatType), t.Scope)
+}
 
 func (t bpf_cgroupMapvalueBackend) String() string {
-	return fmt.Sprintf(`{ PodIp:"%s" , PodPort:%d, NodeIp:"%s", NodePort:%d, protocol:"%s", Flags:%d }`,
-		GetIpStr(t.PodAddress), t.PodPort, GetIpStr(t.NodeAddress), t.NodePort, GetProtocolStr(t.Proto), t.Flags)
+	return fmt.Sprintf(`{ PodIp:"%s" , PodPort:%d, NodeIp:"%s", NodePort:%d }`,
+		GetIpStr(t.PodAddress), t.PodPort, GetIpStr(t.NodeAddress), t.NodePort)
 }
 
 // ------------------------------------------------

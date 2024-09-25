@@ -5,7 +5,7 @@
 #include "vmlinux.h"
 
 
-//======================================= map ： 存储 service ， 包括  service( clusterip nodePort  loadbalancer ) localRedirect  floatIP
+//======================================= map ： 存储 service ， 包括  service( clusterip nodePort  loadbalancer ) localRedirect  loadbalancer
 
 #define DEFAULT_MAX_EBPF_MAP_ENTRIES 65536
 
@@ -15,7 +15,7 @@
 
 #define NAT_TYPE_SERVICE    0
 #define NAT_TYPE_REDIRECT   1
-#define NAT_TYPE_FLOATIP    2
+#define NAT_TYPE_BALANCING    2
 
 #define NODE_PORT_IP	0xffffffff
 
@@ -25,31 +25,31 @@
     对于 NAT_TYPE_REDIRECT：
         解析到 本地 pod ip，
 */
-// a floatIP has several entries mapping to each backend
+// a loadbalancer has several entries mapping to each backend
 struct mapkey_service {
   ipv4_addr_t address;     /* 小端存储。 clusterIP， 或者 NODE_PORT_IP(255.255.255.255) 表示 nodePort  */
   __be16 dport;            /* 小端存储。 clusterIP 的 端口， 或者 nodePort 的 端口     */
   __u8  proto;
-  __u8  nat_type;         /* NAT_TYPE_SERVICE (  lowest priority  ) ,NAT_TYPE_REDIRECT ,  NAT_TYPE_FLOATIP ( highest priority )  */
+  __u8  nat_type;         /* NAT_TYPE_SERVICE (  lowest priority  ) ,NAT_TYPE_REDIRECT ,  NAT_TYPE_BALANCING ( highest priority )  */
   __u8  scope;
   __u8  pad[3];
 };
 
 
-#define NAT_FLAG_EXTERNAL_LOCAL_SVC	0x1
-#define NAT_FLAG_INTERNAL_LOCAL_SVC	0x2
+#define SERVICE_FLAG_EXTERNAL_LOCAL_SVC	0x1
+#define SERVICE_FLAG_INTERNAL_LOCAL_SVC	0x2
 
-#define NAT_FLAG_ACCESS_NODEPORT_FLOATIP	0x1
+#define NAT_FLAG_ACCESS_NODEPORT_BALANCING	0x1
 
 #define NAT_FLAG_ALLOW_ACCESS_SERVICE	0x1
 
 struct mapvalue_service {
-  __u32 address_id ;                 // 为 clusterIP ，对 nodePort 的记录，也记录为 clusterIP
+  __u32 svc_id ;                 // 一个 service 有一个 唯一的 ID ，用来映射 service 下 所有的 endpoint
   __u32 total_backend_count;         // how many global backend exist in the service
   __u32 local_backend_count;         // how many local-node backend exist in the service ，用于实现 clientIP 亲和
   __u32 affinity_timeout;       /* In seconds, only for svc frontend */
-  __u8  service_flags;                /* NAT_FLAG_EXTERNAL_LOCAL_SVC  , NAT_FLAG_INTERNAL_LOCAL_SVC */
-  __u8  floatip_flags;                /* NAT_FLAG_ACCESS_NODEPORT_FLOATIP（是打到 pod 所在节点的 nodePort，还是 pod ip）  */
+  __u8  service_flags;                /* SERVICE_FLAG_EXTERNAL_LOCAL_SVC  , SERVICE_FLAG_INTERNAL_LOCAL_SVC */
+  __u8  balancing_flags;                /* NAT_FLAG_ACCESS_NODEPORT_BALANCING（是打到 pod 所在节点的 nodePort，还是 pod ip）  */
   __u8  redirect_flags;         /* NAT_FLAG_ALLOW_ACCESS_SERVICE( 如果在 local-node backend 不可用时，是否正常解析到 clusterIP)  */
   __u8  pad;
 };
@@ -69,7 +69,7 @@ struct {
 
 struct mapkey_backend {
     __be32 order;      //  第几个 endpoint ip 。 前面几个记录，优先存储 本地 node 上的 endpoint ， 用于实现 clientIP 亲和
-    __u32 address_id;  // map to addressID in mapvalue_service
+    __u32 svc_id;  // 对应 mapvalue_service 中的 svc_id ，  一个 service 有一个 唯一的 ID ，用来映射 service 下 所有的 endpoint
     __be16 dport;
     __u8  proto;
     __u8  nat_type;
@@ -79,12 +79,9 @@ struct mapkey_backend {
 
 struct mapvalue_backend {
 	ipv4_addr_t pod_address;		/* 小端存储。 Service endpoint IPv4 address , saved in LittleEndian */
-	ipv4_addr_t node_address;		/* 小端存储。 for floatIP , access the nodePort */
+	ipv4_addr_t node_address;		/* 小端存储。 for loadbalancer , access the nodePort */
 	__be16 pod_port;		/* 小端存储。 L4 port filter , saved in LittleEndian */
-	__be16 node_port;		/* 小端存储。 for floatIP , access the nodePort */
-	__u8 proto;		/* L4 protocol, currently not used (set to 0) */
-	__u8 flags;
-    __u8 pad[2];
+	__be16 node_port;		/* 小端存储。 for loadbalancer , access the nodePort */
 };
 
 struct {
@@ -188,7 +185,7 @@ struct event_value {
 	__u32  tgid;
     __u8   is_ipv4 ; /* 0 for ipv6 data, 1 for ipv4 data */
     __u8   is_success ; /* 1 for success , 0 for failure */
-    __u8   nat_type ;  /* NAT_TYPE_SERVICE (  lowest priority  ) ,NAT_TYPE_REDIRECT ,  NAT_TYPE_FLOATIP ( highest priority )  */
+    __u8   nat_type ;  /* NAT_TYPE_SERVICE (  lowest priority  ) ,NAT_TYPE_REDIRECT ,  NAT_TYPE_BALANCING ( highest priority )  */
     __u8   pad;
 } ;
 

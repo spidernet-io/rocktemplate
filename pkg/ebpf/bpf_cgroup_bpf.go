@@ -21,7 +21,7 @@ type bpf_cgroupMapkeyAffinity struct {
 
 type bpf_cgroupMapkeyBackend struct {
 	Order     uint32
-	AddressId uint32
+	SvcId     uint32
 	Dport     uint16
 	Proto     uint8
 	NatType   uint8
@@ -61,9 +61,6 @@ type bpf_cgroupMapvalueBackend struct {
 	NodeAddress uint32
 	PodPort     uint16
 	NodePort    uint16
-	Proto       uint8
-	Flags       uint8
-	Pad         [2]uint8
 }
 
 type bpf_cgroupMapvalueNatRecord struct {
@@ -73,7 +70,7 @@ type bpf_cgroupMapvalueNatRecord struct {
 }
 
 type bpf_cgroupMapvalueService struct {
-	AddressId         uint32
+	SvcId         uint32
 	TotalBackendCount uint32
 	LocalBackendCount uint32
 	AffinityTimeout   uint32

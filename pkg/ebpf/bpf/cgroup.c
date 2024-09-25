@@ -73,8 +73,8 @@ static __always_inline  bool ctx_in_hostns(void *ctx )
 static __always_inline bool get_service( ipv4_addr_t dest_ip, __u16 dst_port, __u8 ip_proto  , struct mapkey_service *svckey , struct mapvalue_service *svcval ) {
     struct mapvalue_service *t ;
 
-    // search NAT_TYPE_FLOATIP
-    svckey->nat_type = NAT_TYPE_FLOATIP ;
+    // search NAT_TYPE_BALANCING
+    svckey->nat_type = NAT_TYPE_BALANCING ;
     svckey->address = dest_ip ;
     svckey->dport = dst_port ;
     svckey->proto = ip_proto ;
@@ -86,7 +86,7 @@ static __always_inline bool get_service( ipv4_addr_t dest_ip, __u16 dst_port, __
     //debugf(DEBUG_INFO, "search : nat_type=%d    \n" , svckey->nat_type  );
     t = bpf_map_lookup_elem( &map_service , svckey);
     if (t) {
-        debugf(DEBUG_INFO, "get NAT_TYPE_FLOATIP record \n" );
+        debugf(DEBUG_INFO, "get NAT_TYPE_BALANCING record \n" );
         goto succeed;
     }
 
@@ -126,12 +126,12 @@ static __always_inline bool get_service( ipv4_addr_t dest_ip, __u16 dst_port, __
     return false;
 
 succeed:
-    svcval->address_id = t->address_id ;
+    svcval->svc_id = t->svc_id ;
     svcval->total_backend_count = t->total_backend_count ;
     svcval->local_backend_count = t->local_backend_count ;
     svcval->affinity_timeout = t->affinity_timeout ;
     svcval->service_flags = t->service_flags ;
-    svcval->floatip_flags = t->floatip_flags ;
+    svcval->balancing_flags = t->balancing_flags ;
     svcval->redirect_flags = t->redirect_flags ;
     return true ;
 }
@@ -235,7 +235,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     debugf(DEBUG_INFO, "succeeded to find service value for %pI4:%d\n" , &dst_ip  , dst_port   );
 
     __u32 backend_count = svcval.total_backend_count;
-    if ( svcval.service_flags & (NAT_FLAG_INTERNAL_LOCAL_SVC | NAT_FLAG_EXTERNAL_LOCAL_SVC)  ) {
+    if ( svcval.service_flags & (SERVICE_FLAG_INTERNAL_LOCAL_SVC | SERVICE_FLAG_EXTERNAL_LOCAL_SVC)  ) {
         backend_count = svcval.local_backend_count ;
         debugf(DEBUG_INFO, "forward to local backend for %pI4:%d\n" , &dst_ip  , dst_port   );
     }
@@ -260,7 +260,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     a %= backend_count ;
     struct mapkey_backend backendKey = {
     	.order = a,
-        .address_id = svcval.address_id ,
+        .svc_id = svcval.svc_id ,
         .dport = svckey.dport ,
         .proto = svckey.proto ,
         .nat_type = svckey.nat_type ,
@@ -293,9 +293,9 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
             goto output_event;
         }
     }else{
-        if ( svckey.nat_type == NAT_TYPE_FLOATIP ) {
-            evt.nat_type = NAT_TYPE_FLOATIP ;
-            if ( svcval.floatip_flags & NAT_FLAG_ACCESS_NODEPORT_FLOATIP ) {
+        if ( svckey.nat_type == NAT_TYPE_BALANCING ) {
+            evt.nat_type = NAT_TYPE_BALANCING ;
+            if ( svcval.balancing_flags & NAT_FLAG_ACCESS_NODEPORT_BALANCING ) {
                 nat_ip = backendValue->node_address ;
                 nat_port = backendValue->node_port ;
             }else{
