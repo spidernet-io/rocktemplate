@@ -351,7 +351,8 @@ int sock4_connect(struct bpf_sock_addr *ctx) {
 	__u16 dst_port = ctx_dst_port(ctx);
 	__u32 dst_ip = ctx->user_ip4;
 
-    debugf(DEBUG_VERSBOSE, "connect4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
+    //debugf(DEBUG_VERSBOSE, "connect4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
+
     // invalid bpf_context access off=40 size=4 (43 line(s) omitted)
     //debugf(DEBUG_VERSBOSE, "connect4: src_ip=%pI4  \n" , ctx->msg_src_ip4  );
 
@@ -368,7 +369,7 @@ int sock4_sendmsg(struct bpf_sock_addr *ctx)
 	__u16 dst_port = ctx_dst_port(ctx);
 	__u32 dst_ip = ctx->user_ip4;
 
-    debugf(DEBUG_VERSBOSE , "sendmsg4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
+    //debugf(DEBUG_VERSBOSE , "sendmsg4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
 
     // for UDP
 	err = execute_nat(ctx);
@@ -384,7 +385,7 @@ int sock4_recvmsg(struct bpf_sock_addr *ctx)
 	__u16 dst_port = ctx_dst_port(ctx);
 	__u32 dst_ip = ctx->user_ip4;
 
-    debugf(DEBUG_VERSBOSE, "recvmsg4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
+    //debugf(DEBUG_VERSBOSE, "recvmsg4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
 
 	return SYS_PROCEED;
 }
@@ -396,7 +397,7 @@ int sock4_getpeername(struct bpf_sock_addr *ctx)
 	__u16 dst_port = ctx_dst_port(ctx);
 	__u32 dst_ip = ctx->user_ip4;
 
-    debugf(DEBUG_VERSBOSE , "getpeername4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
+    //debugf(DEBUG_VERSBOSE , "getpeername4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
 
 	return SYS_PROCEED;
 }
