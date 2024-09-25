@@ -8,7 +8,7 @@ import (
 )
 
 var CmdCleanMapBackend = &cobra.Command{
-	Use:   "affinity",
+	Use:   "backend",
 	Short: "clean the ebpf map of backend ",
 	Args:  cobra.RangeArgs(0, 0),
 	Run: func(cmd *cobra.Command, args []string) {

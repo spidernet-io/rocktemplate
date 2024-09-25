@@ -8,7 +8,7 @@ import (
 )
 
 var CmdCleanMapNat = &cobra.Command{
-	Use:   "affinity",
+	Use:   "natRecord",
 	Short: "clean the ebpf map of natRecord ",
 	Args:  cobra.RangeArgs(0, 0),
 	Run: func(cmd *cobra.Command, args []string) {

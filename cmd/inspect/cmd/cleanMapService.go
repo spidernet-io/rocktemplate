@@ -8,7 +8,7 @@ import (
 )
 
 var CmdCleanMapService = &cobra.Command{
-	Use:   "affinity",
+	Use:   "service",
 	Short: "clean the ebpf map of service ",
 	Args:  cobra.RangeArgs(0, 0),
 	Run: func(cmd *cobra.Command, args []string) {
