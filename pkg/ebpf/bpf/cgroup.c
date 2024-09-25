@@ -139,6 +139,7 @@ succeed:
 static __always_inline struct mapvalue_affinity* get_affinity_and_update( struct bpf_sock_addr *ctx , __u32 affinity_second , __u8 ip_proto ) {
 
     if (affinity_second == 0 ) {
+        debugf(DEBUG_VERSBOSE, "affinity_second==0\n"    );
         return NULL ;
     }
 
@@ -149,9 +150,14 @@ static __always_inline struct mapvalue_affinity* get_affinity_and_update( struct
        .proto = ip_proto ,
        .pad = 0 ,
     };
-    struct mapvalue_affinity *affinityValue ;
-    affinityValue = bpf_map_lookup_elem( &map_affinity , &affinityKey);
+    debugf(DEBUG_VERSBOSE, "search affinityKey  original_dest_ip=%pI4 \n"  ,  &(affinityKey.original_dest_ip)  );
+    debugf(DEBUG_VERSBOSE, "search affinityKey  original_dest_ip=%d \n"  ,  affinityKey.client_cookie  );
+    debugf(DEBUG_VERSBOSE, "search affinityKey  original_port=%d \n"  ,  affinityKey.original_port  );
+    debugf(DEBUG_VERSBOSE, "search affinityKey  ip_proto=%d \n"  ,  affinityKey.ip_proto  );
+
+    struct mapvalue_affinity *affinityValue = bpf_map_lookup_elem( &map_affinity , &affinityKey);
     if (!affinityValue) {
+        debugf(DEBUG_VERSBOSE, "failed to find affinityValue  \n"    );
         return NULL;
     }
 
@@ -166,6 +172,7 @@ static __always_inline struct mapvalue_affinity* get_affinity_and_update( struct
             debugf(DEBUG_ERROR, "failed to update map_affinity" );
             return NULL ;
         }
+        debugf(DEBUG_VERSBOSE, " found affinityValue,  \n"    );
         return affinityValue ;
     }else{
         debugf(DEBUG_VERSBOSE, "the affinity record has expired \n"   );
@@ -287,6 +294,12 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
            .nat_port = nat_port ,
            .ts = bpf_ktime_get_ns() ,
         };
+
+            debugf(DEBUG_VERSBOSE, "update affinityKey  original_dest_ip=%pI4 \n"  ,  &(affinityKey.original_dest_ip)  );
+            debugf(DEBUG_VERSBOSE, "update affinityKey  original_dest_ip=%d \n"  ,  affinityKey.client_cookie  );
+            debugf(DEBUG_VERSBOSE, "update affinityKey  original_port=%d \n"  ,  affinityKey.original_port  );
+            debugf(DEBUG_VERSBOSE, "update affinityKey  ip_proto=%d \n"  ,  affinityKey.ip_proto  );
+
         if ( bpf_map_update_elem(&map_affinity, &affinityKey, &affinityValue , BPF_ANY) ) {
             debugf(DEBUG_ERROR, "failed to create map_affinity for %pI4:%d\n" , &dst_ip  , dst_port   );
             goto output_event;
