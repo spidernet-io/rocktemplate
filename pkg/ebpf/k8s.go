@@ -141,13 +141,13 @@ func (s *EbpfProgramStruct) applyEpfMapDataService(l *zap.Logger, oldList, newLi
 	addKeyList := []bpf_cgroupMapkeyService{}
 	addValList := []bpf_cgroupMapvalueService{}
 
-	l.Sugar().Debugf("service map %d items in oldList: \n", len(oldList))
+	l.Sugar().Debugf("service map %d items in oldList: ", len(oldList))
 	for k, v := range oldList {
-		l.Sugar().Debugf("service map oldList[%d]: key=%s, value=%s \n", k, *v.key, *v.val)
+		l.Sugar().Debugf("service map oldList[%d]: key=%s, value=%s ", k, *v.key, *v.val)
 	}
-	l.Sugar().Debugf("service map %d items in newSvcList: \n", len(newList))
+	l.Sugar().Debugf("service map %d items in newList: ", len(newList))
 	for k, v := range newList {
-		l.Sugar().Debugf("service map newSvcList[%d]: key=%s, value=%s \n", k, *v.key, *v.val)
+		l.Sugar().Debugf("service map newList[%d]: key=%s, value=%s ", k, *v.key, *v.val)
 	}
 
 OUTER_OLD:
@@ -158,13 +158,13 @@ OUTER_OLD:
 				if !reflect.DeepEqual(oldKey.val, newKey.val) {
 					addKeyList = append(addKeyList, *newKey.key)
 					addValList = append(addValList, *newKey.val)
-					l.Sugar().Infof("update new service data: key=%s , value=%s \n", newKey.key, newKey.val)
+					l.Sugar().Infof("update new service data: key=%s , value=%s ", newKey.key, newKey.val)
 					continue OUTER_OLD
 				}
 			}
 		}
 		if shouldDelOld {
-			l.Sugar().Infof("delete service data: key=%s , value=%s \n", oldKey.key, oldKey.val)
+			l.Sugar().Infof("delete service data: key=%s , value=%s ", oldKey.key, oldKey.val)
 			delKeyList = append(delKeyList, *oldKey.key)
 		}
 	}
@@ -180,28 +180,24 @@ OUTER_NEW:
 		if shouldAddNew {
 			addKeyList = append(addKeyList, *newKey.key)
 			addValList = append(addValList, *newKey.val)
-			l.Sugar().Infof("create new service data: key=%s , value=%s \n", newKey.key, newKey.val)
+			l.Sugar().Infof("create new service data: key=%s , value=%s ", newKey.key, newKey.val)
 		}
 	}
 
 	// -------- apply
 	if len(addKeyList) > 0 {
 		if e := s.UpdateMapService(addKeyList, addValList); e != nil {
+			l.Sugar().Errorf("failed to update service map: %v", e)
 			return fmt.Errorf("failed to update service map: %v", e)
 		}
-		l.Sugar().Infof("succeeded to update %d items in service map: \n", len(addKeyList))
-		for k, _ := range addKeyList {
-			l.Sugar().Infof("succeeded to update service map: key=%s, value=%s \n", addKeyList[k], addValList[k])
-		}
+		l.Sugar().Infof("succeeded to update %d items in service map: ", len(addKeyList))
 	}
 	if len(delKeyList) > 0 {
 		if e := s.DeleteMapService(delKeyList); e != nil {
+			l.Sugar().Errorf("failed to delete service map: %v", e)
 			return fmt.Errorf("failed to delete service map: %v", e)
 		}
-		l.Sugar().Infof("succeeded to delete %d items in service data \n", len(delKeyList))
-		for k, _ := range delKeyList {
-			l.Sugar().Infof("succeeded to delete service map: key=%s \n", delKeyList[k])
-		}
+		l.Sugar().Infof("succeeded to delete %d items in service data ", len(delKeyList))
 	}
 	return nil
 }
@@ -212,13 +208,13 @@ func (s *EbpfProgramStruct) applyEpfMapDataBackend(l *zap.Logger, oldList, newLi
 	addKeyList := []bpf_cgroupMapkeyBackend{}
 	addValList := []bpf_cgroupMapvalueBackend{}
 
-	l.Sugar().Debugf("backend map %d items in oldList: \n", len(oldList))
+	l.Sugar().Debugf("backend map %d items in oldList: ", len(oldList))
 	for k, v := range oldList {
 		l.Sugar().Debugf("backend map oldList[%d]: key=%s, value=%s ", k, *v.key, *v.val)
 	}
-	l.Sugar().Debugf("backend map %d items in newSvcList: \n", len(newList))
+	l.Sugar().Debugf("backend map %d items in newList: ", len(newList))
 	for k, v := range newList {
-		l.Sugar().Debugf("backend map newSvcList[%d]: key=%s, value=%s ", k, *v.key, *v.val)
+		l.Sugar().Debugf("backend map newList[%d]: key=%s, value=%s ", k, *v.key, *v.val)
 	}
 
 OUTER_OLD:
@@ -229,13 +225,13 @@ OUTER_OLD:
 				if !reflect.DeepEqual(oldKey.val, newKey.val) {
 					addKeyList = append(addKeyList, *newKey.key)
 					addValList = append(addValList, *newKey.val)
-					l.Sugar().Infof("update new backend data: key=%s , value=%s \n", newKey.key, newKey.val)
+					l.Sugar().Infof("update new backend data: key=%s , value=%s ", newKey.key, newKey.val)
 					continue OUTER_OLD
 				}
 			}
 		}
 		if shouldDelOld {
-			l.Sugar().Infof("delete backend data: key=%s , value=%s \n", oldKey.key, oldKey.val)
+			l.Sugar().Infof("delete backend data: key=%s , value=%s ", oldKey.key, oldKey.val)
 			delKeyList = append(delKeyList, *oldKey.key)
 		}
 	}
@@ -251,28 +247,24 @@ OUTER_NEW:
 		if shouldAddNew {
 			addKeyList = append(addKeyList, *newKey.key)
 			addValList = append(addValList, *newKey.val)
-			l.Sugar().Infof("create new backend data: key=%s , value=%s \n", newKey.key, newKey.val)
+			l.Sugar().Infof("create new backend data: key=%s , value=%s ", newKey.key, newKey.val)
 		}
 	}
 
 	// -------- apply
 	if len(addKeyList) > 0 {
 		if e := s.UpdateMapBackend(addKeyList, addValList); e != nil {
+			l.Sugar().Errorf("failed to update backend map: %v", e)
 			return fmt.Errorf("failed to update backend map: %v", e)
 		}
-		l.Sugar().Infof("succeeded to update %d items in backend map: \n", len(addKeyList))
-		for k, _ := range addKeyList {
-			l.Sugar().Infof("succeeded to update backend map: key=%s, value=%s \n", addKeyList[k], addValList[k])
-		}
+		l.Sugar().Infof("succeeded to update %d items in backend map: ", len(addKeyList))
 	}
 	if len(delKeyList) > 0 {
 		if e := s.DeleteMapBackend(delKeyList); e != nil {
+			l.Sugar().Errorf("failed to delete backend map: %v", e)
 			return fmt.Errorf("failed to delete backend map: %v", e)
 		}
-		l.Sugar().Infof("succeeded to delete %d items in backend data \n", len(delKeyList))
-		for k, _ := range delKeyList {
-			l.Sugar().Infof("succeeded to delete backend map: key=%s \n", delKeyList[k])
-		}
+		l.Sugar().Infof("succeeded to delete %d items in backend data ", len(delKeyList))
 	}
 	return nil
 }

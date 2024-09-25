@@ -78,7 +78,7 @@ func (t bpf_cgroupMapkeyNode) String() string {
 
 // ------------------------------------------------
 func (t bpf_cgroupMapkeyBackend) String() string {
-	return fmt.Sprintf(`{ Order:%d, id:%d, port:%s, protocol:%s, NatType:%s, Scope: %d }`,
+	return fmt.Sprintf(`{ Order:%d, SvcId:%d, port:%s, protocol:%s, NatType:%s, Scope: %d }`,
 		t.Order, t.SvcId, t.Dport, GetProtocolStr(t.Proto), GetNatTypeStr(t.NatType), t.Scope)
 }
 
