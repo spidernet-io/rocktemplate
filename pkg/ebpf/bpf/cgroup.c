@@ -240,7 +240,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     struct mapvalue_affinity *affinityValue = get_affinity_and_update(ctx, svcval.affinity_second , ip_proto ) ;
     if (affinityValue) {
         // update
-        debugf(DEBUG_INFO, "nat by service with affinity, for %pI4:%d\n" , &dst_ip  , dst_port   );
+        debugf(DEBUG_INFO, "nat by sencondary affinity, for %pI4:%d\n" , &dst_ip  , dst_port   );
         nat_ip = affinityValue->nat_ip ;
         nat_port = affinityValue->nat_port  ;
         goto set_nat ;
@@ -266,6 +266,9 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
 
 
     if ( svcval.affinity_second > 0 ) {
+        nat_ip = backendValue->pod_address ;
+        nat_port = backendValue->pod_port ;
+
         // create affinity item
         struct mapkey_affinity affinityKey = {
            .original_dest_ip =  dst_ip ,
@@ -283,7 +286,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
             debugf(DEBUG_ERROR, "failed to create map_affinity for %pI4:%d\n" , &dst_ip  , dst_port   );
             goto output_event;
         }
-        debugf(DEBUG_VERSBOSE, "nat by affinity, for %pI4:%d\n" , &dst_ip  , dst_port   );
+        debugf(DEBUG_VERSBOSE, "nat by first affinity, for %pI4:%d\n" , &dst_ip  , dst_port   );
     }else{
         if ( svckey.nat_type == NAT_TYPE_BALANCING ) {
             evt.nat_type = NAT_TYPE_BALANCING ;
