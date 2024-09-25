@@ -126,10 +126,7 @@ func getClusterIPs(svc *corev1.Service, ipFamily corev1.IPFamily) []net.IP {
 
 func GenerateSvcV4Id(svc *corev1.Service) uint32 {
 	// 使用 clusterip （假设 IP 地址唯一） 作为 service 之间的区别，它用于关联 一个 service 和 其所属的所有 endpoint
-	t := net.ParseIP(svc.Spec.ClusterIP).To4()
-	a := binary.LittleEndian.Uint32(t)
-	fmt.Printf("----debug: svc.Spec.ClusterIP=%s %d", svc.Spec.ClusterIP, a)
-	return a
+	return binary.LittleEndian.Uint32(net.ParseIP(svc.Spec.ClusterIP).To4())
 }
 
 func buildEbpfMapDataForSvcPort() {
@@ -232,6 +229,7 @@ func ClassifyV4Endpoint(edsList map[string]*discovery.EndpointSlice) (localEp []
 
 	for _, k := range edsList {
 		for _, v := range k.Endpoints {
+			fmt.Printf("----debug: types.AgentConfig.LocalNodeName=%s  node=%s\n", types.AgentConfig.LocalNodeName, *v.Hostname)
 			if v.Hostname != nil && *v.Hostname == types.AgentConfig.LocalNodeName {
 				// check the validity of ipv4 address
 				if checkV4Addr(&v) {
