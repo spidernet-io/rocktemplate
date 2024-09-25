@@ -1,48 +1,58 @@
 
-=============  应用场景
 
-(1)  k8s 集群内实现 service 解析，包括 clusterip 、 nodePort 等 
+## map 结构 
 
-（2）支持集群外 主机部署， 实现 主机应用 直接访问到 pod ip（macvlan）或者  pod 所在主机 ip + nodePort 
-	这样，能够避免传统 nodePort 等方案带来的 源端口冲突、并发低、转发性能差 等问题 
+一个 service 会生成多组 service 数据 和 多组 backend 数据 
 
-    尤其是 kubevirt 虚拟机场景
+以一个 Nodeport service 为例，有如下数据 
 
-(3) 支持 localRedirect，支持 local dns 
+service 数据如下，它有 两个 port 转发的定义 
+```shell
+default       http-server-v4            Nodeport   172.26.75.227    <pending>         80:31399/TCP,8080:31633/TCP   2m3s
+```
 
-（4） 为多集群 如 K3S 而服务
+所有数据，会被 相同的 SvcId:3813350060  串联在一起
 
-（5）支持 kubeedge， 在 边端 不需要 cni 的情况下，边端进行 clusterIP 解析，把流量 封发到 云端 
-     pod 所在节点的 nodePort
+在 service map 中，有如下数据， 它的数量是 ： "service 端口数" * ( clusterIP数量 + LoadbalancerIP数量 + externalIP数量 + 一个 nodePort  )
+```shell
+# 对应 80 端口 ： ClusterIP + servicePort
+5 : key={ DestIp:172.26.75.227, DestPort:8080, protocol:tcp, NatType:service, Scope:0 }
+5 : value={ SvcId:3813350060, TotalBackendCount:2, LocalBackendCount:1, AffinitySecond:0, ServiceFlags:0, BalancingFlags:0, RedirectFlags:0 }
 
-============================ 功能
+# 对应 80 端口 ：  nodeIP + nodePort :（ 这种数据包的转发，去查询  node map 来确认 node ip ）
+7 : key={ DestIp:255.255.255.255, DestPort:31399, protocol:tcp, NatType:service, Scope:0 }
+7 : value={ SvcId:3813350060, TotalBackendCount:2, LocalBackendCount:1, AffinitySecond:0, ServiceFlags:0, BalancingFlags:0, RedirectFlags:0 }
 
+# 对应 8080 端口 ： ClusterIP + servicePort
+11 : key={ DestIp:255.255.255.255, DestPort:31633, protocol:tcp, NatType:service, Scope:0 }
+11 : value={ SvcId:3813350060, TotalBackendCount:2, LocalBackendCount:1, AffinitySecond:0, ServiceFlags:0, BalancingFlags:0, RedirectFlags:0 }
 
-(1) 支持 service 的访问
-		支持 访问 clusterIP + svcPort
-                loadbalancerIp + svcPort  ( 不支持 loadbalancerIp + nodePort  )
-				externalIP + svcPort ( 不支持 externalIP + nodePort  )
-				nodeIP + nodePort
+# 对应 8080 端口 ： loadbalancerIP + servicePort
+14 : key={ DestIp:172.26.75.227, DestPort:80, protocol:tcp, NatType:service, Scope:0 }
+14 : value={ SvcId:3813350060, TotalBackendCount:2, LocalBackendCount:1, AffinitySecond:0, ServiceFlags:0, BalancingFlags:0, RedirectFlags:0 }
 
-		
-(2) 支持 crd  localRedirect 
-		onlyLocal:  当本地 endpoint 挂了，是否 允许 正常 访问 service
-		qos:   本地 所有 pod 的 connect qos 流控
-         
-（3）支持 crd  balancing 
-		自定义 浮动 ip  和 后端 endpoint ip 
-		可以 额外 自定义  endpoint ip
-         也可以关联 K8S 的 service  
-       fowardToNode ： 是否解析到 pod 所在的 node 的 nodePort  ， 适用与集群外部 的节点
+#.... 可能还有 externalIP 的记录
+#.... 可能还有 loadbalancer ip 的记录
 
+```
 
-============ 问题
+在 backend map 中，有如下数据， 记录的数量是：   endpoint数量 * service端口数量
 
-目前只支持 ipv4， 不支持 ipv6
+```shell
 
-如果 node ip 变换了，目前 backend 中的 pod 所在 的 node ip 不会变化，需要增强
+# 对应 80 端口
+0 : key={ Order:0, SvcId:3813350060, port:8080, protocol:tcp, NatType:service, Scope: 0 }
+0 : value={ PodIp:172.25.161.5 , PodPort:80, NodeIp:0.0.0.0, NodePort:31633 }
+10 : key={ Order:1, SvcId:3813350060, port:8080, protocol:tcp, NatType:service, Scope: 0 }
+10 : value={ PodIp:172.25.132.2 , PodPort:80, NodeIp:0.0.0.0, NodePort:31633 }
 
-对于识别为 local 的 pod，例如 default/kubernetes 的 endpointslice， 其 yaml 中就不带 nodeName， 导致 识别 失败
+# 对应 8080 端口
+1 : key={ Order:0, SvcId:3813350060, port:80, protocol:tcp, NatType:service, Scope: 0 }
+1 : value={ PodIp:172.25.161.5 , PodPort:80, NodeIp:0.0.0.0, NodePort:31399 }
+11 : key={ Order:1, SvcId:3813350060, port:80, protocol:tcp, NatType:service, Scope: 0 }
+11 : value={ PodIp:172.25.132.2 , PodPort:80, NodeIp:0.0.0.0, NodePort:31399 }
+
+```
 
 
 
