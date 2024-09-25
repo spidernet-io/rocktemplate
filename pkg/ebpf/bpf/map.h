@@ -68,8 +68,8 @@ struct {
 //======================================= map ： 存储 endpoint  ， pod ip
 
 struct mapkey_backend {
-    __be32 order;      //  第几个 endpoint ip 。 前面几个记录，优先存储 本地 node 上的 endpoint ， 用于实现 clientIP 亲和
     __u32  svc_id;  // 对应 mapvalue_service 中的 svc_id ，  一个 service 有一个 唯一的 ID ，用来映射 service 下 所有的 endpoint
+    __be32 order;      //  第几个 endpoint ip 。 前面几个记录，优先存储 本地 node 上的 endpoint ， 用于实现 clientIP 亲和
     __be16 dport;
     __u8   proto;
     __u8   nat_type;

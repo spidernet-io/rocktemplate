@@ -20,8 +20,8 @@ type bpf_cgroupMapkeyAffinity struct {
 }
 
 type bpf_cgroupMapkeyBackend struct {
-	Order   uint32
 	SvcId   uint32
+	Order   uint32
 	Dport   uint16
 	Proto   uint8
 	NatType uint8
