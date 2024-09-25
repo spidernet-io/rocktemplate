@@ -29,6 +29,9 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 	resultBackList := []*backendMapData{}
 
 	svcV4Id := GenerateSvcV4Id(svc)
+	if svcV4Id == 0 {
+		return nil, nil, fmt.Errorf("failed to generate svcId")
+	}
 	affinityTime := GetServiceAffinityTime(svc)
 	serviceFlags := GetServiceFlag(svc)
 
@@ -273,21 +276,39 @@ OUTER_NEW:
 
 func (s *EbpfProgramStruct) UpdateEbpfMapForService(l *zap.Logger, oldSvc, newSvc *corev1.Service, oldEdsList, newEdsList map[string]*discovery.EndpointSlice) error {
 
-	oldSvcList, oldBkList, err1 := buildEbpfMapDataForV4Service(NAT_TYPE_SERVICE, oldSvc, oldEdsList)
-	if err1 != nil {
-		return fmt.Errorf("failed to buildEbpfMapDataForV4Service: %v", err1)
-	}
-	newSvcList, newBkList, err2 := buildEbpfMapDataForV4Service(NAT_TYPE_SERVICE, newSvc, newEdsList)
-	if err2 != nil {
-		return fmt.Errorf("failed to buildEbpfMapDataForV4Service: %v", err2)
+	processIpv4 := false
+	processIpv6 := false
+	for _, v := range newSvc.Spec.IPFamilies {
+		if v == corev1.IPv4Protocol {
+			processIpv4 = true
+		}
+		if v == corev1.IPv6Protocol {
+			processIpv6 = true
+		}
 	}
 
-	if e := s.applyEpfMapDataService(l, oldSvcList, newSvcList); e != nil {
-		return fmt.Errorf("failed to applyEpfMapDataService: %v", e)
+	if processIpv4 {
+		oldSvcList, oldBkList, err1 := buildEbpfMapDataForV4Service(NAT_TYPE_SERVICE, oldSvc, oldEdsList)
+		if err1 != nil {
+			return fmt.Errorf("failed to buildEbpfMapDataForV4Service: %v", err1)
+		}
+		newSvcList, newBkList, err2 := buildEbpfMapDataForV4Service(NAT_TYPE_SERVICE, newSvc, newEdsList)
+		if err2 != nil {
+			return fmt.Errorf("failed to buildEbpfMapDataForV4Service: %v", err2)
+		}
+
+		if e := s.applyEpfMapDataService(l, oldSvcList, newSvcList); e != nil {
+			return fmt.Errorf("failed to applyEpfMapDataService: %v", e)
+		}
+		if e := s.applyEpfMapDataBackend(l, oldBkList, newBkList); e != nil {
+			return fmt.Errorf("failed to applyEpfMapDataBackend: %v", e)
+		}
 	}
-	if e := s.applyEpfMapDataBackend(l, oldBkList, newBkList); e != nil {
-		return fmt.Errorf("failed to applyEpfMapDataBackend: %v", e)
+
+	if processIpv6 {
+		l.Sugar().Infof("does not suppport ipv6, abandon applying ")
 	}
+
 	return nil
 }
 
