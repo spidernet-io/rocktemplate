@@ -204,6 +204,9 @@ func (s *EbpfProgramStruct) CleanMapService() (int, error) {
 				return 0, fmt.Errorf("failed to batchlookup for %v\n", mapPtr.String())
 			}
 		}
+		if c == 0 {
+			break
+		}
 		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
 		if e != nil {
 			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
@@ -244,6 +247,9 @@ func (s *EbpfProgramStruct) CleanMapBackend() (int, error) {
 			} else {
 				return 0, fmt.Errorf("failed to batchlookup for %v\n", mapPtr.String())
 			}
+		}
+		if c == 0 {
+			break
 		}
 		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
 		if e != nil {
@@ -286,6 +292,9 @@ func (s *EbpfProgramStruct) CleanMapNode() (int, error) {
 				return 0, fmt.Errorf("failed to batchlookup for %v\n", mapPtr.String())
 			}
 		}
+		if c == 0 {
+			break
+		}
 		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
 		if e != nil {
 			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
@@ -327,6 +336,9 @@ func (s *EbpfProgramStruct) CleanMapAffinity() (int, error) {
 				return 0, fmt.Errorf("failed to batchlookup for %v\n", mapPtr.String())
 			}
 		}
+		if c == 0 {
+			break
+		}
 		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
 		if e != nil {
 			return 0, fmt.Errorf("failed to BatchDelete: %+v", e)
@@ -367,6 +379,9 @@ func (s *EbpfProgramStruct) CleanMapNatRecord() (int, error) {
 			} else {
 				return 0, fmt.Errorf("failed to batchlookup for %v\n", mapPtr.String())
 			}
+		}
+		if c == 0 {
+			break
 		}
 		c, e := s.BpfObjCgroup.MapNatRecord.BatchDelete(keys, &ebpf.BatchOptions{})
 		if e != nil {
