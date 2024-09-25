@@ -229,8 +229,8 @@ func ClassifyV4Endpoint(edsList map[string]*discovery.EndpointSlice) (localEp []
 
 	for _, k := range edsList {
 		for _, v := range k.Endpoints {
-			fmt.Printf("----debug: types.AgentConfig.LocalNodeName=%s  node=%s\n", types.AgentConfig.LocalNodeName, *v.Hostname)
-			if v.Hostname != nil && *v.Hostname == types.AgentConfig.LocalNodeName {
+			fmt.Printf("----debug: types.AgentConfig.LocalNodeName=%s  node=%s\n", types.AgentConfig.LocalNodeName, *v.NodeName)
+			if v.NodeName != nil && *v.NodeName == types.AgentConfig.LocalNodeName {
 				// check the validity of ipv4 address
 				if checkV4Addr(&v) {
 					localEp = append(localEp, &v)
