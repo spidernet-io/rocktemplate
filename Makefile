@@ -449,3 +449,12 @@ update_openapi_sdk:
 	tools/golang/goSwagger.sh generate $(OPENAPI_SDK_DIR)
 
 
+#=================================
+
+
+.PHONY: installDevTool
+installDevTool:
+	apt-get update && apt-get install -y clang llvm gcc-multilib libbpf-dev linux-headers-$(uname -r) golang
+
+
+
