@@ -66,7 +66,7 @@ func (s *EbpfProgramStruct) PrintMapService() error {
 	name := mapPtr.String()
 
 	fmt.Printf("------------------------------\n")
-	fmt.Printf("ebgin map  %s\n", name)
+	fmt.Printf("map  %s\n", name)
 	var cursor ebpf.MapBatchCursor
 	count := 0
 	for {
@@ -111,7 +111,7 @@ func (s *EbpfProgramStruct) PrintMapBackend() error {
 	name := mapPtr.String()
 
 	fmt.Printf("------------------------------\n")
-	fmt.Printf("ebgin map  %s\n", name)
+	fmt.Printf("map  %s\n", name)
 	var cursor ebpf.MapBatchCursor
 	count := 0
 	for {
@@ -156,7 +156,7 @@ func (s *EbpfProgramStruct) PrintMapNode() error {
 	name := mapPtr.String()
 
 	fmt.Printf("------------------------------\n")
-	fmt.Printf("ebgin map  %s\n", name)
+	fmt.Printf("map  %s\n", name)
 	var cursor ebpf.MapBatchCursor
 	count := 0
 	for {
@@ -201,7 +201,7 @@ func (s *EbpfProgramStruct) PrintMapAffinity() error {
 	name := mapPtr.String()
 
 	fmt.Printf("------------------------------\n")
-	fmt.Printf("ebgin map  %s\n", name)
+	fmt.Printf("map  %s\n", name)
 	var cursor ebpf.MapBatchCursor
 	count := 0
 	for {
@@ -246,7 +246,7 @@ func (s *EbpfProgramStruct) PrintMapNatRecord() error {
 	name := mapPtr.String()
 
 	fmt.Printf("------------------------------\n")
-	fmt.Printf("ebgin map  %s\n", name)
+	fmt.Printf("map  %s\n", name)
 	var cursor ebpf.MapBatchCursor
 	count := 0
 	for {
