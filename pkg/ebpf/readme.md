@@ -17,9 +17,6 @@
 
 ============================ 功能
 
-目前只支持 ipv4， 不支持 ipv6
-
-如果 node ip 变换了，目前 backend 中的 pod 所在 的 node ip 不会变化，需要增强
 
 (1) 支持 service 的访问
 		支持 访问 clusterIP + svcPort
@@ -27,6 +24,7 @@
 				externalIP + svcPort ( 不支持 externalIP + nodePort  )
 				nodeIP + nodePort
 
+		
 (2) 支持 crd  localRedirect 
 		onlyLocal:  当本地 endpoint 挂了，是否 允许 正常 访问 service
 		qos:   本地 所有 pod 的 connect qos 流控
@@ -36,5 +34,15 @@
 		可以 额外 自定义  endpoint ip
          也可以关联 K8S 的 service  
        fowardToNode ： 是否解析到 pod 所在的 node 的 nodePort  ， 适用与集群外部 的节点
+
+
+============ 问题
+
+目前只支持 ipv4， 不支持 ipv6
+
+如果 node ip 变换了，目前 backend 中的 pod 所在 的 node ip 不会变化，需要增强
+
+对于识别为 local 的 pod，例如 default/kubernetes 的 endpointslice， 其 yaml 中就不带 nodeName， 导致 识别 失败
+
 
 
