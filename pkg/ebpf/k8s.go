@@ -82,7 +82,7 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 				LocalBackendCount: uint32(len(localEp)),
 				AffinitySecond:    affinityTime,
 				ServiceFlags:      serviceFlags,
-				FloatipFlags:      0,
+				BalancingFlags:    0,
 				RedirectFlags:     0,
 			}
 			resultSvcList = append(resultSvcList, &serviceMapData{
@@ -107,7 +107,7 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 				LocalBackendCount: uint32(len(localEp)),
 				AffinitySecond:    affinityTime,
 				ServiceFlags:      serviceFlags,
-				FloatipFlags:      0,
+				BalancingFlags:    0,
 				RedirectFlags:     0,
 			}
 			resultSvcList = append(resultSvcList, &serviceMapData{

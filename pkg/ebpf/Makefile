@@ -11,7 +11,7 @@ buildGolang:
 	rm bpf_*.go || true
 	export GOPROXY="https://goproxy.io|https://goproxy.cn|direct" && \
 		go mod tidy && \
-		go generate
+		go generate ./...
 	# To further reduce runtime dependencies, add CGO_ENABLED=0 to go build and your application won't depend on libc
 	CGO_ENABLED=0 go build
 
