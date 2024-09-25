@@ -3,13 +3,6 @@
 #include "map.h"
 
 
-/* Hack due to missing narrow ctx access. */
-static __always_inline __be16 ctx_dst_port(const struct bpf_sock_addr *ctx) {
-  // Stored in network byte order
-  volatile __u32 dport = ctx->user_port;
-  // convert to littleEnd
-  return (__be16)dport;
-}
 
 // 169.254.0.10 的大端十六进制表示
 //#define FLOAT_IP   0x0a00feda
@@ -146,12 +139,12 @@ static __always_inline struct mapvalue_affinity* get_affinity_and_update( struct
     struct mapkey_affinity affinityKey = {
        .original_dest_ip =  ctx->user_ip4 ,
        .client_cookie =  bpf_get_netns_cookie(ctx) ,
-       .original_port = ctx_dst_port(ctx) ,
+       .original_port = (__u16)(bpf_htonl(ctx->user_port)>>16) ,
        .proto = ip_proto ,
        .pad = 0 ,
     };
     debugf(DEBUG_VERSBOSE, "search affinityKey  original_dest_ip=%pI4 \n"  ,  &(affinityKey.original_dest_ip)  );
-    debugf(DEBUG_VERSBOSE, "search affinityKey  original_dest_ip=%d \n"  ,  affinityKey.client_cookie  );
+    debugf(DEBUG_VERSBOSE, "search affinityKey  client_cookie=%d \n"  ,  affinityKey.client_cookie  );
     debugf(DEBUG_VERSBOSE, "search affinityKey  original_port=%d \n"  ,  affinityKey.original_port  );
     debugf(DEBUG_VERSBOSE, "search affinityKey  ip_proto=%d \n"  ,  affinityKey.proto  );
 
@@ -296,7 +289,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
         };
 
             debugf(DEBUG_VERSBOSE, "update affinityKey  original_dest_ip=%pI4 \n"  ,  &(affinityKey.original_dest_ip)  );
-            debugf(DEBUG_VERSBOSE, "update affinityKey  original_dest_ip=%d \n"  ,  affinityKey.client_cookie  );
+            debugf(DEBUG_VERSBOSE, "update affinityKey  client_cookie=%d \n"  ,  affinityKey.client_cookie  );
             debugf(DEBUG_VERSBOSE, "update affinityKey  original_port=%d \n"  ,  affinityKey.original_port  );
             debugf(DEBUG_VERSBOSE, "update affinityKey  ip_proto=%d \n"  ,  affinityKey.proto  );
 
@@ -367,8 +360,7 @@ output_event:
 SEC("cgroup/connect4")
 int sock4_connect(struct bpf_sock_addr *ctx) {
 	int err;
-	__u16 dst_port = ctx_dst_port(ctx);
-	__u32 dst_ip = ctx->user_ip4;
+
 
     //debugf(DEBUG_VERSBOSE, "connect4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
 
@@ -385,8 +377,7 @@ SEC("cgroup/sendmsg4")
 int sock4_sendmsg(struct bpf_sock_addr *ctx)
 {
 	int err;
-	__u16 dst_port = ctx_dst_port(ctx);
-	__u32 dst_ip = ctx->user_ip4;
+
 
     //debugf(DEBUG_VERSBOSE , "sendmsg4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
 
@@ -401,8 +392,7 @@ SEC("cgroup/recvmsg4")
 int sock4_recvmsg(struct bpf_sock_addr *ctx)
 {
 	int err;
-	__u16 dst_port = ctx_dst_port(ctx);
-	__u32 dst_ip = ctx->user_ip4;
+
 
     //debugf(DEBUG_VERSBOSE, "recvmsg4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
 
@@ -413,8 +403,7 @@ SEC("cgroup/getpeername4")
 int sock4_getpeername(struct bpf_sock_addr *ctx)
 {
 	int err;
-	__u16 dst_port = ctx_dst_port(ctx);
-	__u32 dst_ip = ctx->user_ip4;
+
 
     //debugf(DEBUG_VERSBOSE , "getpeername4: dst_ip=%pI4 dst_port=%d\n" ,&dst_ip, bpf_htons(dst_port) );
 
