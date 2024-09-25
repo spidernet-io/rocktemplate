@@ -167,6 +167,8 @@ static __always_inline struct mapvalue_affinity* get_affinity_and_update( struct
             return NULL ;
         }
         return affinityValue ;
+    }else{
+        debugf(DEBUG_VERSBOSE, "the affinity record has expired \n"   );
     }
     return NULL ;
 }
@@ -237,13 +239,16 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     }
 
     //------------ check affinity history
-    struct mapvalue_affinity *affinityValue = get_affinity_and_update(ctx, svcval.affinity_second , ip_proto ) ;
-    if (affinityValue) {
-        // update
-        debugf(DEBUG_INFO, "nat by sencondary affinity, for %pI4:%d\n" , &dst_ip  , dst_port   );
-        nat_ip = affinityValue->nat_ip ;
-        nat_port = affinityValue->nat_port  ;
-        goto set_nat ;
+    if ( svcval.affinity_second > 0 ) {
+        debugf(DEBUG_VERSBOSE, "search affinity service for %pI4:%d\n" ,&dst_ip  , dst_port   );
+        struct mapvalue_affinity *affinityValue = get_affinity_and_update(ctx, svcval.affinity_second , ip_proto ) ;
+        if (affinityValue) {
+            // update
+            debugf(DEBUG_INFO, "nat by sencondary affinity, for %pI4:%d\n" , &dst_ip  , dst_port   );
+            nat_ip = affinityValue->nat_ip ;
+            nat_port = affinityValue->nat_port  ;
+            goto set_nat ;
+        }
     }
 
     // ----------------- get backend
