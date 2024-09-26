@@ -99,7 +99,7 @@ static __always_inline bool get_service( __be32 dest_ip, __u16 dst_port, __u8 ip
         goto succeed;
     }else{
         // try to search nodePort
-        ip4_addr = (__ipv4_ip)dest_ip ;
+        __ipv4_ip ip4_addr = (__ipv4_ip)dest_ip ;
         __u32 *nodeval = bpf_map_lookup_elem( &map_node_ip , &ip4_addr);
         if ( nodeval ) {
             debugf( DEBUG_VERSBOSE, "dest address is the ip of a node\n" );
