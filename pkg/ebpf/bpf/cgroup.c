@@ -99,10 +99,8 @@ static __always_inline bool get_service( __be32 dest_ip, __u16 dst_port, __u8 ip
         goto succeed;
     }else{
         // try to search nodePort
-        struct mapkey_node nodekey = {
-            .address = dest_ip ,
-        };
-        __u32 *nodeval = bpf_map_lookup_elem( &map_node , &nodekey);
+        ip4_addr = (__ipv4_ip)dest_ip ;
+        __u32 *nodeval = bpf_map_lookup_elem( &map_node_ip , &ip4_addr);
         if ( nodeval ) {
             debugf( DEBUG_VERSBOSE, "dest address is the ip of a node\n" );
             // it is node ip
@@ -187,11 +185,17 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     struct mapvalue_nat_record natvalue;
 
     struct  event_value evt = {
+        .cgroup_id = bpf_get_current_cgroup_id(),
+        .nat_v6ip_high = 0 ,
+        .nat_v6ip_low = 0 ,
+        .original_dest_v6ip_high = 0 ,
+        .original_dest_v6ip_low = 0 ,
         .is_ipv4 = 1 ,
         .is_success = 0 ,
-        .original_dest_ip = dst_ip ,
+        .original_dest_v4ip = dst_ip ,
         .original_dest_port = dst_port ,
         .tgid = (__u32) ( bpf_get_current_pid_tgid() >> 32 ),
+        .failure_code = 0 ,
         .pad = 0 ,
     } ;
 
@@ -300,7 +304,13 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
         if ( svckey.nat_type == NAT_TYPE_BALANCING ) {
             evt.nat_type = NAT_TYPE_BALANCING ;
             if ( svcval.balancing_flags & NAT_FLAG_ACCESS_NODEPORT_BALANCING ) {
-                nat_ip = backendValue->node_address ;
+                __u32 node_id = backendValue->node_id ;
+                __u32 *node_ip = bpf_map_lookup_elem( &map_node_entry_ip , &node_id);
+                if (!node_ip) {
+                    debugf(DEBUG_ERROR, "failed to find node entry ip for %pI4:%d\n" , &dst_ip  , dst_port   );
+                    goto output_event;
+                }
+                nat_ip = *node_ip ;
                 nat_port = backendValue->node_port ;
             }else{
                 nat_ip = backendValue->pod_address ;
@@ -342,7 +352,7 @@ set_nat:
     debugf(DEBUG_INFO, " DNAT to %pI4:%d \n" , &nat_ip , nat_port );
 
     evt.is_success = 1 ;
-    evt.nat_ip = nat_ip ;
+    evt.nat_v4ip = nat_ip ;
     evt.nat_port = nat_port ;
 
 output_event:

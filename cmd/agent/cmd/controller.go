@@ -158,6 +158,7 @@ func RunReconciles() {
 	stopWatchCh := make(chan struct{})
 	NewServiceInformer(Client, stopWatchCh, writer)
 	NewEndpointSliceInformer(Client, stopWatchCh, writer)
+	NewNodeInformer(Client, stopWatchCh, writer)
 
 	rootLogger.Info("finish all setup ")
 	time.Sleep(time.Hour)

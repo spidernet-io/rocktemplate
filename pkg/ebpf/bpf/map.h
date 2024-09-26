@@ -79,7 +79,7 @@ struct mapkey_backend {
 
 struct mapvalue_backend {
 	__be32 pod_address;		/* 小端存储。 Service endpoint IPv4 address , saved in LittleEndian */
-	__be32 node_address;		/* 小端存储。 for loadbalancer , access the nodePort */
+	__u32 node_id;		    /* 对应 map_node_entry 的 key，查询 node 的 入口 ip 。 小端存储。 for loadbalancer , access the nodePort */
 	__be16 pod_port;		/* 小端存储。 L4 port filter , saved in LittleEndian */
 	__be16 node_port;		/* 小端存储。 for loadbalancer , access the nodePort */
 };
@@ -94,21 +94,30 @@ struct {
 } map_backend SEC(".maps");
 
 
-//-----------------------  map ： 存储 node ip ，用于匹配 nodePort 中的 主机 ip
+//-----------------------  map ： key 存储 所有 node ipv4 ip ，用于匹配 nodePort 中的 主机 ip ； value 未使用
 
-
-struct mapkey_node {
-	__u32 address;       // ip
-};
+typedef __u32 __ipv4_ip ;
 
 struct {
   __uint(type, BPF_MAP_TYPE_HASH );
-  __type(key, struct mapkey_node  );
-  __type(value, __u32  );
+  __type(key, __ipv4_ip  );  // node ipv4 ip
+  __type(value, __u32  );  // 未使用
   __uint(max_entries, DEFAULT_MAX_EBPF_MAP_ENTRIES);
   __uint(pinning, 1); /* 这个配合 golang 中的 pinPath，完成 路径 pin */
   //__uint(map_flags, 0);
-} map_node SEC(".maps");
+} map_node_ip SEC(".maps");
+
+
+//-----------------------  map ： key 存储 每一个 node 的唯一 id ，value 存储 node 的 入口 ip
+
+struct {
+  __uint(type, BPF_MAP_TYPE_HASH );
+  __type(key,   __u32  );  // node id
+  __type(value, __ipv4_ip  );   // node ipv4 ip ， 可以是 node ip， 或者 node 的 隧道ip，或者 node 的公网映射 ip
+  __uint(max_entries, DEFAULT_MAX_EBPF_MAP_ENTRIES);
+  __uint(pinning, 1); /* 这个配合 golang 中的 pinPath，完成 路径 pin */
+  //__uint(map_flags, 0);
+} map_node_entry_ip SEC(".maps");
 
 
 //======================================= map ： 存储 亲和 记录
@@ -176,15 +185,25 @@ struct {
 // BPF_MAP_TYPE_PERF_EVENT_ARRAY 类型的 数据结构体，在 golang 中需要自定定义 struct
 
 struct event_value {
-    __be32 nat_ip ;    // 小端存储。
-    __be32 original_dest_ip ;  /* 小端存储。 dest ip */
+    __u64  cgroup_id ;
+
+    __be64 nat_v6ip_high ;    // 小端存储。
+    __be64 nat_v6ip_low ;    // 小端存储。
+    __be64 original_dest_v6ip_high ;  /* 小端存储。 dest ip */
+    __be64 original_dest_v6ip_low ;  /* 小端存储。 dest ip */
+
+    __be32 nat_v4ip ;    // 小端存储。
+    __be32 original_dest_v4ip ;  /* 小端存储。 dest ip */
+
 	__be16 nat_port;   // 小端存储。
 	__be16 original_dest_port;   // 小端存储。
 	__u32  tgid;
+
     __u8   is_ipv4 ; /* 0 for ipv6 data, 1 for ipv4 data */
     __u8   is_success ; /* 1 for success , 0 for failure */
     __u8   nat_type ;  /* NAT_TYPE_SERVICE (  lowest priority  ) ,NAT_TYPE_REDIRECT ,  NAT_TYPE_BALANCING ( highest priority )  */
-    __u8   pad;
+    __u8   failure_code;
+    __u8   pad[4];
 } ;
 
 // BPF_MAP_TYPE_PERF_EVENT_ARRAY 中的 key 和 value 并不存放真正的 数据， key 用来存放 cpu 索引， values 存放指向 perf event buffer 的地址

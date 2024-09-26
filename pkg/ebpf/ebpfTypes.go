@@ -115,19 +115,34 @@ func (t bpf_cgroupMapvalueAffinity) String() string {
 
 // struct for ebpf map : event
 type MapEventValue struct {
-	NatIp            uint32
-	OriginalDestIp   uint32
-	NatPort          uint16
-	OriginalDestPort uint16
-	Tgid             uint32
-	IsIpv4           uint8 /* 0 for ipv6 data, 1 for ipv4 data */
-	IsSuccess        uint8 /* 1 for success , 0 for failure */
-	NatType          uint8 /* 1 for NAT_TYPE_FLOATIP , 2 for NAT_TYPE_SVC, 3 for NAT_TYPE_REDIRECT  */
-	Pad              uint8
+	CgroupId             uint64
+	NatV6ipHigh          uint64
+	NatV6ipLow           uint64
+	OriginalDestV6ipHigh uint64
+	OriginalDestV6ipLow  uint64
+	NatV4Ip              uint32
+	OriginalDestV4Ip     uint32
+	NatPort              uint16
+	OriginalDestPort     uint16
+	Tgid                 uint32
+	IsIpv4               uint8 /* 0 for ipv6 data, 1 for ipv4 data */
+	IsSuccess            uint8 /* 1 for success , 0 for failure */
+	NatType              uint8 /* 1 for NAT_TYPE_FLOATIP , 2 for NAT_TYPE_SVC, 3 for NAT_TYPE_REDIRECT  */
+	FailureCode          uint8
+	Pad                  [4]uint8
+}
+
+func GetIpv6Str(ipV6High, ipV6Low uint64) string {
+	ip := make([]byte, 16)
+	for i := 0; i < 8; i++ {
+		ip[i] = byte(ipV6High >> (8 * (7 - i)))
+		ip[i+8] = byte(ipV6Low >> (8 * (7 - i)))
+	}
+	return net.IP(ip).String()
 }
 
 func (t MapEventValue) String() string {
-	return fmt.Sprintf(`{ IsIpv4:%d, IsSuccess:%d, NatType:%s, OriginalDestIp:%s, OriginalDestPort:%d, NatIp:%s, NatPort:%d , Tgid:%d }`,
-		t.IsIpv4, t.IsSuccess, GetNatTypeStr(t.NatType),
-		GetIpStr(t.OriginalDestIp), t.OriginalDestPort, GetIpStr(t.NatIp), t.NatPort, t.Tgid)
+	return fmt.Sprintf(`{ CgroupId:%d, IsIpv4:%d, IsSuccess:%d, NatType:%s, OriginalDestV4Ip:%s, OriginalDestV6Ip:%s, OriginalDestPort:%d, NatV4Ip:%s, NatV6Ip:%s, NatPort:%d , Tgid:%d, FailureCode:%d }`,
+		t.CgroupId, t.IsIpv4, t.IsSuccess, GetNatTypeStr(t.NatType),
+		GetIpStr(t.OriginalDestV4Ip), GetIpv6Str(t.OriginalDestV6ipHigh, t.OriginalDestV6ipLow), t.OriginalDestPort, GetIpStr(t.NatV4Ip), GetIpv6Str(t.NatV6ipHigh, t.NatV6ipLow), t.NatPort, t.Tgid, t.FailureCode)
 }

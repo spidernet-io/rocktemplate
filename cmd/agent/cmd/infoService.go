@@ -136,7 +136,7 @@ func NewServiceInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{},
 	kubeInformerFactory.Start(stopWatchCh)
 
 	if !cache.WaitForCacheSync(stopWatchCh, srcInformer.Informer().HasSynced) {
-		rootLogger.Sugar().Fatalf("failed to WaitForCacheSync for serivce ")
+		rootLogger.Sugar().Fatalf("failed to WaitForCacheSync for service ")
 	}
 
 	rootLogger.Sugar().Infof("succeeded to NewServiceInformer ")

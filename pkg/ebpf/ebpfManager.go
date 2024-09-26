@@ -95,8 +95,12 @@ type EbpfProgram interface {
 	DeleteMapBackend([]bpf_cgroupMapkeyBackend) error
 
 	// for agent
+	// for k8s service and endpointslice
 	UpdateEbpfMapForService(*zap.Logger, *corev1.Service, *corev1.Service, map[string]*discovery.EndpointSlice, map[string]*discovery.EndpointSlice) error
 	DeleteEbpfMapForService(*zap.Logger, *corev1.Service, map[string]*discovery.EndpointSlice) error
+	// for k8s node
+	UpdateEbpfMapForNode(*zap.Logger, *corev1.Node, *corev1.Node) error
+	DeleteEbpfMapForNode(*zap.Logger, *corev1.Node) error
 }
 
 var _ EbpfProgram = &EbpfProgramStruct{}
@@ -279,7 +283,7 @@ func (s *EbpfProgramStruct) LoadAllEbpfMap(mapPinDir string) error {
 		return fmt.Errorf("failed to load map %s\n", f)
 	}
 
-	f = filepath.Join(mapdir, "map_node")
+	f = filepath.Join(mapdir, "map_node_ip")
 	s.EbpfMaps.MapNode, err = ebpf.LoadPinnedMap(f, &ebpf.LoadPinOptions{})
 	if err != nil {
 		s.UnloadAllEbpfMap()

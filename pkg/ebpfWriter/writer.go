@@ -14,9 +14,13 @@ import (
 
 type EbpfWriter interface {
 	UpdateService(*zap.Logger, *corev1.Service, bool) error
-	UpdateEndpointSlice(*zap.Logger, *discovery.EndpointSlice, bool) error
 	DeleteService(*zap.Logger, *corev1.Service) error
+
+	UpdateEndpointSlice(*zap.Logger, *discovery.EndpointSlice, bool) error
 	DeleteEndpointSlice(*zap.Logger, *discovery.EndpointSlice) error
+
+	UpdateNode(*zap.Logger, *corev1.Node, bool) error
+	DeleteNode(*zap.Logger, *corev1.Node) error
 }
 
 type EndpointData struct {
@@ -27,9 +31,13 @@ type EndpointData struct {
 }
 
 type ebpfWriter struct {
-	l *lock.Mutex
 	// index: namesapce/name
-	endpointData map[string]*EndpointData
+	ebpfServiceLock *lock.Mutex
+	endpointData    map[string]*EndpointData
+
+	ebpfNodeLock *lock.Mutex
+	nodeData     map[string]*corev1.Node
+
 	// use the creationTimestamp to record the last update time, and calculate the validityTime
 	validityTime time.Duration
 	log          *zap.Logger
@@ -40,11 +48,13 @@ var _ EbpfWriter = (*ebpfWriter)(nil)
 
 func NewEbpfWriter(ebpfhandler ebpf.EbpfProgram, validityTime time.Duration, l *zap.Logger) EbpfWriter {
 	t := ebpfWriter{
-		l:            &lock.Mutex{},
-		endpointData: make(map[string]*EndpointData),
-		validityTime: validityTime,
-		log:          l,
-		ebpfhandler:  ebpfhandler,
+		ebpfServiceLock: &lock.Mutex{},
+		ebpfNodeLock:    &lock.Mutex{},
+		endpointData:    make(map[string]*EndpointData),
+		nodeData:        make(map[string]*corev1.Node),
+		validityTime:    validityTime,
+		log:             l,
+		ebpfhandler:     ebpfhandler,
 	}
 
 	// before informer, clean all map data to keep all data up to date
@@ -54,7 +64,7 @@ func NewEbpfWriter(ebpfhandler ebpf.EbpfProgram, validityTime time.Duration, l *
 	ebpfhandler.CleanMapService()
 	l.Sugar().Infof("clean ebpf map node when stratup ")
 	ebpfhandler.CleanMapNode()
-	
+
 	go t.DeamonGC()
 	return &t
 }

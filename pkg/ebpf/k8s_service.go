@@ -9,11 +9,13 @@ import (
 	"reflect"
 )
 
+// map the key and value of the service map
 type serviceMapData struct {
 	key *bpf_cgroupMapkeyService
 	val *bpf_cgroupMapvalueService
 }
 
+// map the key and value of the backend map
 type backendMapData struct {
 	key *bpf_cgroupMapkeyBackend
 	val *bpf_cgroupMapvalueBackend
@@ -321,6 +323,6 @@ func (s *EbpfProgramStruct) DeleteEbpfMapForService(l *zap.Logger, svc *corev1.S
 	return nil
 }
 
-// -------------------------------------------------- for local redirect
+// -------------------------------------------------- for CRD redirect
 
-// -------------------------------------------------- for custom balancing
+// -------------------------------------------------- for CRD  balancing

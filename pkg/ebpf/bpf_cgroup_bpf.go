@@ -134,7 +134,7 @@ type bpf_cgroupMapSpecs struct {
 	MapBackend   *ebpf.MapSpec `ebpf:"map_backend"`
 	MapEvent     *ebpf.MapSpec `ebpf:"map_event"`
 	MapNatRecord *ebpf.MapSpec `ebpf:"map_nat_record"`
-	MapNode      *ebpf.MapSpec `ebpf:"map_node"`
+	MapNodeIP      *ebpf.MapSpec `ebpf:"map_node_ip"`
 	MapService   *ebpf.MapSpec `ebpf:"map_service"`
 }
 
@@ -161,7 +161,7 @@ type bpf_cgroupMaps struct {
 	MapBackend   *ebpf.Map `ebpf:"map_backend"`
 	MapEvent     *ebpf.Map `ebpf:"map_event"`
 	MapNatRecord *ebpf.Map `ebpf:"map_nat_record"`
-	MapNode      *ebpf.Map `ebpf:"map_node"`
+	MapNodeIP      *ebpf.Map `ebpf:"map_node_ip"`
 	MapService   *ebpf.Map `ebpf:"map_service"`
 }
 
