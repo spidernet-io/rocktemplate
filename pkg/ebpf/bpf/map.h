@@ -54,7 +54,8 @@ struct mapvalue_service {
   __u8  pad;
 };
 
-
+// 一个 k8s 的 service， 若其下有 n(默认1) 个 clusterIP ，有 m 个 loabdlancerIP， 有 t 个 externalIP， 没有 nodePort ， 那么  map_service 中有 n+m+t 个记录
+// 一个 k8s 的 service， 若其下有 n(默认1) 个 clusterIP ，有 m 个 loabdlancerIP， 有 t 个 externalIP， 有 nodePort ， 那么  map_service 中有 n+m+t+1 个记录
 struct {
   __uint(type, BPF_MAP_TYPE_HASH);
   __type(key, struct mapkey_service  );
@@ -84,6 +85,8 @@ struct mapvalue_backend {
 	__be16 node_port;		/* 小端存储。 for loadbalancer , access the nodePort */
 };
 
+// 一个 k8s 的 service， 若对应有 n 个 endpoint ， 该 service 下有 m 个 port，每个 port 没有 nodePort， 那么  map_backend 中有 n*m 个记录
+// 一个 k8s 的 service， 若对应有 n 个 endpoint ， 该 service 下有 m 个 port，每个 port 有 nodePort，   那么  map_backend 中有 n*m*2 个记录
 struct {
   __uint(type, BPF_MAP_TYPE_HASH);
   __type(key, struct mapkey_backend );

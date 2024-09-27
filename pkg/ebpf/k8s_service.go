@@ -43,7 +43,7 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 		protocol := GetPortProtocol(&svcPort)
 
 		// generate data for backend map
-		// 随着有多组 service port， 也有着多组的 backend
+		// 1组 service port， 对应 一组 clusterIpPort backend + nodePort backend
 		localEp, remoteEp := ClassifyV4Endpoint(edsList)
 		allEp := []*discovery.Endpoint{}
 		allEp = append(allEp, localEp...)
@@ -71,6 +71,16 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 				key: &backMapKey,
 				val: &backMapVal,
 			})
+
+			if svcPort.NodePort != 0 {
+				m := backMapKey
+				m.Dport = uint16(svcPort.NodePort)
+				n := backMapVal
+				resultBackList = append(resultBackList, &backendMapData{
+					key: &m,
+					val: &n,
+				})
+			}
 		}
 
 		// ----------------- generate data of service map  ----------------

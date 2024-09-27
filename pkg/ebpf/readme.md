@@ -36,7 +36,9 @@ default       http-server-v4            Nodeport   172.26.75.227    <pending>   
 
 ```
 
-在 backend map 中，有如下数据， 记录的数量是：   endpoint数量 * service端口数量
+在 backend map 中，有如下数据， 记录的数量是：   
+		如果有没有 nodePort ，记录数量是： endpoint数量 * service 端口数量
+		如果有 nodePort ，   记录数量是： endpoint数量 * service 端口数量 * 2
 
 ```shell
 
