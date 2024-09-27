@@ -161,10 +161,11 @@ func (s *EbpfProgramStruct) applyEpfMapDataNodeEntryIpV4(l *zap.Logger, oldNode 
 		}
 	}
 
-	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 4 ")
+	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 4 %s", entryIp)
 
 	nodeId, err := nodeId.NodeIdManagerHander.GetNodeId(newNode.Name)
 	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 5 ")
+
 	if err != nil {
 		l.Sugar().Errorf("failed to find the nodeIP for node %s when updating ebpf data: %v", oldNode.Name, err)
 		return fmt.Errorf("failed to find the nodeIP for node %s when updating ebpf data: %v", oldNode.Name, err)
