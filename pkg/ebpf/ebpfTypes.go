@@ -96,7 +96,7 @@ func (t bpf_cgroupMapkeyBackend) String() string {
 
 func (t bpf_cgroupMapvalueBackend) String() string {
 	return fmt.Sprintf(`{ PodIp:%s , PodPort:%d, NodeId:%d, NodePort:%d }`,
-		GetIpStr(t.PodAddress), t.PodPort, GetIpStr(t.NodeId), t.NodePort)
+		GetIpStr(t.PodAddress), t.PodPort, t.NodeId, t.NodePort)
 }
 
 // ------------------------------------------------
