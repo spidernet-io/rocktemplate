@@ -37,7 +37,6 @@ var NodeIdManagerHander NodeIdManager
 // so it introduce an abstraction layer to store and search dynamically from api-server
 func InitNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
 	if _, ok := NodeIdManagerHander.(*nodeIdManager); !ok {
-		log.Sugar().Info("initialize NodeIdManagerHander")
 		t := &nodeIdManager{
 			client:     c,
 			nodeIdData: make(map[string]uint32),
@@ -46,6 +45,7 @@ func InitNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
 		}
 		t.initNodeId()
 		NodeIdManagerHander = t
+		log.Sugar().Info("finish initialize NodeIdManagerHander")
 	} else {
 		log.Sugar().Errorf("secondary calling for InitNodeIdManager")
 	}
@@ -62,7 +62,7 @@ func (s *nodeIdManager) applyNewNodeIP(oldNode corev1.Node) (uint32, error) {
 		t := Uint32ToString(nodeId)
 		node.ObjectMeta.Annotations[types.NodeAnnotaitonNodeIdKey] = t
 
-		s.log.Sugar().Info("try to apply a nodeId %s for node %s", t, node.Name)
+		s.log.Sugar().Info("node %s lacks nodeId, try to apply a new nodeId %s for ", node.Name, t)
 		if _, err := s.client.CoreV1().Nodes().Update(context.Background(), node, metav1.UpdateOptions{}); err != nil {
 			if apierrors.IsConflict(err) {
 				// look whether pod has been updated with the nodeId by other pod
@@ -87,6 +87,7 @@ func (s *nodeIdManager) applyNewNodeIP(oldNode corev1.Node) (uint32, error) {
 				s.log.Sugar().Errorf("failed to set nodeIp to node %s: %v", node.Name, err)
 			}
 		} else {
+			s.log.Sugar().Infof("succeeded to apply a new nodeId %s for node %s ", t, node.Name)
 			return nodeId, nil
 		}
 		// sleep and retry
@@ -132,7 +133,6 @@ func (s *nodeIdManager) initNodeId() {
 		if err != nil {
 			s.log.Sugar().Fatalf("failed to set nodeId for node %s : %v", node.Name, err)
 		}
-		s.log.Sugar().Infof("succeeded to generate nodeId %d for node %s", nodeId, node.Name)
 		s.nodeIdData[node.Name] = nodeId
 	}
 
