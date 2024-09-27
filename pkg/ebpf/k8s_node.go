@@ -50,9 +50,9 @@ func (s *EbpfProgramStruct) applyEpfMapDataNodeIpV4(l *zap.Logger, oldNode *core
 	for k, v := range oldList {
 		l.Sugar().Debugf("nodeIp map oldList[%d]: key=%s, value=%d ", k, *v.key, *v.val)
 	}
-	l.Sugar().Debugf("service map %d items in newList: ", len(newList))
+	l.Sugar().Debugf("node map %d items in newList: ", len(newList))
 	for k, v := range newList {
-		l.Sugar().Debugf("service map newList[%d]: key=%s, value=%d ", k, *v.key, *v.val)
+		l.Sugar().Debugf("node map newList[%d]: key=%s, value=%d ", k, *v.key, *v.val)
 	}
 
 OUTER_OLD:
@@ -111,13 +111,17 @@ type nodeEntryIpMapData struct {
 
 func (s *EbpfProgramStruct) applyEpfMapDataNodeEntryIpV4(l *zap.Logger, oldNode *corev1.Node, newNode *corev1.Node) error {
 
+	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 1 ")
+
 	if newNode == nil && oldNode == nil {
 		return fmt.Errorf("empty node obj")
 	}
 
+	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 2 ")
+
 	// each node just has only one key
 	if newNode == nil && oldNode != nil {
-		// delete
+		// delete node
 		nodeId, err := nodeId.NodeIdManagerHander.GetNodeId(oldNode.Name)
 		if err != nil {
 			l.Sugar().Errorf("failed to find the nodeIP for node %s when deleting ebpf data: %v", oldNode.Name, err)
@@ -171,7 +175,7 @@ func (s *EbpfProgramStruct) applyEpfMapDataNodeEntryIpV4(l *zap.Logger, oldNode 
 		l.Sugar().Errorf("failed to update nodeEntryIP map: %v", err)
 		return fmt.Errorf("failed to update nodeEntryIP map: %v", err)
 	}
-	l.Sugar().Infof("succeeded to update 1 items in nodeEntryIP map: ")
+	l.Sugar().Infof("succeeded to update 1 items in nodeEntryIP map ")
 	return nil
 }
 
