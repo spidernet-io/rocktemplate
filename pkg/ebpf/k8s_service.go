@@ -58,7 +58,7 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 				Scope:   SCOPE_LOCAL_CLUSTER,
 			}
 			nodeid := uint32(0)
-			if edp.NodeName != nil && len(edp.NodeName) > 0 {
+			if edp.NodeName != nil && len(*edp.NodeName) > 0 {
 				nodeid, _ = nodeId.NodeIdManagerHander.GetNodeId(*(edp.NodeName))
 			}
 			backMapVal := bpf_cgroupMapvalueBackend{
