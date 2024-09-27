@@ -72,8 +72,20 @@ func (t bpf_cgroupMapvalueService) String() string {
 
 // ------------------------------------------------
 
-func (t bpf_cgroupMapkeyNode) String() string {
-	return fmt.Sprintf(`{ NodeIp:%s}`, GetIpStr(t.Address))
+type bpf_cgroupMapkeyNodeIp struct {
+	IpAddr uint32
+}
+
+func (t bpf_cgroupMapkeyNodeIp) String() string {
+	return fmt.Sprintf(`{ NodeIp:%s}`, GetIpStr(t.IpAddr))
+}
+
+type bpf_cgroupMapvalueNodeEntryIp struct {
+	IpAddr uint32
+}
+
+func (t bpf_cgroupMapvalueNodeEntryIp) String() string {
+	return fmt.Sprintf(`{ NodeIp:%s}`, GetIpStr(t.IpAddr))
 }
 
 // ------------------------------------------------
@@ -83,8 +95,8 @@ func (t bpf_cgroupMapkeyBackend) String() string {
 }
 
 func (t bpf_cgroupMapvalueBackend) String() string {
-	return fmt.Sprintf(`{ PodIp:%s , PodPort:%d, NodeIp:%s, NodePort:%d }`,
-		GetIpStr(t.PodAddress), t.PodPort, GetIpStr(t.NodeAddress), t.NodePort)
+	return fmt.Sprintf(`{ PodIp:%s , PodPort:%d, NodeId:%d, NodePort:%d }`,
+		GetIpStr(t.PodAddress), t.PodPort, GetIpStr(t.NodeId), t.NodePort)
 }
 
 // ------------------------------------------------

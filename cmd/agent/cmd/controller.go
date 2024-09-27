@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/spidernet-io/rocktemplate/pkg/ebpf"
 	"github.com/spidernet-io/rocktemplate/pkg/ebpfWriter"
+	"github.com/spidernet-io/rocktemplate/pkg/nodeId"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -143,6 +144,9 @@ func RunReconciles() {
 	if e2 != nil {
 		rootLogger.Sugar().Fatalf("failed to NewForConfig: %v", e2)
 	}
+
+	// before informer and ebpf, build nodeId database
+	nodeId.NewNodeIdManager(Client, rootLogger.Named("nodeId"))
 
 	// setup ebpf and load
 	bpfManager := ebpf.NewEbpfProgramMananger(rootLogger.Named("ebpf"))

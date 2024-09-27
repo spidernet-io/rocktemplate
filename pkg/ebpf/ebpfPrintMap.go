@@ -141,15 +141,60 @@ func (s *EbpfProgramStruct) PrintMapBackend() error {
 	return nil
 }
 
-func (s *EbpfProgramStruct) PrintMapNode() error {
-	keys := make([]bpf_cgroupMapkeyNode, 100)
+func (s *EbpfProgramStruct) PrintMapNodeIp() error {
+	keys := make([]bpf_cgroupMapkeyNodeIp, 100)
 	vals := make([]uint32, 100)
 
 	var mapPtr *ebpf.Map
-	if s.BpfObjCgroup.MapNode != nil {
-		mapPtr = s.BpfObjCgroup.MapNode
-	} else if s.EbpfMaps != nil && s.EbpfMaps.MapNode != nil {
-		mapPtr = s.EbpfMaps.MapNode
+	if s.BpfObjCgroup.MapNodeIp != nil {
+		mapPtr = s.BpfObjCgroup.MapNodeIp
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapNodeIp != nil {
+		mapPtr = s.EbpfMaps.MapNodeIp
+	} else {
+		return fmt.Errorf("failed to get ebpf map")
+	}
+	name := mapPtr.String()
+
+	fmt.Printf("------------------------------\n")
+	fmt.Printf("map  %s\n", name)
+	var cursor ebpf.MapBatchCursor
+	count := 0
+	for {
+		c, batchErr := mapPtr.BatchLookup(&cursor, keys, vals, nil)
+		count += c
+		finished := false
+		if batchErr != nil {
+			if errors.Is(batchErr, ebpf.ErrKeyNotExist) {
+				// end
+				finished = true
+			} else {
+				return fmt.Errorf("failed to batchlookup for %v\n", mapPtr.String())
+			}
+		}
+		for i := 0; i < len(keys) && i < c; i++ {
+			fmt.Printf("%v : key=%+v\n", i, keys[i])
+			fmt.Printf("%v : value=%+v\n", i, vals[i])
+		}
+		if finished {
+			break
+		}
+	}
+
+	fmt.Printf("end map %s: total items: %v \n", name, count)
+	fmt.Printf("------------------------------\n")
+	fmt.Printf("\n")
+	return nil
+}
+
+func (s *EbpfProgramStruct) PrintMapNodeEntryIp() error {
+	keys := make([]uint32, 100)
+	vals := make([]bpf_cgroupMapvalueNodeEntryIp, 100)
+
+	var mapPtr *ebpf.Map
+	if s.BpfObjCgroup.MapNodeEntryIp != nil {
+		mapPtr = s.BpfObjCgroup.MapNodeEntryIp
+	} else if s.EbpfMaps != nil && s.EbpfMaps.MapNodeEntryIp != nil {
+		mapPtr = s.EbpfMaps.MapNodeEntryIp
 	} else {
 		return fmt.Errorf("failed to get ebpf map")
 	}

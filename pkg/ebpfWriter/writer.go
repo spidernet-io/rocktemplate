@@ -62,8 +62,10 @@ func NewEbpfWriter(ebpfhandler ebpf.EbpfProgram, validityTime time.Duration, l *
 	ebpfhandler.CleanMapBackend()
 	l.Sugar().Infof("clean ebpf map service when stratup ")
 	ebpfhandler.CleanMapService()
-	l.Sugar().Infof("clean ebpf map node when stratup ")
-	ebpfhandler.CleanMapNode()
+	l.Sugar().Infof("clean ebpf map nodeIp when stratup ")
+	ebpfhandler.CleanMapNodeIp()
+	l.Sugar().Infof("clean ebpf map nodeEntryIp when stratup ")
+	ebpfhandler.CleanMapNodeEntryIp()
 
 	go t.DeamonGC()
 	return &t

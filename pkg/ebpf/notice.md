@@ -49,3 +49,8 @@ fowardToNode ： 是否解析到 pod 所在的 node 的 nodePort  ， 适用与�
 貌似每次启动，calico node 都歇菜了 ？ 测试和 其它 ebpf 程序的 工程兼容性 
 
 还没测试 udp 
+
+
+鸡和蛋的问题： 没有 kube-proxy， 我们的组价 部署上来时，如何访问 api-server 进行 工作 ？
+
+

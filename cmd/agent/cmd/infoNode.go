@@ -3,6 +3,8 @@ package cmd
 import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/spidernet-io/rocktemplate/pkg/ebpfWriter"
+	"github.com/spidernet-io/rocktemplate/pkg/nodeId"
+	"github.com/spidernet-io/rocktemplate/pkg/types"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	kubeinformers "k8s.io/client-go/informers"
@@ -28,9 +30,16 @@ func (s *NodeReconciler) HandlerAdd(obj interface{}) {
 	)
 
 	logger.Sugar().Debugf("HandlerAdd process node %+v", node.Name)
+	nodeId.NodeIdManagerHander.BuildNodeId(node)
 	s.writer.UpdateNode(logger, node, false)
 
 	return
+}
+
+func checkNodeEntryIPChanged(oldNode, newNode *corev1.Node, entryKey string) bool {
+	oldEntryIP, _ := oldNode.ObjectMeta.Annotations[entryKey]
+	newEntryIP, _ := newNode.ObjectMeta.Annotations[entryKey]
+	return oldEntryIP == newEntryIP
 }
 
 func (s *NodeReconciler) HandlerUpdate(oldObj, newObj interface{}) {
@@ -51,12 +60,23 @@ func (s *NodeReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 
 	logger.Sugar().Debugf("HandlerUpdate process node %+v", newNode.Name)
 
-	onlyUpdateTime := false
+	// update nodeId mapping to nodeName
+	if !reflect.DeepEqual(oldNode.ObjectMeta.Annotations, oldNode.ObjectMeta.Annotations) {
+		nodeId.NodeIdManagerHander.BuildNodeId(newNode)
+	}
+
+	onlyUpdateTime := true
 	if t := cmp.Diff(oldNode.Status.Addresses, newNode.Status.Addresses); len(t) > 0 {
 		logger.Sugar().Debugf("node address: %s", t)
 	}
-	if reflect.DeepEqual(oldNode.Status.Addresses, newNode.Status.Addresses) {
-		onlyUpdateTime = true
+	if !reflect.DeepEqual(oldNode.Status.Addresses, newNode.Status.Addresses) {
+		onlyUpdateTime = false
+	}
+	if checkNodeEntryIPChanged(oldNode, newNode, types.NodeAnnotaitonNodeEntryIPv4) {
+		onlyUpdateTime = false
+	}
+	if checkNodeEntryIPChanged(oldNode, newNode, types.NodeAnnotaitonNodeEntryIPv6) {
+		onlyUpdateTime = false
 	}
 	s.writer.UpdateNode(logger, newNode, onlyUpdateTime)
 
@@ -75,6 +95,9 @@ func (s *NodeReconciler) HandlerDelete(obj interface{}) {
 
 	logger.Sugar().Infof("HandlerDelete process node %+v", node.Name)
 	s.writer.DeleteNode(logger, node)
+
+	// must  update the ebpf firstly, then delete the nodeIP
+	nodeId.NodeIdManagerHander.DeleteNodeId(node.Name)
 
 	return
 }

@@ -7,9 +7,9 @@ import (
 	"os"
 )
 
-var CmdPrintMapAll = &cobra.Command{
-	Use:   "all",
-	Short: "print all data of the ebpf map ",
+var CmdPrintMapNodeIp = &cobra.Command{
+	Use:   "nodeIp",
+	Short: "print the ebpf map of nodeIp ",
 	Args:  cobra.RangeArgs(0, 0),
 	Run: func(cmd *cobra.Command, args []string) {
 		bpf := ebpf.NewEbpfProgramMananger(nil)
@@ -20,17 +20,12 @@ var CmdPrintMapAll = &cobra.Command{
 		defer bpf.UnloadAllEbpfMap()
 
 		fmt.Printf("\n")
-		fmt.Printf("print all data of the ebpf map:\n")
-		bpf.PrintMapAffinity()
-		bpf.PrintMapNatRecord()
-		bpf.PrintMapService()
-		bpf.PrintMapBackend()
+		fmt.Printf("print the ebpf map of nodeIp:\n")
 		bpf.PrintMapNodeIp()
-		bpf.PrintMapNodeEntryIp()
 		fmt.Printf("\n")
 	},
 }
 
 func init() {
-	CmdPrintMap.AddCommand(CmdPrintMapAll)
+	CmdPrintMap.AddCommand(CmdPrintMapNodeIp)
 }

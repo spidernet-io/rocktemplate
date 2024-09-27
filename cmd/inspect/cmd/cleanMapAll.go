@@ -33,11 +33,17 @@ var CmdCleanMapAll = &cobra.Command{
 		} else {
 			fmt.Printf("    succeeded to clean %d items in backend map\n", c)
 		}
-		if c, e := bpf.CleanMapNode(); e != nil {
-			fmt.Printf("    failed to clean node map: %+v\n", e)
+		if c, e := bpf.CleanMapNodeIp(); e != nil {
+			fmt.Printf("    failed to clean node nodeIp: %+v\n", e)
 			os.Exit(3)
 		} else {
-			fmt.Printf("    succeeded to clean %d items in node map\n", c)
+			fmt.Printf("    succeeded to clean %d items in nodeIp map\n", c)
+		}
+		if c, e := bpf.CleanMapNodeEntryIp(); e != nil {
+			fmt.Printf("    failed to clean nodeEntryIp map: %+v\n", e)
+			os.Exit(3)
+		} else {
+			fmt.Printf("    succeeded to clean %d items in nodeEntryIp map\n", c)
 		}
 		if c, e := bpf.CleanMapNatRecord(); e != nil {
 			fmt.Printf("    failed to clean natRecord map: %+v\n", e)

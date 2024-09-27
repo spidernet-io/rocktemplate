@@ -4,4 +4,15 @@ package types
 
 const (
 	TlsCaCommonName = "spidernet.io"
+
+	OrgName = "bpfElf.io"
+
+	// use this annotation to mark an ID in the annotation of each node
+	// "bpfElf.org/nodeId": "32BitNumber"
+	NodeAnnotaitonNodeIdKey = OrgName + "/nodeId"
+
+	// the user could mark the ip in the annotation of each node
+	// "bpfElf.org/nodeEntryIpv4": "192.168.1.1."
+	NodeAnnotaitonNodeEntryIPv4 = OrgName + "/nodeEntryIpv4"
+	NodeAnnotaitonNodeEntryIPv6 = OrgName + "/nodeEntryIpv6"
 )

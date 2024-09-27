@@ -7,9 +7,9 @@ import (
 	"os"
 )
 
-var CmdPrintMapAll = &cobra.Command{
-	Use:   "all",
-	Short: "print all data of the ebpf map ",
+var CmdCleanMapNodeEntryIp = &cobra.Command{
+	Use:   "nodeEntryIp",
+	Short: "clean the ebpf map of nodeEntryIp ",
 	Args:  cobra.RangeArgs(0, 0),
 	Run: func(cmd *cobra.Command, args []string) {
 		bpf := ebpf.NewEbpfProgramMananger(nil)
@@ -20,17 +20,17 @@ var CmdPrintMapAll = &cobra.Command{
 		defer bpf.UnloadAllEbpfMap()
 
 		fmt.Printf("\n")
-		fmt.Printf("print all data of the ebpf map:\n")
-		bpf.PrintMapAffinity()
-		bpf.PrintMapNatRecord()
-		bpf.PrintMapService()
-		bpf.PrintMapBackend()
-		bpf.PrintMapNodeIp()
-		bpf.PrintMapNodeEntryIp()
+		fmt.Printf("clean the ebpf map of node:\n")
+		if c, e := bpf.CleanMapNodeEntryIp(); e != nil {
+			fmt.Printf("    failed to clean: %+v\n", e)
+			os.Exit(3)
+		} else {
+			fmt.Printf("    succeeded to clean %d items\n", c)
+		}
 		fmt.Printf("\n")
 	},
 }
 
 func init() {
-	CmdPrintMap.AddCommand(CmdPrintMapAll)
+	CmdCleanMap.AddCommand(CmdCleanMapNodeEntryIp)
 }

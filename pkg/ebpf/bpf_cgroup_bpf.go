@@ -37,8 +37,6 @@ type bpf_cgroupMapkeyNatRecord struct {
 	Pad          uint8
 }
 
-type bpf_cgroupMapkeyNode struct{ Address uint32 }
-
 type bpf_cgroupMapkeyService struct {
 	Address uint32
 	Dport   uint16
@@ -56,10 +54,10 @@ type bpf_cgroupMapvalueAffinity struct {
 }
 
 type bpf_cgroupMapvalueBackend struct {
-	PodAddress  uint32
-	NodeAddress uint32
-	PodPort     uint16
-	NodePort    uint16
+	PodAddress uint32
+	NodeId     uint32
+	PodPort    uint16
+	NodePort   uint16
 }
 
 type bpf_cgroupMapvalueNatRecord struct {
@@ -130,12 +128,13 @@ type bpf_cgroupProgramSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type bpf_cgroupMapSpecs struct {
-	MapAffinity  *ebpf.MapSpec `ebpf:"map_affinity"`
-	MapBackend   *ebpf.MapSpec `ebpf:"map_backend"`
-	MapEvent     *ebpf.MapSpec `ebpf:"map_event"`
-	MapNatRecord *ebpf.MapSpec `ebpf:"map_nat_record"`
-	MapNodeIP      *ebpf.MapSpec `ebpf:"map_node_ip"`
-	MapService   *ebpf.MapSpec `ebpf:"map_service"`
+	MapAffinity    *ebpf.MapSpec `ebpf:"map_affinity"`
+	MapBackend     *ebpf.MapSpec `ebpf:"map_backend"`
+	MapEvent       *ebpf.MapSpec `ebpf:"map_event"`
+	MapNatRecord   *ebpf.MapSpec `ebpf:"map_nat_record"`
+	MapNodeEntryIp *ebpf.MapSpec `ebpf:"map_node_entry_ip"`
+	MapNodeIp      *ebpf.MapSpec `ebpf:"map_node_ip"`
+	MapService     *ebpf.MapSpec `ebpf:"map_service"`
 }
 
 // bpf_cgroupObjects contains all objects after they have been loaded into the kernel.
@@ -157,12 +156,13 @@ func (o *bpf_cgroupObjects) Close() error {
 //
 // It can be passed to loadBpf_cgroupObjects or ebpf.CollectionSpec.LoadAndAssign.
 type bpf_cgroupMaps struct {
-	MapAffinity  *ebpf.Map `ebpf:"map_affinity"`
-	MapBackend   *ebpf.Map `ebpf:"map_backend"`
-	MapEvent     *ebpf.Map `ebpf:"map_event"`
-	MapNatRecord *ebpf.Map `ebpf:"map_nat_record"`
-	MapNodeIP      *ebpf.Map `ebpf:"map_node_ip"`
-	MapService   *ebpf.Map `ebpf:"map_service"`
+	MapAffinity    *ebpf.Map `ebpf:"map_affinity"`
+	MapBackend     *ebpf.Map `ebpf:"map_backend"`
+	MapEvent       *ebpf.Map `ebpf:"map_event"`
+	MapNatRecord   *ebpf.Map `ebpf:"map_nat_record"`
+	MapNodeEntryIp *ebpf.Map `ebpf:"map_node_entry_ip"`
+	MapNodeIp      *ebpf.Map `ebpf:"map_node_ip"`
+	MapService     *ebpf.Map `ebpf:"map_service"`
 }
 
 func (m *bpf_cgroupMaps) Close() error {
@@ -171,7 +171,8 @@ func (m *bpf_cgroupMaps) Close() error {
 		m.MapBackend,
 		m.MapEvent,
 		m.MapNatRecord,
-		m.MapNode,
+		m.MapNodeEntryIp,
+		m.MapNodeIp,
 		m.MapService,
 	)
 }

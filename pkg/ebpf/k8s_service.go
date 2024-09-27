@@ -3,6 +3,7 @@ package ebpf
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/spidernet-io/rocktemplate/pkg/nodeId"
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	discovery "k8s.io/api/discovery/v1"
@@ -56,11 +57,12 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 				NatType: NAT_TYPE_SERVICE,
 				Scope:   SCOPE_LOCAL_CLUSTER,
 			}
+			nodeid, _ := nodeId.NodeIdManagerHander.GetNodeId(*edp.NodeName)
 			backMapVal := bpf_cgroupMapvalueBackend{
-				PodAddress:  GetEndpointIPv4Address(edp),
-				NodeAddress: 0,
-				PodPort:     uint16(svcPort.TargetPort.IntValue()),
-				NodePort:    uint16(svcPort.NodePort),
+				PodAddress: GetEndpointIPv4Address(edp),
+				NodeId:     nodeid,
+				PodPort:    uint16(svcPort.TargetPort.IntValue()),
+				NodePort:   uint16(svcPort.NodePort),
 			}
 			resultBackList = append(resultBackList, &backendMapData{
 				key: &backMapKey,
@@ -140,7 +142,7 @@ func buildEbpfMapDataForV4Service(natType uint8, svc *corev1.Service, edsList ma
 	return nil, nil, fmt.Errorf("buildEbpfMapDataForV4Service: unknowd nat type %d", natType)
 }
 
-func (s *EbpfProgramStruct) applyEpfMapDataService(l *zap.Logger, oldList, newList []*serviceMapData) error {
+func (s *EbpfProgramStruct) applyEpfMapDataV4Service(l *zap.Logger, oldList, newList []*serviceMapData) error {
 
 	delKeyList := []bpf_cgroupMapkeyService{}
 	addKeyList := []bpf_cgroupMapkeyService{}
@@ -203,7 +205,7 @@ OUTER_NEW:
 	return nil
 }
 
-func (s *EbpfProgramStruct) applyEpfMapDataBackend(l *zap.Logger, oldList, newList []*backendMapData) error {
+func (s *EbpfProgramStruct) applyEpfMapDataV4Backend(l *zap.Logger, oldList, newList []*backendMapData) error {
 
 	delKeyList := []bpf_cgroupMapkeyBackend{}
 	addKeyList := []bpf_cgroupMapkeyBackend{}
@@ -292,11 +294,11 @@ func (s *EbpfProgramStruct) UpdateEbpfMapForService(l *zap.Logger, oldSvc, newSv
 			return fmt.Errorf("failed to buildEbpfMapDataForV4Service: %v", err2)
 		}
 
-		if e := s.applyEpfMapDataService(l, oldSvcList, newSvcList); e != nil {
-			return fmt.Errorf("failed to applyEpfMapDataService: %v", e)
+		if e := s.applyEpfMapDataV4Service(l, oldSvcList, newSvcList); e != nil {
+			return fmt.Errorf("failed to applyEpfMapDataV4Service: %v", e)
 		}
-		if e := s.applyEpfMapDataBackend(l, oldBkList, newBkList); e != nil {
-			return fmt.Errorf("failed to applyEpfMapDataBackend: %v", e)
+		if e := s.applyEpfMapDataV4Backend(l, oldBkList, newBkList); e != nil {
+			return fmt.Errorf("failed to applyEpfMapDataV4Backend: %v", e)
 		}
 	}
 
@@ -308,16 +310,34 @@ func (s *EbpfProgramStruct) UpdateEbpfMapForService(l *zap.Logger, oldSvc, newSv
 }
 
 func (s *EbpfProgramStruct) DeleteEbpfMapForService(l *zap.Logger, svc *corev1.Service, edsList map[string]*discovery.EndpointSlice) error {
-	svcList, bkList, err := buildEbpfMapDataForV4Service(NAT_TYPE_SERVICE, svc, edsList)
-	if err != nil {
-		return fmt.Errorf("failed to buildEbpfMapDataForV4Service: %v", err)
+
+	processIpv4 := false
+	processIpv6 := false
+	for _, v := range svc.Spec.IPFamilies {
+		if v == corev1.IPv4Protocol {
+			processIpv4 = true
+		}
+		if v == corev1.IPv6Protocol {
+			processIpv6 = true
+		}
 	}
 
-	if e := s.applyEpfMapDataService(l, svcList, []*serviceMapData{}); e != nil {
-		return fmt.Errorf("failed to applyEpfMapDataService: %v", e)
+	if processIpv4 {
+		svcList, bkList, err := buildEbpfMapDataForV4Service(NAT_TYPE_SERVICE, svc, edsList)
+		if err != nil {
+			return fmt.Errorf("failed to buildEbpfMapDataForV4Service: %v", err)
+		}
+
+		if e := s.applyEpfMapDataV4Service(l, svcList, []*serviceMapData{}); e != nil {
+			return fmt.Errorf("failed to applyEpfMapDataV4Service: %v", e)
+		}
+		if e := s.applyEpfMapDataV4Backend(l, bkList, []*backendMapData{}); e != nil {
+			return fmt.Errorf("failed to applyEpfMapDataV4Backend: %v", e)
+		}
 	}
-	if e := s.applyEpfMapDataBackend(l, bkList, []*backendMapData{}); e != nil {
-		return fmt.Errorf("failed to applyEpfMapDataBackend: %v", e)
+
+	if processIpv6 {
+		l.Sugar().Infof("does not suppport ipv6, abandon applying ")
 	}
 
 	return nil
