@@ -146,7 +146,7 @@ func RunReconciles() {
 	}
 
 	// before informer and ebpf, build nodeId database
-	nodeId.NewNodeIdManager(Client, rootLogger.Named("nodeId"))
+	nodeId.InitNodeIdManager(Client, rootLogger.Named("nodeId"))
 
 	// setup ebpf and load
 	bpfManager := ebpf.NewEbpfProgramMananger(rootLogger.Named("ebpf"))

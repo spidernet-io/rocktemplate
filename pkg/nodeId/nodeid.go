@@ -31,7 +31,8 @@ var NodeIdManagerHander NodeIdManager = (*nodeIdManager)(nil)
 // used to generate and store nodeIp for each node
 // when ebpf applies some endpoints data, they need to use nodeId, but the node resource possibly has not been synchronized,
 // so it introduce an abstraction layer to store and search dynamically from api-server
-func NewNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
+func InitNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
+	log.Sugar().Info("InitNodeIdManager")
 	if NodeIdManagerHander == nil {
 		NodeIdManagerHander := &nodeIdManager{
 			client:     c,
