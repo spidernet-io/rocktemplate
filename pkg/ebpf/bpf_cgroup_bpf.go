@@ -74,7 +74,7 @@ type bpf_cgroupMapvalueService struct {
 	ServiceFlags      uint8
 	BalancingFlags    uint8
 	RedirectFlags     uint8
-	NatMode               uint8
+	NatMode           uint8
 }
 
 // loadBpf_cgroup returns the embedded CollectionSpec for bpf_cgroup.
