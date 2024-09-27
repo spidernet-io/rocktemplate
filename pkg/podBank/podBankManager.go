@@ -127,7 +127,7 @@ func (s *podBankManager) Update(oldPod, newPod *corev1.Pod) {
 		}
 	} else if newPod != nil && oldPod == nil {
 		// add
-		if len(oldPod.Status.PodIPs) > 0 && !oldPod.Spec.HostNetwork {
+		if len(newPod.Status.PodIPs) > 0 && !newPod.Spec.HostNetwork {
 			s.log.Sugar().Debugf("add podInfor for pod %s/%s", newPod.Namespace, newPod.Name)
 			s.updatePodInfo(newPod)
 		} else {

@@ -28,7 +28,7 @@ func (s *PodReconciler) HandlerAdd(obj interface{}) {
 	)
 	logger.Sugar().Debugf("HandlerAdd process node %+v", name)
 
-	s.log.Sugar().Info("update pod ip for pod %s", name)
+	s.log.Sugar().Infof("update pod ip for pod %s", name)
 	podBank.PodBankHander.Update(nil, pod)
 
 	return
