@@ -40,7 +40,7 @@ func InitNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
 			log:        log,
 		}
 		t.initNodeId()
-		NodeIdManagerHander := t
+		NodeIdManagerHander = t
 		log.Sugar().Info("InitNodeIdManager")
 	}
 }
