@@ -26,13 +26,17 @@ type nodeIdManager struct {
 	log        *zap.Logger
 }
 
-var NodeIdManagerHander NodeIdManager = (*nodeIdManager)(nil)
+// var NodeIdManagerHander NodeIdManager = (*nodeIdManager)(nil)
+
+var _ NodeIdManager = (*nodeIdManager)(nil)
+
+var NodeIdManagerHander NodeIdManager
 
 // used to generate and store nodeIp for each node
 // when ebpf applies some endpoints data, they need to use nodeId, but the node resource possibly has not been synchronized,
 // so it introduce an abstraction layer to store and search dynamically from api-server
 func InitNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
-	if NodeIdManagerHander == nil {
+	if _, ok := NodeIdManagerHander.(*nodeIdManager); !ok {
 		log.Sugar().Info("initialize NodeIdManagerHander")
 		t := &nodeIdManager{
 			client:     c,
