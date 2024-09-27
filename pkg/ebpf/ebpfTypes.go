@@ -8,6 +8,27 @@ import (
 
 // ----------------- map flag ---------------------
 
+const (
+	NatTypeService = iota
+	NatTypeLocalRedirect
+	NatTypeFloatIP
+)
+
+const (
+	PROTOCOL_TCP = 6
+	PROTOCOL_UDP = 17
+)
+
+const (
+	NatTypeNone = iota
+	NatModeServiceClusterip
+	NatModeServiceLoadBalancer
+	NatModeServiceExternalIp
+	NatModeServiceNodePort
+	NatModeRedirect
+	NatModeBalancing
+)
+
 var (
 	NAT_TYPE_SERVICE   = uint8(0)
 	NAT_TYPE_REDIRECT  = uint8(1)
@@ -59,6 +80,28 @@ func GetNatTypeStr(p uint8) string {
 	}
 	return natType
 }
+
+func GetNatModeStr(p uint8) string {
+	t := "unknown"
+	switch p {
+	case NatModeServiceClusterip:
+		t = "ServiceClusterIP"
+	case NatModeServiceLoadBalancer:
+		t = "ServiceLoadbalancer"
+	case NatModeServiceExternalIp:
+		t = "ServiceExternalIP"
+	case NatModeServiceNodePort:
+		t = "ServiceNodeport"
+	case NatModeRedirect:
+		t = "localRedirect"
+	case NatModeBalancing:
+		t = "balancing"
+	default:
+	}
+	return t
+}
+
+// -----------------------------------------------------
 
 func (t bpf_cgroupMapkeyService) String() string {
 	return fmt.Sprintf(`{ DestIp:%s, DestPort:%d, protocol:%s, NatType:%s, Scope:%d }`,
@@ -141,7 +184,8 @@ type MapEventValue struct {
 	IsSuccess            uint8 /* 1 for success , 0 for failure */
 	NatType              uint8 /* 1 for NAT_TYPE_FLOATIP , 2 for NAT_TYPE_SVC, 3 for NAT_TYPE_REDIRECT  */
 	FailureCode          uint8
-	Pad                  [4]uint8
+	NatMode              uint8
+	Pad                  [3]uint8
 }
 
 func GetIpv6Str(ipV6High, ipV6Low uint64) string {
@@ -154,7 +198,7 @@ func GetIpv6Str(ipV6High, ipV6Low uint64) string {
 }
 
 func (t MapEventValue) String() string {
-	return fmt.Sprintf(`{ CgroupId:%d, IsIpv4:%d, IsSuccess:%d, NatType:%s, OriginalDestV4Ip:%s, OriginalDestV6Ip:%s, OriginalDestPort:%d, NatV4Ip:%s, NatV6Ip:%s, NatPort:%d , Tgid:%d, FailureCode:%d }`,
-		t.CgroupId, t.IsIpv4, t.IsSuccess, GetNatTypeStr(t.NatType),
-		GetIpStr(t.OriginalDestV4Ip), GetIpv6Str(t.OriginalDestV6ipHigh, t.OriginalDestV6ipLow), t.OriginalDestPort, GetIpStr(t.NatV4Ip), GetIpv6Str(t.NatV6ipHigh, t.NatV6ipLow), t.NatPort, t.Tgid, t.FailureCode)
+	return fmt.Sprintf(`{ CgroupId:%d, IsIpv4:%d, IsSuccess:%d, NatType:%s, NatMode:%s, OriginalDestV4Ip:%s, OriginalDestV6Ip:%s, OriginalDestPort:%d, NatV4Ip:%s, NatV6Ip:%s, NatPort:%d , Tgid:%d, FailureCode:%d }`,
+		t.CgroupId, t.IsIpv4, t.IsSuccess, GetNatTypeStr(t.NatType), GetNatModeStr(t.NatMode)
+	GetIpStr(t.OriginalDestV4Ip), GetIpv6Str(t.OriginalDestV6ipHigh, t.OriginalDestV6ipLow), t.OriginalDestPort, GetIpStr(t.NatV4Ip), GetIpv6Str(t.NatV6ipHigh, t.NatV6ipLow), t.NatPort, t.Tgid, t.FailureCode)
 }

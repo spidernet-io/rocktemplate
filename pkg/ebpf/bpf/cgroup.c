@@ -124,6 +124,7 @@ succeed:
     svcval->service_flags = t->service_flags ;
     svcval->balancing_flags = t->balancing_flags ;
     svcval->redirect_flags = t->redirect_flags ;
+    svcval->nat_mode = t->nat_mode ;
     return true ;
 }
 
@@ -197,6 +198,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
         .tgid = (__u32) ( bpf_get_current_pid_tgid() >> 32 ),
         .failure_code = 0 ,
         .pad = 0 ,
+        .nat_mode = 0 ,
     } ;
 
     if( ctx_in_hostns(ctx) ) {
@@ -229,6 +231,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
         return 2;
     }
     debugf(DEBUG_INFO, "succeeded to find service value for %pI4:%d\n" , &dst_ip  , dst_port   );
+    evt.nat_mode=svcval.nat_mode ;
 
     __u32 backend_count = svcval.total_backend_count;
     if ( svcval.service_flags & (SERVICE_FLAG_INTERNAL_LOCAL_SVC | SERVICE_FLAG_EXTERNAL_LOCAL_SVC)  ) {

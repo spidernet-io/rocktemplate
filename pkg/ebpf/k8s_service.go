@@ -7,6 +7,7 @@ import (
 	"go.uber.org/zap"
 	corev1 "k8s.io/api/core/v1"
 	discovery "k8s.io/api/discovery/v1"
+	"net"
 	"reflect"
 )
 
@@ -84,16 +85,41 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 		}
 
 		// ----------------- generate data of service map  ----------------
+
 		// get clusterIP, loadbalancerIP, externalIP
 		// they use the same port, So deal with them together
-		allVip := GetServiceV4AllVip(svc)
-		for _, vip := range allVip {
-			// generate data for service map
+		// allVip := GetServiceV4AllVip(svc)
+		// for _, vip := range allVip {
+		// 	// generate data for service map
+		// 	svcMapKey := bpf_cgroupMapkeyService{
+		// 		Address: binary.LittleEndian.Uint32(vip.To4()),
+		// 		Dport:   uint16(svcPort.Port),
+		// 		Proto:   protocol,
+		// 		NatType: NAT_TYPE_SERVICE,
+		// 		Scope:   SCOPE_LOCAL_CLUSTER,
+		// 	}
+		// 	svcMapVal := bpf_cgroupMapvalueService{
+		// 		SvcId:             svcV4Id,
+		// 		TotalBackendCount: uint32(len(allEp)),
+		// 		LocalBackendCount: uint32(len(localEp)),
+		// 		AffinitySecond:    affinityTime,
+		// 		ServiceFlags:      serviceFlags,
+		// 		BalancingFlags:    0,
+		// 		RedirectFlags:     0,
+		// 		NatMode:,
+		// 	}
+		// 	resultSvcList = append(resultSvcList, &serviceMapData{
+		// 		key: &svcMapKey,
+		// 		val: &svcMapVal,
+		// 	})
+		// }
+
+		addFunc := func(vip net.IP, port uint16, natType, natMode uint8) {
 			svcMapKey := bpf_cgroupMapkeyService{
 				Address: binary.LittleEndian.Uint32(vip.To4()),
-				Dport:   uint16(svcPort.Port),
+				Dport:   port,
 				Proto:   protocol,
-				NatType: NAT_TYPE_SERVICE,
+				NatType: natType,
 				Scope:   SCOPE_LOCAL_CLUSTER,
 			}
 			svcMapVal := bpf_cgroupMapvalueService{
@@ -104,6 +130,7 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 				ServiceFlags:      serviceFlags,
 				BalancingFlags:    0,
 				RedirectFlags:     0,
+				NatMode:           natMode,
 			}
 			resultSvcList = append(resultSvcList, &serviceMapData{
 				key: &svcMapKey,
@@ -111,29 +138,25 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 			})
 		}
 
+		for _, vip := range getClusterIPs(svc, corev1.IPv4Protocol) {
+			addFunc(vip, uint16(svcPort.Port), NAT_TYPE_SERVICE, NatModeServiceClusterip)
+		}
+		for _, vip := range GetServiceV4LoadbalancerIP(svc) {
+			addFunc(vip, uint16(svcPort.Port), NAT_TYPE_SERVICE, NatModeServiceLoadBalancer)
+		}
+		if svc.Spec.ExternalIPs != nil {
+			for _, v := range svc.Spec.ExternalIPs {
+				vip := net.ParseIP(v)
+				if vip.To4() != nil {
+					addFunc(vip.To4(), uint16(svcPort.Port), NAT_TYPE_SERVICE, NatModeServiceExternalIp)
+				}
+			}
+		}
+
 		// handle nodePort alone cause it uses nodePort
 		if svcPort.NodePort != 0 {
 			// generate data for service map
-			svcMapKey := bpf_cgroupMapkeyService{
-				Address: binary.LittleEndian.Uint32(NODEPORT_V4_IP),
-				Dport:   uint16(svcPort.NodePort),
-				Proto:   protocol,
-				NatType: NAT_TYPE_SERVICE,
-				Scope:   SCOPE_LOCAL_CLUSTER,
-			}
-			svcMapVal := bpf_cgroupMapvalueService{
-				SvcId:             svcV4Id,
-				TotalBackendCount: uint32(len(allEp)),
-				LocalBackendCount: uint32(len(localEp)),
-				AffinitySecond:    affinityTime,
-				ServiceFlags:      serviceFlags,
-				BalancingFlags:    0,
-				RedirectFlags:     0,
-			}
-			resultSvcList = append(resultSvcList, &serviceMapData{
-				key: &svcMapKey,
-				val: &svcMapVal,
-			})
+			addFunc(NODEPORT_V4_IP, uint16(svcPort.NodePort), NAT_TYPE_SERVICE, NatModeServiceNodePort)
 		}
 	}
 	return resultSvcList, resultBackList, nil

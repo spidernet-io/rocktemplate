@@ -358,7 +358,7 @@ func (s *EbpfProgramStruct) daemonGetEvent() {
 			s.l.Sugar().Warnf("parsing ringbuf event: %s", err)
 			continue
 		}
-		s.l.Sugar().Debugf("ebpf event: %s \n", t)
+		s.l.Sugar().Debugf("ebpf event: %s ", t)
 
 		select {
 		case s.Event <- t:

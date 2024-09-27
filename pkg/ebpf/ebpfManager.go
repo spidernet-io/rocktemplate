@@ -26,17 +26,6 @@ const (
 	EventChanLength = 1000
 )
 
-const (
-	NatTypeService = iota
-	NatTypeLocalRedirect
-	NatTypeFloatIP
-)
-
-const (
-	PROTOCOL_TCP = 6
-	PROTOCOL_UDP = 17
-)
-
 // -----------------------------------
 
 type EbpfMaps struct {

@@ -38,10 +38,20 @@ struct mapkey_service {
 
 #define SERVICE_FLAG_EXTERNAL_LOCAL_SVC	0x1
 #define SERVICE_FLAG_INTERNAL_LOCAL_SVC	0x2
-
+//
 #define NAT_FLAG_ACCESS_NODEPORT_BALANCING	0x1
-
+//
 #define NAT_FLAG_ALLOW_ACCESS_SERVICE	0x1
+
+
+#define NAT_MODE_SERVICE_CLUSTERIP	    0x1
+#define NAT_MODE_SERVICE_LOADBALANCER	0x2
+#define NAT_MODE_SERVICE_EXTERNALIP  	0x3
+#define NAT_MODE_SERVICE_NODEPORT   	0x4
+//
+#define NAT_MODE_REDIRECT   	        0x5
+//
+#define NAT_MODE_BALANCING   	        0x6
 
 struct mapvalue_service {
   __u32 svc_id ;                 // 一个 service 有一个 唯一的 ID ，用来映射 service 下 所有的 endpoint
@@ -51,7 +61,7 @@ struct mapvalue_service {
   __u8  service_flags;                /* SERVICE_FLAG_EXTERNAL_LOCAL_SVC  , SERVICE_FLAG_INTERNAL_LOCAL_SVC */
   __u8  balancing_flags;                /* NAT_FLAG_ACCESS_NODEPORT_BALANCING（是打到 pod 所在节点的 nodePort，还是 pod ip）  */
   __u8  redirect_flags;         /* NAT_FLAG_ALLOW_ACCESS_SERVICE( 如果在 local-node backend 不可用时，是否正常解析到 clusterIP)  */
-  __u8  pad;
+  __u8  nat_mode;               /* 用于标识 对应的 key 中的 ip 地址是 哪种哪些， 参考 NAT_MODE_* 标志 */
 };
 
 // 一个 k8s 的 service， 若其下有 n(默认1) 个 clusterIP ，有 m 个 loabdlancerIP， 有 t 个 externalIP， 没有 nodePort ， 那么  map_service 中有 n+m+t 个记录
@@ -206,7 +216,8 @@ struct event_value {
     __u8   is_success ; /* 1 for success , 0 for failure */
     __u8   nat_type ;  /* NAT_TYPE_SERVICE (  lowest priority  ) ,NAT_TYPE_REDIRECT ,  NAT_TYPE_BALANCING ( highest priority )  */
     __u8   failure_code;
-    __u8   pad[4];
+    __u8   nat_mode;    /* 用于标识发生了哪种 IP 地址的 nat， 参考 NAT_MODE_* 标志 */
+    __u8   pad[3];
 } ;
 
 // BPF_MAP_TYPE_PERF_EVENT_ARRAY 中的 key 和 value 并不存放真正的 数据， key 用来存放 cpu 索引， values 存放指向 perf event buffer 的地址
