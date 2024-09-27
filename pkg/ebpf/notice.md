@@ -53,4 +53,8 @@ fowardToNode ： 是否解析到 pod 所在的 node 的 nodePort  ， 适用与�
 
 鸡和蛋的问题： 没有 kube-proxy， 我们的组价 部署上来时，如何访问 api-server 进行 工作 ？
 
+支持 crd redirect 和 balancing 
+
+支持 解析ip 的 指标
+
 

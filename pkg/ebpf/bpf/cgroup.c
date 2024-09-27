@@ -195,7 +195,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
         .is_success = 0 ,
         .original_dest_v4ip = dst_ip ,
         .original_dest_port = dst_port ,
-        .tgid = (__u32) ( bpf_get_current_pid_tgid() >> 32 ),
+        .pid = (__u32) ( 0x00000000ffffffff & bpf_get_current_pid_tgid() ),
         .failure_code = 0 ,
         .pad = 0 ,
         .nat_mode = 0 ,

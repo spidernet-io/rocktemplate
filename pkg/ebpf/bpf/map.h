@@ -210,7 +210,7 @@ struct event_value {
 
 	__be16 nat_port;   // 小端存储。
 	__be16 original_dest_port;   // 小端存储。
-	__u32  tgid;
+	__u32  pid;
 
     __u8   is_ipv4 ; /* 0 for ipv6 data, 1 for ipv4 data */
     __u8   is_success ; /* 1 for success , 0 for failure */
