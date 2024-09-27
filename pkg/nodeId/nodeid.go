@@ -33,6 +33,7 @@ var NodeIdManagerHander NodeIdManager = (*nodeIdManager)(nil)
 // so it introduce an abstraction layer to store and search dynamically from api-server
 func InitNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
 	if NodeIdManagerHander == nil {
+		log.Sugar().Info("initialize NodeIdManagerHander")
 		t := &nodeIdManager{
 			client:     c,
 			nodeIdData: make(map[string]uint32),
@@ -41,7 +42,7 @@ func InitNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
 		}
 		t.initNodeId()
 		NodeIdManagerHander = t
-		log.Sugar().Info("InitNodeIdManager")
+
 	}
 }
 
@@ -91,6 +92,8 @@ func (s *nodeIdManager) applyNewNodeIP(oldNode corev1.Node) (uint32, error) {
 
 // generate nodeId and set to the node's annotation , and build all local database
 func (s *nodeIdManager) initNodeId() {
+
+	s.log.Sugar().Infof("initial nodeId")
 
 	nodeList, err := s.client.CoreV1().Nodes().List(context.Background(), metav1.ListOptions{})
 	if err != nil {
