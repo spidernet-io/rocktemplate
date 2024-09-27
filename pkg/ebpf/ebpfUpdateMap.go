@@ -73,7 +73,7 @@ func (s *EbpfProgramStruct) UpdateMapNodeEntryIp(keyList []uint32, valueList []b
 		return fmt.Errorf("invalid parameter")
 	}
 
-	c, e := s.BpfObjCgroup.MapNodeIp.BatchUpdate(keyList, valueList, &ebpf.BatchOptions{})
+	c, e := s.BpfObjCgroup.MapNodeEntryIp.BatchUpdate(keyList, valueList, &ebpf.BatchOptions{})
 	if e != nil {
 		return fmt.Errorf("failed to BatchUpdate: %+v", e)
 	}
