@@ -41,6 +41,7 @@ func InitNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
 			log:        log,
 		}
 		NodeIdManagerHander.initNodeId()
+		log.Sugar().Info("InitNodeIdManager 2")
 	}
 }
 
