@@ -42,7 +42,8 @@ func InitNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
 		}
 		t.initNodeId()
 		NodeIdManagerHander = t
-
+	} else {
+		log.Sugar().Errorf("secondary calling for InitNodeIdManager")
 	}
 }
 
