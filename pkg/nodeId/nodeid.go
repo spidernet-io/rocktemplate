@@ -32,16 +32,16 @@ var NodeIdManagerHander NodeIdManager = (*nodeIdManager)(nil)
 // when ebpf applies some endpoints data, they need to use nodeId, but the node resource possibly has not been synchronized,
 // so it introduce an abstraction layer to store and search dynamically from api-server
 func InitNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
-	log.Sugar().Info("InitNodeIdManager")
 	if NodeIdManagerHander == nil {
-		NodeIdManagerHander := &nodeIdManager{
+		t := &nodeIdManager{
 			client:     c,
 			nodeIdData: make(map[string]uint32),
 			dataLock:   &lock.Mutex{},
 			log:        log,
 		}
-		NodeIdManagerHander.initNodeId()
-		log.Sugar().Info("InitNodeIdManager 2")
+		t.initNodeId()
+		NodeIdManagerHander := t
+		log.Sugar().Info("InitNodeIdManager")
 	}
 }
 
