@@ -50,9 +50,9 @@ func (s *EbpfProgramStruct) applyEpfMapDataNodeIpV4(l *zap.Logger, oldNode *core
 	for k, v := range oldList {
 		l.Sugar().Debugf("nodeIp map oldList[%d]: key=%s, value=%d ", k, *v.key, *v.val)
 	}
-	l.Sugar().Debugf("node map %d items in newList: ", len(newList))
+	l.Sugar().Debugf("nodeIp map %d items in newList: ", len(newList))
 	for k, v := range newList {
-		l.Sugar().Debugf("node map newList[%d]: key=%s, value=%d ", k, *v.key, *v.val)
+		l.Sugar().Debugf("nodeIp map newList[%d]: key=%s, value=%d ", k, *v.key, *v.val)
 	}
 
 OUTER_OLD:
@@ -138,6 +138,8 @@ func (s *EbpfProgramStruct) applyEpfMapDataNodeEntryIpV4(l *zap.Logger, oldNode 
 		return nil
 	}
 
+	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 3 ")
+
 	// update or create
 	entryIp, _ := newNode.ObjectMeta.Annotations[types.NodeAnnotaitonNodeEntryIPv4]
 	if len(entryIp) != 0 && net.ParseIP(entryIp).To4() == nil {
@@ -158,6 +160,8 @@ func (s *EbpfProgramStruct) applyEpfMapDataNodeEntryIpV4(l *zap.Logger, oldNode 
 			return fmt.Errorf("did not find ipv4 internal ip for node %s", newNode.Name)
 		}
 	}
+
+	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 4 ")
 
 	nodeId, err := nodeId.NodeIdManagerHander.GetNodeId(newNode.Name)
 	if err != nil {
