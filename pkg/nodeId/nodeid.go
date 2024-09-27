@@ -33,13 +33,13 @@ var NodeIdManagerHander NodeIdManager = (*nodeIdManager)(nil)
 // so it introduce an abstraction layer to store and search dynamically from api-server
 func NewNodeIdManager(c *kubernetes.Clientset, log *zap.Logger) {
 	if NodeIdManagerHander == nil {
-		t := &nodeIdManager{
+		NodeIdManagerHander := &nodeIdManager{
 			client:     c,
 			nodeIdData: make(map[string]uint32),
 			dataLock:   &lock.Mutex{},
 			log:        log,
 		}
-		t.initNodeId()
+		NodeIdManagerHander.initNodeId()
 	}
 }
 
