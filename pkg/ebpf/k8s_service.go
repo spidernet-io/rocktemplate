@@ -57,7 +57,10 @@ func buildEbpfMapDataForV4ServiceTypeService(svc *corev1.Service, edsList map[st
 				NatType: NAT_TYPE_SERVICE,
 				Scope:   SCOPE_LOCAL_CLUSTER,
 			}
-			nodeid, _ := nodeId.NodeIdManagerHander.GetNodeId(*(edp.NodeName))
+			nodeid := uint32(0)
+			if edp.NodeName != nil && len(edp.NodeName) > 0 {
+				nodeid, _ = nodeId.NodeIdManagerHander.GetNodeId(*(edp.NodeName))
+			}
 			backMapVal := bpf_cgroupMapvalueBackend{
 				PodAddress: GetEndpointIPv4Address(edp),
 				NodeId:     nodeid,
