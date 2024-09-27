@@ -147,6 +147,7 @@ func (s *nodeIdManager) BuildNodeId(node *corev1.Node) error {
 
 	s.dataLock.Lock()
 	if _, ok := s.nodeIdData[node.Name]; ok {
+		s.dataLock.Unlock()
 		return nil
 	}
 	s.dataLock.Unlock()
