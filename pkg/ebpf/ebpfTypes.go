@@ -199,6 +199,6 @@ func GetIpv6Str(ipV6High, ipV6Low uint64) string {
 
 func (t MapEventValue) String() string {
 	return fmt.Sprintf(`{ CgroupId:%d, IsIpv4:%d, IsSuccess:%d, NatType:%s, NatMode:%s, OriginalDestV4Ip:%s, OriginalDestV6Ip:%s, OriginalDestPort:%d, NatV4Ip:%s, NatV6Ip:%s, NatPort:%d , Tgid:%d, FailureCode:%d }`,
-		t.CgroupId, t.IsIpv4, t.IsSuccess, GetNatTypeStr(t.NatType), GetNatModeStr(t.NatMode)
-	GetIpStr(t.OriginalDestV4Ip), GetIpv6Str(t.OriginalDestV6ipHigh, t.OriginalDestV6ipLow), t.OriginalDestPort, GetIpStr(t.NatV4Ip), GetIpv6Str(t.NatV6ipHigh, t.NatV6ipLow), t.NatPort, t.Tgid, t.FailureCode)
+		t.CgroupId, t.IsIpv4, t.IsSuccess, GetNatTypeStr(t.NatType), GetNatModeStr(t.NatMode),
+		GetIpStr(t.OriginalDestV4Ip), GetIpv6Str(t.OriginalDestV6ipHigh, t.OriginalDestV6ipLow), t.OriginalDestPort, GetIpStr(t.NatV4Ip), GetIpv6Str(t.NatV6ipHigh, t.NatV6ipLow), t.NatPort, t.Tgid, t.FailureCode)
 }
