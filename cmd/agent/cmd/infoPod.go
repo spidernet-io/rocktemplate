@@ -104,5 +104,5 @@ func NewPodInformer(Client *kubernetes.Clientset, stopWatchCh chan struct{}, loc
 		rootLogger.Sugar().Fatalf("failed to WaitForCacheSync for pod ")
 	}
 
-	rootLogger.Sugar().Infof("succeeded to NewPodInformer ")
+	rootLogger.Sugar().Infof("succeeded to NewPodInformer, begin to only watch local pod ")
 }

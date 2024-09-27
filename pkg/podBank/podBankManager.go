@@ -97,6 +97,7 @@ func (s *podBankManager) initPodBank() {
 		s.log.Sugar().Fatalf("failed to list namespaces: %v", err)
 	}
 	for _, ns := range namespaces.Items {
+		// only get the pod of local node
 		pods, err := s.client.CoreV1().Pods(ns.Name).List(context.TODO(), metav1.ListOptions{
 			FieldSelector: fmt.Sprintf("spec.nodeName=%s", s.NodeName),
 		})
@@ -105,7 +106,10 @@ func (s *podBankManager) initPodBank() {
 		}
 		for _, pod := range pods.Items {
 			s.log.Sugar().Debugf("save ip information of pod %s/%s", pod.Namespace, pod.Name)
-			s.updatePodInfo(&pod)
+			// ignore hostnetwork pods who share same ip
+			if !pod.Spec.HostNetwork {
+				s.updatePodInfo(&pod)
+			}
 		}
 	}
 
@@ -119,6 +123,7 @@ func (s *podBankManager) Update(oldPod, newPod *corev1.Pod) {
 		return
 	} else if newPod == nil && oldPod != nil {
 		// delete
+		// ignore hostnetwork pods who share same ip
 		if len(oldPod.Status.PodIPs) > 0 && !oldPod.Spec.HostNetwork {
 			s.log.Sugar().Debugf("delete podInfor for pod %s/%s", oldPod.Namespace, oldPod.Name)
 			s.deletePodInfo(oldPod)
@@ -127,6 +132,7 @@ func (s *podBankManager) Update(oldPod, newPod *corev1.Pod) {
 		}
 	} else if newPod != nil && oldPod == nil {
 		// add
+		// ignore hostnetwork pods who share same ip
 		if len(newPod.Status.PodIPs) > 0 && !newPod.Spec.HostNetwork {
 			s.log.Sugar().Debugf("add podInfor for pod %s/%s", newPod.Namespace, newPod.Name)
 			s.updatePodInfo(newPod)
@@ -137,6 +143,7 @@ func (s *podBankManager) Update(oldPod, newPod *corev1.Pod) {
 		// update
 		// only for statefulset, they will use same podname with possibly different ip address
 		// delete the old one first
+		// ignore hostnetwork pods who share same ip
 		if len(oldPod.Status.PodIPs) > 0 && !oldPod.Spec.HostNetwork {
 			s.log.Sugar().Debugf("update old podInfor for pod %s/%s", newPod.Namespace, newPod.Name)
 			s.deletePodInfo(oldPod)
@@ -144,6 +151,7 @@ func (s *podBankManager) Update(oldPod, newPod *corev1.Pod) {
 			s.log.Sugar().Debugf("ignore updating old podInfor for pod %s/%s", newPod.Namespace, newPod.Name)
 		}
 		// add the new one
+		// ignore hostnetwork pods who share same ip
 		if len(newPod.Status.PodIPs) > 0 && !newPod.Spec.HostNetwork {
 			s.log.Sugar().Debugf("update new podInfor for pod %s/%s", newPod.Namespace, newPod.Name)
 			s.updatePodInfo(newPod)
@@ -151,6 +159,9 @@ func (s *podBankManager) Update(oldPod, newPod *corev1.Pod) {
 			s.log.Sugar().Debugf("ignore updating new podInfor for pod %s/%s", newPod.Namespace, newPod.Name)
 		}
 	}
+
+	s.log.Sugar().Debugf("pod IP information: %+v", s.podIpDatabase)
+
 	return
 }
 
