@@ -109,8 +109,8 @@ func (t bpf_cgroupMapkeyService) String() string {
 }
 
 func (t bpf_cgroupMapvalueService) String() string {
-	return fmt.Sprintf(`{ SvcId:%d, TotalBackendCount:%d, LocalBackendCount:%d, AffinitySecond:%d, ServiceFlags:%d, BalancingFlags:%d, RedirectFlags:%d }`,
-		t.SvcId, t.TotalBackendCount, t.LocalBackendCount, t.AffinitySecond, t.ServiceFlags, t.BalancingFlags, t.RedirectFlags)
+	return fmt.Sprintf(`{ SvcId:%d, TotalBackendCount:%d, LocalBackendCount:%d, AffinitySecond:%d, NatMode:%s, ServiceFlags:%d, BalancingFlags:%d, RedirectFlags:%d }`,
+		t.SvcId, t.TotalBackendCount, t.LocalBackendCount, t.AffinitySecond, GetNatModeStr(t.NatMode), t.ServiceFlags, t.BalancingFlags, t.RedirectFlags)
 }
 
 // ------------------------------------------------
