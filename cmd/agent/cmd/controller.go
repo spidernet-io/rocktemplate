@@ -8,6 +8,8 @@ import (
 	"github.com/spidernet-io/rocktemplate/pkg/ebpf"
 	"github.com/spidernet-io/rocktemplate/pkg/ebpfWriter"
 	"github.com/spidernet-io/rocktemplate/pkg/nodeId"
+	"github.com/spidernet-io/rocktemplate/pkg/podBank"
+	"github.com/spidernet-io/rocktemplate/pkg/types"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
@@ -147,6 +149,8 @@ func RunReconciles() {
 
 	// before informer and ebpf, build nodeId database
 	nodeId.InitNodeIdManager(Client, rootLogger.Named("nodeId"))
+	// before informer and ebpf, build pod ip database of local node
+	podBank.InitPodBankManager(Client, rootLogger.Named("podBank"), types.AgentConfig.LocalNodeName)
 
 	// setup ebpf and load
 	bpfManager := ebpf.NewEbpfProgramMananger(rootLogger.Named("ebpf"))
@@ -158,11 +162,13 @@ func RunReconciles() {
 	// setup ebpf writer
 	writer := ebpfWriter.NewEbpfWriter(bpfManager, InformerListInvterval, rootLogger.Named("ebpfWriter"))
 
-	// setup service informer
+	// setup informer
 	stopWatchCh := make(chan struct{})
+	NewPodInformer(Client, stopWatchCh, types.AgentConfig.LocalNodeName)
+	NewNodeInformer(Client, stopWatchCh, writer)
+
 	NewServiceInformer(Client, stopWatchCh, writer)
 	NewEndpointSliceInformer(Client, stopWatchCh, writer)
-	NewNodeInformer(Client, stopWatchCh, writer)
 
 	rootLogger.Info("finish all setup ")
 	time.Sleep(time.Hour)

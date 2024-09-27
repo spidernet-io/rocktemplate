@@ -15,4 +15,6 @@ const (
 	// "bpfElf.org/nodeEntryIpv4": "192.168.1.1."
 	NodeAnnotaitonNodeEntryIPv4 = OrgName + "/nodeEntryIpv4"
 	NodeAnnotaitonNodeEntryIPv6 = OrgName + "/nodeEntryIpv6"
+
+	HostProcMountDir = "/host"
 )
