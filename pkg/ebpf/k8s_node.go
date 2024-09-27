@@ -164,13 +164,16 @@ func (s *EbpfProgramStruct) applyEpfMapDataNodeEntryIpV4(l *zap.Logger, oldNode 
 	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 4 ")
 
 	nodeId, err := nodeId.NodeIdManagerHander.GetNodeId(newNode.Name)
+	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 5 ")
 	if err != nil {
 		l.Sugar().Errorf("failed to find the nodeIP for node %s when updating ebpf data: %v", oldNode.Name, err)
 		return fmt.Errorf("failed to find the nodeIP for node %s when updating ebpf data: %v", oldNode.Name, err)
 	}
+	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 6 ")
 	r := bpf_cgroupMapvalueNodeEntryIp{
 		IpAddr: binary.LittleEndian.Uint32(net.ParseIP(entryIp).To4()),
 	}
+	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 7 ")
 
 	l.Sugar().Infof("ebpf map of the nodeEntryIP updates: key=%d , value=%s ", nodeId, r.String())
 
@@ -179,6 +182,9 @@ func (s *EbpfProgramStruct) applyEpfMapDataNodeEntryIpV4(l *zap.Logger, oldNode 
 		l.Sugar().Errorf("failed to update nodeEntryIP map: %v", err)
 		return fmt.Errorf("failed to update nodeEntryIP map: %v", err)
 	}
+
+	l.Sugar().Debugf("applyEpfMapDataNodeEntryIpV4 8 ")
+
 	l.Sugar().Infof("succeeded to update 1 items in nodeEntryIP map ")
 	return nil
 }
