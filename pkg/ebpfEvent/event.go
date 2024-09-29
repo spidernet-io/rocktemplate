@@ -53,7 +53,13 @@ func (s *ebpfEventStruct) WatchEbpfEvent(stopWatch chan struct{}) {
 					if hostFlag {
 						eventStr += fmt.Sprintf("ClientPodName=, Namespace=, ContainerId=, HostClient=true, ")
 					} else {
-						eventStr += fmt.Sprintf("ClientPodName=%s, Namespace=%s, ContainerId=%s, HostClient=false, ", podName, namespace, containerId)
+						if len(podName) > 0 {
+							// k8s pod
+							eventStr += fmt.Sprintf("ClientPodName=%s, Namespace=%s, ContainerId=, HostClient=false, ", podName, namespace)
+						} else {
+							// just a container
+							eventStr += fmt.Sprintf("ClientPodName=, Namespace=, ContainerId=%s, HostClient=false, ", containerId)
+						}
 					}
 				}
 				eventStr += fmt.Sprintf("NodeName=%s, ", types.AgentConfig.LocalNodeName)
