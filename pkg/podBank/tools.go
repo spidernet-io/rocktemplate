@@ -63,11 +63,6 @@ func getPodAndContainerID(pid uint32) (podId string, containerId string, host bo
 	var line string
 	for scanner.Scan() {
 		line = scanner.Text()
-		// 检查是否为主机应用
-		if isHostProcess(line) {
-			host = true
-			return
-		}
 		if strings.Contains(line, "kubepods") {
 			parts := strings.Split(line, "/")
 			if len(parts) >= 4 {
@@ -83,6 +78,11 @@ func getPodAndContainerID(pid uint32) (podId string, containerId string, host bo
 					}
 				}
 			}
+		} else {
+			if isHostProcess(line) {
+				host = true
+				return
+			}
 		}
 	}
 
@@ -91,14 +91,14 @@ func getPodAndContainerID(pid uint32) (podId string, containerId string, host bo
 
 func isHostProcess(line string) bool {
 	hostPatterns := []string{
-		"0::/",
-		":/init.scope",
-		":/user.slice",
-		":/system.slice",
+		"^0::/$",
+		"^0::/init.scope",
+		"^0::/user.slice",
+		"^0::/system.slice",
 	}
 
 	for _, pattern := range hostPatterns {
-		if strings.Contains(line, pattern) {
+		if strings.HasSuffix(line, pattern) {
 			return true
 		}
 	}
