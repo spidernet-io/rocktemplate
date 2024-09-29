@@ -6,6 +6,7 @@ import (
 	"github.com/spidernet-io/rocktemplate/pkg/podBank"
 	"github.com/spidernet-io/rocktemplate/pkg/types"
 	"go.uber.org/zap"
+	"time"
 )
 
 type ebpfEventStruct struct {
@@ -47,12 +48,12 @@ func (s *ebpfEventStruct) WatchEbpfEvent(stopWatch chan struct{}) {
 				if err != nil {
 					s.l.Sugar().Errorf("failed to get podName for pid %d: %v", event.Pid, err)
 					// container application , but miss pod name
-					eventStr += fmt.Sprintf("podName=unknown, namespace=unknown, host=false, ")
+					eventStr += fmt.Sprintf("clientPodName=unknown, namespace=unknown, host=false, ")
 				} else {
 					if hostFlag {
-						eventStr += fmt.Sprintf("podName=, namespace=, host=true, ")
+						eventStr += fmt.Sprintf("ClientPodName=, namespace=, host=true, ")
 					} else {
-						eventStr += fmt.Sprintf("podName=%s, namespace=%s, host=false, ", podName, namespace)
+						eventStr += fmt.Sprintf("ClientPodName=%s, namespace=%s, host=false, ", podName, namespace)
 					}
 				}
 				eventStr += fmt.Sprintf("NodeName=%d, ", types.AgentConfig.LocalNodeName)
@@ -65,11 +66,12 @@ func (s *ebpfEventStruct) WatchEbpfEvent(stopWatch chan struct{}) {
 					eventStr += fmt.Sprintf("DestIp=%s, DestPort=%d, NatIp=%s, NatPort=%d, ",
 						ebpf.GetIpv6Str(event.OriginalDestV6ipHigh, event.OriginalDestV6ipLow), event.OriginalDestPort, ebpf.GetIpv6Str(event.NatV6ipHigh, event.NatV6ipLow), event.NatPort)
 				}
-				eventStr += fmt.Sprintf("Pid=%d, Failure=%s ", event.Pid, ebpf.GetFailureStr(event.FailureCode))
+				eventStr += fmt.Sprintf("Pid=%d, Failure=%s, ", event.Pid, ebpf.GetFailureStr(event.FailureCode))
+				stamp := time.Now().UTC()
+				eventStr += fmt.Sprintf("TimeStamp=%s ", stamp.Format("2006-01-02T15:04:05Z"))
 
 				s.l.Sugar().Infof("ebpf event: %s", eventStr)
 			}
-
 		}
 	}()
 
