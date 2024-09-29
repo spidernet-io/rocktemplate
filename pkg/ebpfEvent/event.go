@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/spidernet-io/rocktemplate/pkg/ebpf"
 	"github.com/spidernet-io/rocktemplate/pkg/podBank"
+	"github.com/spidernet-io/rocktemplate/pkg/types"
 	"go.uber.org/zap"
 )
 
@@ -54,13 +55,14 @@ func (s *ebpfEventStruct) WatchEbpfEvent(stopWatch chan struct{}) {
 						eventStr += fmt.Sprintf("podName=%s, namespace=%s, host=false, ", podName, namespace)
 					}
 				}
+				eventStr += fmt.Sprintf("NodeName=%d, ", types.AgentConfig.LocalNodeName)
 				eventStr += fmt.Sprintf("IsIpv4=%d, IsSuccess=%d, ", event.IsIpv4, event.IsSuccess)
 				eventStr += fmt.Sprintf("NatType=%s, NatMode=%s, ", ebpf.GetNatTypeStr(event.NatType), ebpf.GetNatModeStr(event.NatMode))
 				if event.IsIpv4 != 0 {
-					eventStr += fmt.Sprintf("OriginalDestIp=%s, OriginalDestPort=%d, NatIp=%s, NatPort=%d, ",
+					eventStr += fmt.Sprintf("DestIp=%s, DestPort=%d, NatIp=%s, NatPort=%d, ",
 						ebpf.GetIpStr(event.OriginalDestV4Ip), event.OriginalDestPort, ebpf.GetIpStr(event.NatV4Ip), event.NatPort)
 				} else {
-					eventStr += fmt.Sprintf("OriginalDestIp=%s, OriginalDestPort=%d, NatIp=%s, NatPort=%d, ",
+					eventStr += fmt.Sprintf("DestIp=%s, DestPort=%d, NatIp=%s, NatPort=%d, ",
 						ebpf.GetIpv6Str(event.OriginalDestV6ipHigh, event.OriginalDestV6ipLow), event.OriginalDestPort, ebpf.GetIpv6Str(event.NatV6ipHigh, event.NatV6ipLow), event.NatPort)
 				}
 				eventStr += fmt.Sprintf("Pid=%d, Failure=%s ", event.Pid, ebpf.GetFailureStr(event.FailureCode))
