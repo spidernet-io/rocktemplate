@@ -56,7 +56,7 @@ func (s *ebpfEventStruct) WatchEbpfEvent(stopWatch chan struct{}) {
 						eventStr += fmt.Sprintf("ClientPodName=%s, namespace=%s, host=false, ", podName, namespace)
 					}
 				}
-				eventStr += fmt.Sprintf("NodeName=%d, ", types.AgentConfig.LocalNodeName)
+				eventStr += fmt.Sprintf("NodeName=%s, ", types.AgentConfig.LocalNodeName)
 				eventStr += fmt.Sprintf("IsIpv4=%d, IsSuccess=%d, ", event.IsIpv4, event.IsSuccess)
 				eventStr += fmt.Sprintf("NatType=%s, NatMode=%s, ", ebpf.GetNatTypeStr(event.NatType), ebpf.GetNatModeStr(event.NatMode))
 				if event.IsIpv4 != 0 {
