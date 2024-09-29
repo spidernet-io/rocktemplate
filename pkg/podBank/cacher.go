@@ -1,102 +1,141 @@
 package podBank
 
 import (
-	"container/list"
 	"github.com/spidernet-io/rocktemplate/pkg/lock"
 )
 
-// Key 结构体，包含 Cgroup 和 Pid，都是 uint32 类型
-type Key struct {
-	Cgroup, Pid uint32
+// PodName 封装 Podname 和 Namespace
+type PodName struct {
+	Podname   string
+	Namespace string
 }
 
-// Value 结构体，包含 Namespace 和 Podname
-type Value struct {
-	Namespace, Podname string
+// PodID 封装 PodUuid 和 ContainerId
+type PodID struct {
+	PodUuid     string
+	ContainerId string
 }
 
-// LimitedStore 是一个有容量限制的键值存储结构
-type LimitedStore struct {
-	capacity int
-	items    map[Key]*list.Element
-	order    *list.List
-	mutex    lock.RWMutex
+// PodRegistry 是一个存储结构，用于存储和检索 Pod 相关信息
+type PodRegistry struct {
+	mutex      lock.RWMutex
+	keyToValue map[PodName]PodID
+	valueToKey map[PodID]PodName
+	keyOrder   []PodName // 用于维护键的插入顺序
+	capacity   int       // 存储的最大容量
 }
 
-type entry struct {
-	key   Key
-	value Value
-}
-
-// NewLimitedStore 创建一个新的 LimitedStore
-func NewLimitedStore(capacity int) *LimitedStore {
-	return &LimitedStore{
-		capacity: capacity,
-		items:    make(map[Key]*list.Element),
-		order:    list.New(),
+// NewPodRegistry 创建并返回一个新的 PodRegistry 实例
+func NewPodRegistry(capacity int) *PodRegistry {
+	return &PodRegistry{
+		keyToValue: make(map[PodName]PodID),
+		valueToKey: make(map[PodID]PodName),
+		keyOrder:   make([]PodName, 0, capacity),
+		capacity:   capacity,
 	}
 }
 
-// Set 添加或更新一个键值对
-func (s *LimitedStore) Set(key Key, value Value) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+// Set 设置 PodName 对应的 PodID 值
+func (pr *PodRegistry) Set(key PodName, value PodID) {
+	pr.mutex.Lock()
+	defer pr.mutex.Unlock()
 
-	if elem, exists := s.items[key]; exists {
-		s.order.MoveToBack(elem)
-		elem.Value.(*entry).value = value
+	_, exists := pr.keyToValue[key]
+	if exists {
+		// 如果键已存在，直接更新值
+		oldValue := pr.keyToValue[key]
+		delete(pr.valueToKey, oldValue) // 删除旧的 value-key 映射
+		pr.keyToValue[key] = value
+		pr.valueToKey[value] = key
+		// 更新键在 keyOrder 中的位置
+		pr.removeFromKeyOrder(key)
+		pr.keyOrder = append(pr.keyOrder, key)
+	} else {
+		// 如果是新键，检查是否达到容量上限
+		if len(pr.keyToValue) >= pr.capacity {
+			// 删除最旧的键值对
+			oldestKey := pr.keyOrder[0]
+			pr.deleteInternal(oldestKey)
+		}
+		// 添加新的键值对
+		pr.keyToValue[key] = value
+		pr.valueToKey[value] = key
+		pr.keyOrder = append(pr.keyOrder, key)
+	}
+}
+
+// Delete 删除与 PodName 对应的条目
+func (pr *PodRegistry) Delete(key PodName) {
+	pr.mutex.Lock()
+	defer pr.mutex.Unlock()
+
+	pr.deleteInternal(key)
+}
+
+// deleteInternal 内部使用的删除方法，不加锁
+func (pr *PodRegistry) deleteInternal(key PodName) {
+	value, exists := pr.keyToValue[key]
+	if !exists {
+		// 如果键不存在，直接返回，不做任何操作
 		return
 	}
 
-	if s.order.Len() >= s.capacity {
-		oldest := s.order.Front()
-		if oldest != nil {
-			s.order.Remove(oldest)
-			delete(s.items, oldest.Value.(*entry).key)
+	// 删除 keyToValue 中的条目
+	delete(pr.keyToValue, key)
+
+	// 删除 valueToKey 中的条目
+	delete(pr.valueToKey, value)
+
+	// 从 keyOrder 中移除键
+	pr.removeFromKeyOrder(key)
+}
+
+// removeFromKeyOrder 从 keyOrder 切片中移除指定的键
+func (pr *PodRegistry) removeFromKeyOrder(key PodName) {
+	for i, k := range pr.keyOrder {
+		if k == key {
+			// 使用 copy 来移除元素，避免内存泄漏
+			copy(pr.keyOrder[i:], pr.keyOrder[i+1:])
+			pr.keyOrder = pr.keyOrder[:len(pr.keyOrder)-1]
+			break
 		}
 	}
-
-	elem := s.order.PushBack(&entry{key, value})
-	s.items[key] = elem
 }
 
-// Get 获取一个键对应的值
-func (s *LimitedStore) Get(key Key) (Value, bool) {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
+// GetValueByKey 根据 PodName 查询 PodID
+func (pr *PodRegistry) GetValueByKey(key PodName) (PodID, bool) {
+	pr.mutex.RLock()
+	defer pr.mutex.RUnlock()
 
-	if elem, exists := s.items[key]; exists {
-		return elem.Value.(*entry).value, true
-	}
-	return Value{}, false
+	value, exists := pr.keyToValue[key]
+	return value, exists
 }
 
-// Delete 删除一个键值对
-func (s *LimitedStore) Delete(key Key) {
-	s.mutex.Lock()
-	defer s.mutex.Unlock()
+// GetKeyByValue 根据 PodID 查询 PodName
+func (pr *PodRegistry) GetKeyByValue(value PodID) (PodName, bool) {
+	pr.mutex.RLock()
+	defer pr.mutex.RUnlock()
 
-	if elem, exists := s.items[key]; exists {
-		s.order.Remove(elem)
-		delete(s.items, key)
-	}
+	key, exists := pr.valueToKey[value]
+	return key, exists
 }
 
-// Len 返回当前存储的项目数量
-func (s *LimitedStore) Len() int {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
-	return len(s.items)
+// Count 返回存储的键值对数量
+func (pr *PodRegistry) Count() int {
+	pr.mutex.RLock()
+	defer pr.mutex.RUnlock()
+
+	return len(pr.keyToValue)
 }
 
 // GetAll 返回所有存储的键值对
-func (s *LimitedStore) GetAll() map[Key]Value {
-	s.mutex.RLock()
-	defer s.mutex.RUnlock()
+func (pr *PodRegistry) GetAll() map[PodName]PodID {
+	pr.mutex.RLock()
+	defer pr.mutex.RUnlock()
 
-	result := make(map[Key]Value, len(s.items))
-	for key, elem := range s.items {
-		result[key] = elem.Value.(*entry).value
+	result := make(map[PodName]PodID, len(pr.keyToValue))
+	for k, v := range pr.keyToValue {
+		result[k] = v
 	}
 	return result
 }

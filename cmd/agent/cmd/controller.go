@@ -6,6 +6,7 @@ package cmd
 import (
 	"fmt"
 	"github.com/spidernet-io/rocktemplate/pkg/ebpf"
+	"github.com/spidernet-io/rocktemplate/pkg/ebpfEvent"
 	"github.com/spidernet-io/rocktemplate/pkg/ebpfWriter"
 	"github.com/spidernet-io/rocktemplate/pkg/nodeId"
 	"github.com/spidernet-io/rocktemplate/pkg/podBank"
@@ -169,6 +170,10 @@ func RunReconciles() {
 
 	NewServiceInformer(Client, stopWatchCh, writer)
 	NewEndpointSliceInformer(Client, stopWatchCh, writer)
+
+	//
+	ebpfEvent := ebpfEvent.NewEbpfEvent(rootLogger.Named("ebpfEvent"), bpfManager)
+	ebpfEvent.WatchEbpfEvent(stopWatchCh)
 
 	rootLogger.Info("finish all setup ")
 	time.Sleep(time.Hour)

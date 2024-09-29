@@ -9,6 +9,7 @@ import (
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/cache"
+	"reflect"
 )
 
 // -----------------------------------
@@ -28,7 +29,7 @@ func (s *PodReconciler) HandlerAdd(obj interface{}) {
 	)
 	logger.Sugar().Debugf("HandlerAdd process node %+v", name)
 
-	s.log.Sugar().Infof("update pod ip for pod %s", name)
+	s.log.Sugar().Infof("update id for pod %s", name)
 	podBank.PodBankHander.Update(nil, pod)
 
 	return
@@ -50,10 +51,10 @@ func (s *PodReconciler) HandlerUpdate(oldObj, newObj interface{}) {
 		zap.String("pod", name),
 	)
 
-	s.log.Sugar().Info("update pod ip for pod %s/%s", newPod.Namespace, newPod.Name)
-	podBank.PodBankHander.Update(oldPod, newPod)
-
-	logger.Sugar().Debugf("HandlerUpdate process pod %s", name)
+	if !reflect.DeepEqual(oldPod.Status.ContainerStatuses, newPod.Status.ContainerStatuses) {
+		logger.Sugar().Debugf("update id for pod %s/%s", newPod.Namespace, newPod.Name)
+		podBank.PodBankHander.Update(oldPod, newPod)
+	}
 
 	return
 }
