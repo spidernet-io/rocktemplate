@@ -89,7 +89,7 @@ func getPodAndContainerID(pid uint32) (podId string, containerId string, host bo
 	return "", "", false, fmt.Errorf("failed to get pod id of pid %d from path %s: %s", pid, cgroupPath, line)
 }
 
-var hostPatterns := []*regexp.Regexp{
+var hostPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`^0::/$`),
 	regexp.MustCompile(`^0::/init\.scope$`),
 	regexp.MustCompile(`^0::/user\.slice/.*$`),
