@@ -194,6 +194,18 @@ struct {
 
 //======================================= map ： 存储 event
 
+// no available backend
+#define FAILURE_CODE_AGENT__NO_BACKEND 	                     1
+// there is available backend, but failed to find it in backend map
+#define FAILURE_CODE_AGENT__FIND_BACKEND_FAILURE            2
+// failed to find node entry ip map
+#define FAILURE_CODE_AGENT__FIND_NODE_ENTRY_IP_MAP_FAILURE  3
+// failed to update affinity map
+#define FAILURE_CODE_SYSTEM__UPDATE_AFFINITY_MAP_FAILURE     100
+// failed to update natRecord map
+#define FAILURE_CODE_SYSTEM__UPDATE_NAT_RECORD_MAP_FAILURE   101
+
+
 
 // BPF_MAP_TYPE_PERF_EVENT_ARRAY 类型的 数据结构体，在 golang 中需要自定定义 struct
 

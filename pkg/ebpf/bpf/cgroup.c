@@ -227,6 +227,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     struct mapkey_service svckey;
     struct mapvalue_service svcval;
     if ( ! get_service( dst_ip , dst_port , ip_proto , &svckey, &svcval) ) {
+        // these packets may be forwarding for non-service
         debugf(DEBUG_VERSBOSE, "did not find service value for %pI4:%d\n" , &dst_ip  , dst_port   );
         return 2;
     }
@@ -240,7 +241,8 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     }
     if ( backend_count == 0 ) {
         debugf(DEBUG_INFO, "no backend for %pI4:%d\n" , &dst_ip  , dst_port   );
-        return 2;
+        evt.failure_code = FAILURE_CODE_AGENT__NO_BACKEND ;
+        goto output_event;
     }
 
     //------------ check affinity history
@@ -271,9 +273,9 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
     struct mapvalue_backend *backendValue = bpf_map_lookup_elem( &map_backend , &backendKey);
     if (!backendValue) {
         debugf(DEBUG_ERROR, "failed to find backend for %pI4:%d\n" , &dst_ip  , dst_port   );
+        evt.failure_code = FAILURE_CODE_AGENT__FIND_BACKEND_FAILURE ;
         goto output_event;
     }
-
 
     if ( svcval.affinity_second > 0 ) {
         nat_ip = backendValue->pod_address ;
@@ -300,6 +302,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
 
         if ( bpf_map_update_elem(&map_affinity, &affinityKey, &affinityValue , BPF_ANY) ) {
             debugf(DEBUG_ERROR, "failed to create map_affinity for %pI4:%d\n" , &dst_ip  , dst_port   );
+            evt.failure_code = FAILURE_CODE_SYSTEM__UPDATE_AFFINITY_MAP_FAILURE ;
             goto output_event;
         }
         debugf(DEBUG_VERSBOSE, "nat by first affinity, for %pI4:%d\n" , &dst_ip  , dst_port   );
@@ -311,6 +314,7 @@ static __always_inline int execute_nat(struct bpf_sock_addr *ctx) {
                 __u32 *node_ip = bpf_map_lookup_elem( &map_node_entry_ip , &node_id);
                 if (!node_ip) {
                     debugf(DEBUG_ERROR, "failed to find node entry ip for %pI4:%d\n" , &dst_ip  , dst_port   );
+                    evt.failure_code = FAILURE_CODE_AGENT__FIND_NODE_ENTRY_IP_MAP_FAILURE ;
                     goto output_event;
                 }
                 nat_ip = *node_ip ;
@@ -345,7 +349,7 @@ set_nat:
     natvalue.pad[1] = 0;
     if ( bpf_map_update_elem(&map_nat_record, &natkey, &natvalue , BPF_ANY) ) {
         debugf(DEBUG_ERROR, "failed to update map_nat_record for %pI4:%d\n" , &dst_ip  , dst_port   );
-        goto output_event;
+        evt.failure_code = FAILURE_CODE_SYSTEM__UPDATE_NAT_RECORD_MAP_FAILURE ;
     }
 
     ctx->user_ip4 = nat_ip ;

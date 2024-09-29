@@ -7,17 +7,25 @@ import (
 )
 
 // ----------------- map flag ---------------------
-
-const (
-	NatTypeService = iota
-	NatTypeLocalRedirect
-	NatTypeFloatIP
+var (
+	NAT_TYPE_SERVICE   = uint8(0)
+	NAT_TYPE_REDIRECT  = uint8(1)
+	NAT_TYPE_BALANCING = uint8(2)
 )
+var NatTypeMap = map[uint8]string{
+	NAT_TYPE_SERVICE:   "service",
+	NAT_TYPE_REDIRECT:  "localRedirect",
+	NAT_TYPE_BALANCING: "balancing",
+}
 
-const (
-	PROTOCOL_TCP = 6
-	PROTOCOL_UDP = 17
+var (
+	IPPROTO_TCP = uint8(6)
+	IPPROTO_UDP = uint8(17)
 )
+var ProtocalMap = map[uint8]string{
+	IPPROTO_TCP: "tcp",
+	IPPROTO_UDP: "udp",
+}
 
 const (
 	NatTypeNone = iota
@@ -29,36 +37,51 @@ const (
 	NatModeBalancing
 )
 
+var NatModeMap = map[uint8]string{
+	NatModeServiceClusterip:    "ServiceClusterIP",
+	NatModeServiceLoadBalancer: "ServiceLoadbalancer",
+	NatModeServiceExternalIp:   "ServiceExternalIP",
+	NatModeServiceNodePort:     "ServiceNodeport",
+	NatModeRedirect:            "localRedirect",
+	NatModeBalancing:           "balancing",
+}
+
+var FailureCodeMap = map[uint8]string{
+	0:   "",
+	1:   "AgentNoBackend",
+	2:   "AgentFindBackendFailure",
+	3:   "AgentFindNodeEntryIpFailure",
+	100: "SystemUpdateAffinityFailure",
+	101: "SystemUpdateNatRecordFailure",
+}
+
 var (
-	NAT_TYPE_SERVICE   = uint8(0)
-	NAT_TYPE_REDIRECT  = uint8(1)
-	NAT_TYPE_BALANCING = uint8(2)
-
-	IPPROTO_TCP = uint8(6)
-	IPPROTO_UDP = uint8(17)
-
+	//
 	SCOPE_LOCAL_CLUSTER = uint8(0)
-
 	// for NodePorts, ExternalIPs, and LoadBalancer IPs
 	SERVICE_FLAG_EXTERNAL_LOCAL_SVC = uint8(0x1)
 	// for ClusterIP
 	SERVICE_FLAG_INTERNAL_LOCAL_SVC = uint8(0x2)
-
+	//
 	NODEPORT_V4_IP = net.ParseIP("255.255.255.255").To4()
 )
 
 // -------------------------
 
-func GetProtocolStr(p uint8) string {
-	proto := "unknown"
-	switch p {
-	case PROTOCOL_TCP:
-		proto = "tcp"
-	case PROTOCOL_UDP:
-		proto = "udp"
-	default:
+func GetNatTypeStr(p uint8) string {
+	if v, ok := NatTypeMap[p]; ok {
+		return v
+	} else {
+		return ""
 	}
-	return proto
+}
+
+func GetProtocolStr(p uint8) string {
+	if v, ok := ProtocalMap[p]; ok {
+		return v
+	} else {
+		return "unknown"
+	}
 }
 
 func GetIpStr(p uint32) string {
@@ -67,38 +90,20 @@ func GetIpStr(p uint32) string {
 	return net.IP(tmp).String()
 }
 
-func GetNatTypeStr(p uint8) string {
-	natType := "unknown"
-	switch p {
-	case NatTypeService:
-		natType = "service"
-	case NatTypeLocalRedirect:
-		natType = "localRedirect"
-	case NatTypeFloatIP:
-		natType = "floatIP"
-	default:
+func GetNatModeStr(p uint8) string {
+	if v, ok := NatModeMap[p]; ok {
+		return v
+	} else {
+		return "unkown"
 	}
-	return natType
 }
 
-func GetNatModeStr(p uint8) string {
-	t := "unknown"
-	switch p {
-	case NatModeServiceClusterip:
-		t = "ServiceClusterIP"
-	case NatModeServiceLoadBalancer:
-		t = "ServiceLoadbalancer"
-	case NatModeServiceExternalIp:
-		t = "ServiceExternalIP"
-	case NatModeServiceNodePort:
-		t = "ServiceNodeport"
-	case NatModeRedirect:
-		t = "localRedirect"
-	case NatModeBalancing:
-		t = "balancing"
-	default:
+func GetFailureStr(p uint8) string {
+	if v, ok := FailureCodeMap[p]; ok {
+		return v
+	} else {
+		return ""
 	}
-	return t
 }
 
 // -----------------------------------------------------
@@ -198,7 +203,7 @@ func GetIpv6Str(ipV6High, ipV6Low uint64) string {
 }
 
 func (t MapEventValue) String() string {
-	return fmt.Sprintf(`{ CgroupId:%d, IsIpv4:%d, IsSuccess:%d, NatType:%s, NatMode:%s, OriginalDestV4Ip:%s, OriginalDestV6Ip:%s, OriginalDestPort:%d, NatV4Ip:%s, NatV6Ip:%s, NatPort:%d , Pid:%d, FailureCode:%d }`,
+	return fmt.Sprintf(`{ CgroupId:%d, IsIpv4:%d, IsSuccess:%d, NatType:%s, NatMode:%s, OriginalDestV4Ip:%s, OriginalDestV6Ip:%s, OriginalDestPort:%d, NatV4Ip:%s, NatV6Ip:%s, NatPort:%d , Pid:%d, FailureCode:%s }`,
 		t.CgroupId, t.IsIpv4, t.IsSuccess, GetNatTypeStr(t.NatType), GetNatModeStr(t.NatMode),
-		GetIpStr(t.OriginalDestV4Ip), GetIpv6Str(t.OriginalDestV6ipHigh, t.OriginalDestV6ipLow), t.OriginalDestPort, GetIpStr(t.NatV4Ip), GetIpv6Str(t.NatV6ipHigh, t.NatV6ipLow), t.NatPort, t.Pid, t.FailureCode)
+		GetIpStr(t.OriginalDestV4Ip), GetIpv6Str(t.OriginalDestV6ipHigh, t.OriginalDestV6ipLow), t.OriginalDestPort, GetIpStr(t.NatV4Ip), GetIpv6Str(t.NatV6ipHigh, t.NatV6ipLow), t.NatPort, t.Pid, GetFailureStr(t.FailureCode))
 }

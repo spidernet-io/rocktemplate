@@ -150,6 +150,7 @@ func RunReconciles() {
 
 	// before informer and ebpf, build nodeId database
 	nodeId.InitNodeIdManager(Client, rootLogger.Named("nodeId"))
+
 	// before informer and ebpf, build pod ip database of local node
 	podBank.InitPodBankManager(Client, rootLogger.Named("podBank"), types.AgentConfig.LocalNodeName)
 

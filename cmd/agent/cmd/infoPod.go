@@ -27,9 +27,8 @@ func (s *PodReconciler) HandlerAdd(obj interface{}) {
 	logger := s.log.With(
 		zap.String("pod", name),
 	)
-	logger.Sugar().Debugf("HandlerAdd process node %+v", name)
 
-	s.log.Sugar().Infof("update id for pod %s", name)
+	s.log.Sugar().Debugf("add id for pod %s", name)
 	podBank.PodBankHander.Update(nil, pod)
 
 	return
@@ -70,7 +69,7 @@ func (s *PodReconciler) HandlerDelete(obj interface{}) {
 		zap.String("pod", name),
 	)
 
-	logger.Sugar().Infof("HandlerDelete process pod %s", name)
+	logger.Sugar().Debugf("delete id for pod %s/%s", pod.Namespace, pod.Name)
 	podBank.PodBankHander.Update(pod, nil)
 
 	return

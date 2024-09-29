@@ -64,7 +64,7 @@ func getPodAndContainerID(pid uint32) (podId string, containerId string, host bo
 	for scanner.Scan() {
 		line = scanner.Text()
 		// 检查是否为主机应用
-		if line == "0::/" || strings.HasSuffix(line, ":/init.scope") {
+		if isHostProcess(line) {
 			host = true
 			return
 		}
@@ -74,6 +74,7 @@ func getPodAndContainerID(pid uint32) (podId string, containerId string, host bo
 				podMatch := podRegex.FindStringSubmatch(parts[3])
 				if len(podMatch) == 2 {
 					podID := strings.ReplaceAll(podMatch[1], "_", "-")
+
 					if len(parts) >= 5 {
 						containerMatch := containerRegex.FindStringSubmatch(parts[4])
 						if len(containerMatch) == 2 {
@@ -86,4 +87,21 @@ func getPodAndContainerID(pid uint32) (podId string, containerId string, host bo
 	}
 
 	return "", "", false, fmt.Errorf("failed to get pod id of pid %d from path %s: %s", pid, cgroupPath, line)
+}
+
+func isHostProcess(line string) bool {
+	hostPatterns := []string{
+		"0::/",
+		":/init.scope",
+		":/user.slice",
+		":/system.slice",
+	}
+
+	for _, pattern := range hostPatterns {
+		if strings.Contains(line, pattern) {
+			return true
+		}
+	}
+
+	return false
 }
