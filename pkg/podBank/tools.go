@@ -89,19 +89,19 @@ func getPodAndContainerID(pid uint32) (podId string, containerId string, host bo
 	return "", "", false, fmt.Errorf("failed to get pod id of pid %d from path %s: %s", pid, cgroupPath, line)
 }
 
-func isHostProcess(line string) bool {
-	hostPatterns := []string{
-		"^0::/$",
-		"^0::/init.scope",
-		"^0::/user.slice",
-		"^0::/system.slice",
-	}
+var hostPatterns := []*regexp.Regexp{
+	regexp.MustCompile(`^0::/$`),
+	regexp.MustCompile(`^0::/init\.scope$`),
+	regexp.MustCompile(`^0::/user\.slice/.*$`),
+	regexp.MustCompile(`^0::/system\.slice/.*$`),
+}
 
+// isHostProcess 使用正则表达式检查给定的 cgroup 行是否表示主机进程
+func isHostProcess(line string) bool {
 	for _, pattern := range hostPatterns {
-		if strings.HasSuffix(line, pattern) {
+		if pattern.MatchString(line) {
 			return true
 		}
 	}
-
 	return false
 }
