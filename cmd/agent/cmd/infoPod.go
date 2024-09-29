@@ -28,7 +28,7 @@ func (s *PodReconciler) HandlerAdd(obj interface{}) {
 		zap.String("pod", name),
 	)
 
-	s.log.Sugar().Debugf("add id for pod %s", name)
+	logger.Sugar().Debugf("add id for pod %s", name)
 	podBank.PodBankHander.Update(nil, pod)
 
 	return
