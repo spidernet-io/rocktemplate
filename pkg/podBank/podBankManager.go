@@ -12,7 +12,7 @@ import (
 
 type PidBankManager interface {
 	Update(*corev1.Pod, *corev1.Pod)
-	LookupPodByPid(uint32) (string, string, bool, error)
+	LookupPodByPid(uint32) (string, string, string, bool, error)
 }
 
 type podBankManager struct {
@@ -138,9 +138,12 @@ func (s *podBankManager) Update(oldPod, newPod *corev1.Pod) {
 }
 
 // pid 用于查询 关联 pod name
-func (s *podBankManager) LookupPodByPid(pid uint32) (podName, namespace string, host bool, err error) {
+// 如果是 k8s pod，则 podName, namespace, containerdId 有值
+// 如果只是个 容器 但不是 pod，则   containerdId 有值
+// 如果只是个 主机上的应用，则 bool 有值
+func (s *podBankManager) LookupPodByPid(pid uint32) (podName, namespace, containerdId string, host bool, err error) {
 	if pid == 0 {
-		return "", "", false, fmt.Errorf("empty input")
+		return "", "", "", false, fmt.Errorf("empty input")
 	}
 
 	podId, containerId, host, e := getPodAndContainerID(pid)
@@ -150,7 +153,11 @@ func (s *podBankManager) LookupPodByPid(pid uint32) (podName, namespace string, 
 	}
 	s.log.Sugar().Debugf("pod %d got: podUuid=%s, containerId=%s, host=%v", pid, podId, containerId, host)
 	if host {
-		return "", "", true, nil
+		return "", "", "", true, nil
+	}
+
+	if len(podId) == 0 && len(containerId) > 0 {
+		return "", "", containerId, false, nil
 	}
 
 	// first, check lookup history
@@ -159,7 +166,7 @@ func (s *podBankManager) LookupPodByPid(pid uint32) (podName, namespace string, 
 		ContainerId: containerId,
 	}
 	if k, ok := s.podInfo.GetKeyByValue(value); ok {
-		return k.Podname, k.Namespace, false, nil
+		return k.Podname, k.Namespace, containerId, false, nil
 	}
 
 	err = fmt.Errorf("no data of PodName for pid %d", pid)

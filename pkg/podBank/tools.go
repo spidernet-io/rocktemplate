@@ -37,6 +37,14 @@ func fileExists(filename string) bool {
 //   - bool: 是否为主机进程（如果找到）
 //   - 如果未找到，两个返回值都为空字符串
 
+var (
+	podRegex                 = regexp.MustCompile(`kubepods-[^-]+-pod([^.]+)\.slice`)
+	containerRegex           = regexp.MustCompile(`[^-]+-([^.]+)\.scope`)
+	dockerContainerRegex     = regexp.MustCompile(`docker-([0-9a-f]{64})\.scope$`)
+	containerdContainerRegex = regexp.MustCompile(`containerd-([0-9a-f]{64})\.scope$`)
+	crioContainerRegex       = regexp.MustCompile(`crio-([0-9a-f]{64})\.scope$`)
+)
+
 func getPodAndContainerID(pid uint32) (podId string, containerId string, host bool, err error) {
 	podId = ""
 	containerId = ""
@@ -56,9 +64,6 @@ func getPodAndContainerID(pid uint32) (podId string, containerId string, host bo
 	}
 	defer file.Close()
 
-	podRegex := regexp.MustCompile(`kubepods-[^-]+-pod([^.]+)\.slice`)
-	containerRegex := regexp.MustCompile(`[^-]+-([^.]+)\.scope`)
-
 	scanner := bufio.NewScanner(file)
 	var line string
 	for scanner.Scan() {
@@ -69,7 +74,6 @@ func getPodAndContainerID(pid uint32) (podId string, containerId string, host bo
 				podMatch := podRegex.FindStringSubmatch(parts[3])
 				if len(podMatch) == 2 {
 					podID := strings.ReplaceAll(podMatch[1], "_", "-")
-
 					if len(parts) >= 5 {
 						containerMatch := containerRegex.FindStringSubmatch(parts[4])
 						if len(containerMatch) == 2 {
@@ -78,11 +82,14 @@ func getPodAndContainerID(pid uint32) (podId string, containerId string, host bo
 					}
 				}
 			}
-		} else {
-			if isHostProcess(line) {
-				host = true
-				return
-			}
+		} else if dockerMatch := dockerContainerRegex.FindStringSubmatch(line); dockerMatch != nil {
+			return "", dockerMatch[1], false, nil
+		} else if containerdMatch := containerdContainerRegex.FindStringSubmatch(line); containerdMatch != nil {
+			return "", containerdMatch[1], false, nil
+		} else if crioMatch := crioContainerRegex.FindStringSubmatch(line); crioMatch != nil {
+			return "", crioMatch[1], false, nil
+		} else if isHostProcess(line) {
+			return "", "", true, nil
 		}
 	}
 

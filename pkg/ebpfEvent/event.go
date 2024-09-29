@@ -44,16 +44,16 @@ func (s *ebpfEventStruct) WatchEbpfEvent(stopWatch chan struct{}) {
 				s.l.Sugar().Debugf("received an ebpf event: %s ", event)
 				var eventStr string
 
-				podName, namespace, hostFlag, err := podBank.PodBankHander.LookupPodByPid(event.Pid)
+				podName, namespace, containerId, hostFlag, err := podBank.PodBankHander.LookupPodByPid(event.Pid)
 				if err != nil {
 					s.l.Sugar().Errorf("failed to get podName for pid %d: %v", event.Pid, err)
 					// container application , but miss pod name
-					eventStr += fmt.Sprintf("clientPodName=unknown, namespace=unknown, HostClient=false, ")
+					eventStr += fmt.Sprintf("ClientPodName=unknown, Namespace=unknown, ContainerId=unknown, HostClient=false, ")
 				} else {
 					if hostFlag {
-						eventStr += fmt.Sprintf("ClientPodName=, namespace=, HostClient=true, ")
+						eventStr += fmt.Sprintf("ClientPodName=, Namespace=, ContainerId=, HostClient=true, ")
 					} else {
-						eventStr += fmt.Sprintf("ClientPodName=%s, namespace=%s, HostClient=false, ", podName, namespace)
+						eventStr += fmt.Sprintf("ClientPodName=%s, Namespace=%s, ContainerId=%s, HostClient=false, ", podName, namespace, containerId)
 					}
 				}
 				eventStr += fmt.Sprintf("NodeName=%s, ", types.AgentConfig.LocalNodeName)
