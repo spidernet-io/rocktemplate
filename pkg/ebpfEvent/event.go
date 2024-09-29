@@ -63,7 +63,7 @@ func (s *ebpfEventStruct) WatchEbpfEvent(stopWatch chan struct{}) {
 					eventStr += fmt.Sprintf("OriginalDestIp=%s, OriginalDestPort=%d, NatIp=%s, NatPort=%d, ",
 						ebpf.GetIpv6Str(event.OriginalDestV6ipHigh, event.OriginalDestV6ipLow), event.OriginalDestPort, ebpf.GetIpv6Str(event.NatV6ipHigh, event.NatV6ipLow), event.NatPort)
 				}
-				eventStr += fmt.Sprintf("Pid=%d, Failure=%d ", event.Pid, ebpf.GetFailureStr(event.FailureCode))
+				eventStr += fmt.Sprintf("Pid=%d, Failure=%s ", event.Pid, ebpf.GetFailureStr(event.FailureCode))
 
 				s.l.Sugar().Infof("ebpf event: %s", eventStr)
 			}

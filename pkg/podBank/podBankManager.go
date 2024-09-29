@@ -148,7 +148,10 @@ func (s *podBankManager) LookupPodByPid(pid uint32) (podName, namespace string, 
 		err = fmt.Errorf("failed to getPodAndContainerID for pid %d: %v ", pid, e)
 		return
 	}
-	s.log.Sugar().Debugf("pod %d got: podUuid=%s, containerId=%s", pid, podId, containerId)
+	s.log.Sugar().Debugf("pod %d got: podUuid=%s, containerId=%s, host=%v", pid, podId, containerId, host)
+	if host {
+		return "", "", true, nil
+	}
 
 	// first, check lookup history
 	value := PodID{
