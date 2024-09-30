@@ -14,7 +14,7 @@ PROJECT_ROOT=$(dirname ${BASH_SOURCE[0]})/../..
 
 CHART_DIR=${1:-"${PROJECT_ROOT}/charts"}
 # ====modify====
-API_CODE_DIR=${2:-"${PROJECT_ROOT}/pkg/k8s/apis/rocktemplate.spidernet.io/v1"}
+API_CODE_DIR=${2:-"${PROJECT_ROOT}/pkg/k8s/apis/balancing.elf.io/v1beta"}
 
 #======================
 

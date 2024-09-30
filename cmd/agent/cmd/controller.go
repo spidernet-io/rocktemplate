@@ -11,11 +11,15 @@ import (
 	"github.com/spidernet-io/rocktemplate/pkg/nodeId"
 	"github.com/spidernet-io/rocktemplate/pkg/podBank"
 	"github.com/spidernet-io/rocktemplate/pkg/types"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/clientcmd/api"
 	"os"
 	"path/filepath"
+	ctrl "sigs.k8s.io/controller-runtime"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"time"
 )
 
@@ -178,5 +182,34 @@ func RunReconciles() {
 
 	rootLogger.Info("finish all setup ")
 	time.Sleep(time.Hour)
+
+}
+
+func SetupController() {
+
+	// controller for CRD
+	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
+		Metrics: metricsserver.Options{
+			BindAddress: "0",
+		},
+		HealthProbeBindAddress: "0",
+	})
+	if err != nil {
+		rootLogger.Sugar().Fatalf("unable to NewManager")
+	}
+	if err := api.AddToScheme(mgr.GetScheme()); err != nil {
+		rootLogger.Sugar().Fatalf("unable to add scheme")
+	}
+	err = ctrl.NewControllerManagedBy(mgr).
+		For(&api.ChaosPod{}).
+		Owns(&corev1.Pod{}).
+		Complete(&reconciler{
+			Client: mgr.GetClient(),
+			scheme: mgr.GetScheme(),
+		})
+	if err != nil {
+		setupLog.Error(err, "unable to create controller")
+		os.Exit(1)
+	}
 
 }

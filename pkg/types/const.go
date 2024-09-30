@@ -3,9 +3,10 @@
 package types
 
 const (
-	TlsCaCommonName = "spidernet.io"
+	OrgName = "elf.io"
 
-	OrgName = "bpfElf.io"
+	ApiVersion = "v1beta"
+	ApiGroup   = "balancing." + OrgName
 
 	// use this annotation to mark an ID in the annotation of each node
 	// "bpfElf.org/nodeId": "32BitNumber"

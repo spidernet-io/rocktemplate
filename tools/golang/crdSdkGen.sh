@@ -42,10 +42,11 @@ rm -rf ${OUTPUT_PKG} || true
 # https://github.com/kubernetes/code-generator/blob/master/kube_codegen.sh
 source "${PROJECT_ROOT}/${CODEGEN_PKG}/kube_codegen.sh"
 
-kube::codegen::gen_helpers \
-    --boilerplate "${SCRIPT_ROOT}/hack/boilerplate.go.txt" \
-    "${SCRIPT_ROOT}/pkg/apis"
+echo "generate deep copy api"
+#kube::codegen::gen_helpers \
+#    "${PROJECT_ROOT}/pkg/apis"
 
+echo "generate client api"
 kube::codegen::gen_client\
     --with-watch \
     --output-dir "${PROJECT_ROOT}/${OUTPUT_PKG}" \

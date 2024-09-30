@@ -1,7 +1,7 @@
-// Copyright 2022 Authors of spidernet-io
+// Copyright 2024 Authors of spidernet-io
 // SPDX-License-Identifier: Apache-2.0
 
-package v1
+package v1beta
 
 import (
 	"k8s.io/apimachinery/pkg/runtime/schema"

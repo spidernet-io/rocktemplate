@@ -2,19 +2,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 // +kubebuilder:object:generate=true
-// +groupName=rocktemplate.spidernet.io
+// +groupName=balancing.elf.io
 
-// Package v1 contains API Schema definitions for the spiderpool v1 API group
-package v1
+package v1beta
 
 import (
+	"github.com/spidernet-io/rocktemplate/pkg/types"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/scheme"
 )
 
 var (
 	// GroupVersion is group version used to register these objects
-	GroupVersion = schema.GroupVersion{Group: "rocktemplate.spidernet.io", Version: "v1"}
+	GroupVersion = schema.GroupVersion{Group: types.ApiGroup, Version: types.ApiVersion}
 
 	// SchemeBuilder is used to add go types to the GroupVersionKind scheme
 	SchemeBuilder = &scheme.Builder{GroupVersion: GroupVersion}

@@ -38,8 +38,9 @@ func fileExists(filename string) bool {
 //   - 如果未找到，两个返回值都为空字符串
 
 var (
-	podRegex                 = regexp.MustCompile(`kubepods-[^-]+-pod([^.]+)\.slice`)
-	containerRegex           = regexp.MustCompile(`[^-]+-([^.]+)\.scope`)
+	podRegex       = regexp.MustCompile(`kubepods-[^-]+-pod([^.]+)\.slice`)
+	containerRegex = regexp.MustCompile(`[^-]+-([^.]+)\.scope`)
+	//
 	dockerContainerRegex     = regexp.MustCompile(`docker-([0-9a-f]{64})\.scope$`)
 	containerdContainerRegex = regexp.MustCompile(`containerd-([0-9a-f]{64})\.scope$`)
 	crioContainerRegex       = regexp.MustCompile(`crio-([0-9a-f]{64})\.scope$`)

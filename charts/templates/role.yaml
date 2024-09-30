@@ -8,48 +8,79 @@ rules:
 - apiGroups:
   - ""
   resources:
-  - endpoints
-  - namespaces
-  - nodes
-  - pods
-  verbs:
-  - get
-  - list
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
   - events
   verbs:
   - create
   - delete
   - get
   - list
+  - patch
   - update
   - watch
 - apiGroups:
-  - apps
+  - ""
   resources:
-  - daemonsets
-  - deployments
-  - replicasets
-  - statefulsets
+  - nodes
+  - pods
+  - services
   verbs:
   - get
   - list
   - update
   - watch
 - apiGroups:
-  - batch
+  - admissionregistration.k8s.io
   resources:
-  - cronjobs
-  - jobs
+  - mutatingwebhookconfigurations
+  - validatingwebhookconfigurations
   verbs:
+  - create
+  - delete
   - get
   - list
+  - patch
   - update
   - watch
+- apiGroups:
+  - balancing.elf.io
+  resources:
+  - balancingpolicys
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - balancing.elf.io
+  resources:
+  - balancingpolicys/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - balancing.elf.io
+  resources:
+  - localredirectpolicys
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - balancing.elf.io
+  resources:
+  - localredirectpolicys/status
+  verbs:
+  - get
+  - patch
+  - update
 - apiGroups:
   - coordination.k8s.io
   resources:
@@ -59,22 +90,11 @@ rules:
   - get
   - update
 - apiGroups:
-  - rocktemplate.spidernet.io
+  - discovery.k8s.io
   resources:
-  - mybooks
+  - endpointslices
   verbs:
-  - create
-  - delete
   - get
   - list
-  - patch
   - update
   - watch
-- apiGroups:
-  - rocktemplate.spidernet.io
-  resources:
-  - mybooks/status
-  verbs:
-  - get
-  - patch
-  - update
