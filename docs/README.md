@@ -92,6 +92,13 @@
     
     run test
 
+13  为 ci 中的 ghaction-import-gpg 创建 密钥
+
+找个 ubuntu 的机器, 运行 "gpg --full-generate-key" 创建一个 weizhou.lan@daocloud.io 的 密钥，记住密码 
+运行 " gpg --armor --export-secret-key weizhou.lan@daocloud.io -w0 > /tmp/sec " 导出密码
+在 仓库中创建 action 的 secret：  GPG_PASSPHRASE  为 密码，  GPG_PRIVATE_KEY 为导出的密钥
+
+
 ## local develop
 
 1. `make build_local_image`
